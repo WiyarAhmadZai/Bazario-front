@@ -154,28 +154,107 @@ const Home = () => {
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">Discover our handpicked selection of premium luxury items</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((item, index) => (
+            {[
+              {
+                id: 1,
+                name: "Diamond Elegance Ring",
+                price: "$2,999.99",
+                description: "Exquisite handcrafted diamond ring with platinum setting",
+                icon: (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v-4a2 2 0 011-1.732l4-2.732a2 2 0 011 1.732V16a2 2 0 01-1 1.732l-4 2.732A2 2 0 017 18.732V16z" />
+                  </svg>
+                ),
+                gradient: "from-purple-400 via-pink-500 to-red-500"
+              },
+              {
+                id: 2,
+                name: "Swiss Luxury Timepiece",
+                price: "$4,599.99",
+                description: "Premium Swiss-made watch with automatic movement",
+                icon: (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+                gradient: "from-blue-400 via-purple-500 to-purple-600"
+              },
+              {
+                id: 3,
+                name: "Designer Leather Handbag",
+                price: "$1,899.99",
+                description: "Handcrafted Italian leather bag with gold accents",
+                icon: (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z" />
+                  </svg>
+                ),
+                gradient: "from-amber-400 via-orange-500 to-yellow-500"
+              }
+            ].map((product, index) => (
               <div 
-                key={item} 
-                className="bg-black bg-opacity-30 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 border border-gray-700 hover:border-gold group animate-fade-in-up"
+                key={product.id} 
+                className="bg-black bg-opacity-30 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-700 transform hover:scale-105 hover:-translate-y-3 border border-gray-700 hover:border-gold group animate-fade-in-up relative"
                 style={{ animationDelay: `${index * 200}ms` }}
               >
-                <div className="h-64 bg-gradient-to-r from-gold to-bronze flex items-center justify-center relative overflow-hidden">
-                  <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 group-hover:scale-110 transition-transform duration-300" />
-                  <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-0 transition-all duration-300"></div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-white group-hover:text-gold transition-colors duration-300">Premium Product {item}</h3>
-                  <p className="text-gray-300 mb-4 group-hover:text-white transition-colors duration-300">Luxury item description goes here with exquisite details</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-gold">$999.99</span>
-                    <button className="bg-gray-800 hover:bg-gold hover:text-black text-white font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105">
-                      View Details
-                    </button>
+                {/* Background glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                
+                {/* Product image/icon area */}
+                <div className={`h-64 bg-gradient-to-r ${product.gradient} flex items-center justify-center relative overflow-hidden group-hover:bg-gradient-to-br transition-all duration-700`}>
+                  {/* Animated background elements */}
+                  <div className="absolute top-4 right-4 w-3 h-3 bg-white/20 rounded-full animate-pulse"></div>
+                  <div className="absolute bottom-6 left-6 w-2 h-2 bg-white/30 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                  <div className="absolute top-1/2 left-4 w-1.5 h-1.5 bg-white/25 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                  
+                  {/* Main icon */}
+                  <div className="text-white transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 relative z-10">
+                    {product.icon}
+                  </div>
+                  
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-0 transition-all duration-500"></div>
+                  
+                  {/* Price badge */}
+                  <div className="absolute top-4 left-4 bg-black bg-opacity-50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold border border-white/20">
+                    {product.price}
                   </div>
                 </div>
+                
+                {/* Product details */}
+                <div className="p-6 relative z-10">
+                  <h3 className="text-xl font-bold mb-2 text-white group-hover:text-gold transition-colors duration-300">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-300 mb-4 group-hover:text-white transition-colors duration-300 leading-relaxed">
+                    {product.description}
+                  </p>
+                  
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg key={star} className="w-4 h-4 text-gold fill-current" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-gray-400 text-sm">(4.9)</span>
+                    </div>
+                    
+                    <button className="bg-gray-800 hover:bg-gold hover:text-black text-white font-semibold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 group">
+                      <span>View Details</span>
+                      <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {/* Bottom accent line */}
+                  <div className="w-0 h-0.5 bg-gold mx-auto mt-4 group-hover:w-full transition-all duration-700 ease-out"></div>
+                </div>
               </div>
-            ))}
+            ))}"
           </div>
           <div className="text-center mt-12 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
             <Link 
