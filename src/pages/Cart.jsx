@@ -140,7 +140,7 @@ const Cart = () => {
                         >
                           -
                         </button>
-                        <span className="px-3 py-1 bg-white border-t border-b">{item.quantity}</span>
+                        <span className="px-3 py-1 bg-gray-800 border-t border-b border-gray-600">{item.quantity}</span>
                         <button 
                           className="luxury-button px-3 py-1 rounded-r-full text-sm"
                           onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
