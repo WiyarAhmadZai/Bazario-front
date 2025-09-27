@@ -19,6 +19,10 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import FAQ from './pages/FAQ';
+import ShippingPolicy from './pages/ShippingPolicy';
+import ReturnsExchanges from './pages/ReturnsExchanges';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 // Import context
 import { useAuth } from './context/AuthContext';
@@ -112,6 +116,10 @@ function App() {
           } />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/returns-exchanges" element={<ReturnsExchanges />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={
