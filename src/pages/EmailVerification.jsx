@@ -16,11 +16,11 @@ const EmailVerification = () => {
 
   // Get user data from navigation state
   const userData = location.state || {};
-  const { user_id, email } = userData;
+  const { email } = userData;
 
   useEffect(() => {
     // Redirect to register if no user data
-    if (!user_id || !email) {
+    if (!email) {
       navigate('/register');
       return;
     }
@@ -30,7 +30,7 @@ const EmailVerification = () => {
       const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
       return () => clearTimeout(timer);
     }
-  }, [user_id, email, navigate, resendCooldown]);
+  }, [email, navigate, resendCooldown]);
 
   const handleCodeChange = (index, value) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
@@ -79,7 +79,7 @@ const EmailVerification = () => {
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          user_id: user_id,
+          email: email,
           verification_code: code,
         }),
       });
@@ -87,11 +87,16 @@ const EmailVerification = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('Email verified successfully! Redirecting...');
-        authLogin(data.user, data.token);
+        setSuccess('Email verified successfully! Redirecting to login...');
         
         setTimeout(() => {
-          navigate('/');
+          // Redirect to login with success message
+          navigate('/login', { 
+            state: { 
+              message: 'Email verified successfully! You can now log in.',
+              email: email
+            } 
+          });
         }, 2000);
       } else {
         setError(data.message || 'Verification failed');
