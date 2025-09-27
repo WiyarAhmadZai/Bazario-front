@@ -9,6 +9,7 @@ const EmailVerification = () => {
   const [success, setSuccess] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [showGetCodeButton, setShowGetCodeButton] = useState(false);
 
   const { login: authLogin } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -36,6 +37,15 @@ const EmailVerification = () => {
       const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
       return () => clearTimeout(timer);
     }
+    
+    // Show "Get Verification Code" button after 30 seconds
+    const getCodeTimer = setTimeout(() => {
+      setShowGetCodeButton(true);
+    }, 30000);
+
+    return () => {
+      clearTimeout(getCodeTimer);
+    };
   }, [email, verification_code, navigate, resendCooldown]);
 
   const handleCodeChange = (index, value) => {
@@ -154,6 +164,41 @@ const EmailVerification = () => {
       setResendLoading(false);
     }
   };
+  
+  const handleGetVerificationCode = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Call the development endpoint to get the verification code
+      const response = await fetch('http://localhost:8000/api/get-verification-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.verification_code) {
+        setSuccess(`Your verification code is: ${data.verification_code}`);
+        // Pre-fill the code
+        const codeArray = data.verification_code.split('');
+        setVerificationCode(codeArray);
+      } else {
+        setError(data.message || 'Failed to retrieve verification code');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -255,6 +300,22 @@ const EmailVerification = () => {
               'Resend verification code'
             )}
           </button>
+          
+          {/* Button to get verification code manually after 30 seconds */}
+          {showGetCodeButton && (
+            <div className="pt-4">
+              <button
+                onClick={handleGetVerificationCode}
+                disabled={loading}
+                className="font-medium text-gold hover:text-yellow-400 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed underline"
+              >
+                {loading ? 'Getting code...' : 'Get verification code manually'}
+              </button>
+              <p className="text-xs text-gray-500 mt-1">
+                Click this if you haven't received the code after 30 seconds
+              </p>
+            </div>
+          )}
           
           <p className="text-sm text-gray-400 pt-4">
             <Link to="/register" className="font-medium text-gold hover:text-yellow-400 transition-colors duration-300">
