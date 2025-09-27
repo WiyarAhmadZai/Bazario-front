@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
@@ -9,8 +9,32 @@ const Header = () => {
   const { cartCount } = useContext(CartContext);
   const { wishlistCount } = useContext(WishlistContext);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  // Show scroll to top button when page is scrolled down
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setShowScrollToTop(true);
+      } else {
+        setShowScrollToTop(false);
+      }
+    };
+
+    window.addEventListener('scroll', toggleVisibility);
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
+
+  // Scroll to top smoothly
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   return (
+    <>
     <header className="bg-gray-900 shadow-md py-4 px-6 sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-white">
@@ -157,6 +181,31 @@ const Header = () => {
         </div>
       </div>
     </header>
+    
+    {/* Scroll to Top Button */}
+    {showScrollToTop && (
+      <button
+        onClick={scrollToTop}
+        className="fixed bottom-8 right-8 z-50 bg-gold hover:bg-yellow-600 text-black p-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 hover:shadow-xl"
+        aria-label="Scroll to top"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 10l7-7m0 0l7 7m-7-7v18"
+          />
+        </svg>
+      </button>
+    )}
+    </>
   );
 };
 
