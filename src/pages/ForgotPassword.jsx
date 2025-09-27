@@ -44,7 +44,15 @@ const ForgotPassword = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('Password reset code sent to your email!');
+        // Check if verification code was provided directly (email delivery failed)
+        if (data.verification_code) {
+          setSuccess(`Password reset code: ${data.verification_code} (email delivery failed)`);
+          // Pre-fill the code
+          const codeArray = data.verification_code.split('');
+          setFormData(prev => ({ ...prev, verification_code: codeArray }));
+        } else {
+          setSuccess('Password reset code sent to your email!');
+        }
         setStep(2);
         setResendCooldown(60);
       } else {
@@ -155,7 +163,15 @@ const ForgotPassword = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('New password reset code sent!');
+        // Check if verification code was provided directly (email delivery failed)
+        if (data.verification_code) {
+          setSuccess(`New password reset code: ${data.verification_code} (email delivery failed)`);
+          // Pre-fill the code
+          const codeArray = data.verification_code.split('');
+          setFormData(prev => ({ ...prev, verification_code: codeArray }));
+        } else {
+          setSuccess('New password reset code sent!');
+        }
         setResendCooldown(60);
         setTimeout(() => setSuccess(''), 5000);
       } else {
