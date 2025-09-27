@@ -191,10 +191,10 @@ const ReturnsExchanges = () => {
                 Contact Support
               </a>
               <a
-                href="tel:1-800-LUXURY"
+                href="tel:+93776992603"
                 className="px-6 py-3 bg-gray-800 bg-opacity-50 text-white font-semibold rounded-lg hover:bg-opacity-70 transition-all duration-300"
               >
-                Call: 1-800-LUXURY
+                Call: +93 776 992 603
               </a>
             </div>
           </div>
