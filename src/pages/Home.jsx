@@ -105,7 +105,7 @@ const Home = () => {
         
         {/* Slide Indicators */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
-          <div className="flex space-x-3 mb-4">
+          <div className="flex space-x-3">
             {slides.map((_, index) => (
               <button
                 key={index}
@@ -118,13 +118,6 @@ const Home = () => {
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
-          </div>
-          
-          {/* Scroll indicator */}
-          <div className="text-white animate-bounce">
-            <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
           </div>
         </div>
       </section>
