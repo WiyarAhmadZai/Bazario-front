@@ -68,7 +68,14 @@ const Home = () => {
         setSubscriptionStatus('🎉 Successfully subscribed! Welcome to our luxury community.');
         setEmail('');
       } else {
-        setSubscriptionStatus(data.message || 'Subscription failed. Please try again.');
+        // Handle different error types
+        if (response.status === 422) {
+          setSubscriptionStatus(`⚠️ ${data.message}`);
+        } else if (response.status === 409) {
+          setSubscriptionStatus(`ℹ️ ${data.message}`);
+        } else {
+          setSubscriptionStatus(`❌ ${data.message || 'Subscription failed. Please try again.'}`);
+        }
       }
     } catch (error) {
       console.error('Newsletter subscription error:', error);
@@ -576,9 +583,23 @@ const Home = () => {
               <div className={`mb-6 p-4 rounded-lg border ${
                 subscriptionStatus.includes('Successfully') 
                   ? 'bg-green-900/30 border-green-500 text-green-300' 
+                  : subscriptionStatus.includes('already subscribed') || subscriptionStatus.includes('reactivated')
+                  ? 'bg-blue-900/30 border-blue-500 text-blue-300'
                   : 'bg-red-900/30 border-red-500 text-red-300'
               } backdrop-blur-lg animate-fade-in-up`}>
-                {subscriptionStatus}
+                <div className="flex items-start">
+                  <div className="flex-1">
+                    {subscriptionStatus}
+                  </div>
+                  <button 
+                    onClick={() => setSubscriptionStatus('')}
+                    className="ml-2 text-current opacity-70 hover:opacity-100 transition-opacity"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             )}
             
