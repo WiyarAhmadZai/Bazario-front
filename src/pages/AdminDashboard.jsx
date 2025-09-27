@@ -89,7 +89,7 @@ const AdminDashboard = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-gray-800 divide-y divide-gray-600">
               {orders.slice(0, 5).map((order) => (
                 <tr key={order.id}>
                   <td className="px-6 py-4 whitespace-nowrap">#{order.id}</td>
