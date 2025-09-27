@@ -41,11 +41,23 @@ const Login = () => {
     try {
       const response = await login(formData);
       
+      // Check if we need to redirect to verification page
+      if (response && response.redirect_to_verification) {
+        navigate('/verify-email', {
+          state: {
+            email: response.email,
+            verification_code: response.verification_code // Pass code if available
+          }
+        });
+        return;
+      }
+      
       // Check if email verification is required
       if (response && response.requires_verification) {
         navigate('/verify-email', {
           state: {
-            email: response.email
+            email: response.email,
+            verification_code: response.verification_code // Pass code if available
           }
         });
         return;
