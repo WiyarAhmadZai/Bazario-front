@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [email, setEmail] = useState('');
+  const [subscriptionStatus, setSubscriptionStatus] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
   
   const slides = [
     {
@@ -35,6 +38,46 @@ const Home = () => {
 
   const goToSlide = (index) => {
     setCurrentSlide(index);
+  };
+
+  // Newsletter subscription handler
+  const handleNewsletterSubscription = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes('@')) {
+      setSubscriptionStatus('Please enter a valid email address.');
+      return;
+    }
+
+    setIsSubscribing(true);
+    setSubscriptionStatus('');
+
+    try {
+      const response = await fetch('http://localhost:8000/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubscriptionStatus('🎉 Successfully subscribed! Welcome to our luxury community.');
+        setEmail('');
+      } else {
+        setSubscriptionStatus(data.message || 'Subscription failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      setSubscriptionStatus('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubscribing(false);
+      // Clear status message after 5 seconds
+      setTimeout(() => setSubscriptionStatus(''), 5000);
+    }
   };
   return (
     <div className="home-page">
@@ -451,6 +494,126 @@ const Home = () => {
                 <p className="text-gray-300 group-hover:text-white transition-colors duration-300">{item.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Customer Testimonials */}
+      <section className="py-16 bg-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-fade-in-up">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">What Our Clients Say</h2>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">Trusted by discerning customers worldwide</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Sarah Johnson",
+                role: "Fashion Designer",
+                image: "/src/assets/testimonial-1.jpg",
+                rating: 5,
+                text: "Exceptional quality and service. Every piece I've purchased has exceeded my expectations. Truly luxury redefined."
+              },
+              {
+                name: "Michael Chen",
+                role: "Business Executive",
+                image: "/src/assets/testimonial-2.jpg",
+                rating: 5,
+                text: "The attention to detail is remarkable. From packaging to product quality, everything reflects the premium nature of this brand."
+              },
+              {
+                name: "Emma Rodriguez",
+                role: "Interior Designer",
+                image: "/src/assets/testimonial-3.jpg",
+                rating: 5,
+                text: "I've never experienced such personalized service. The team goes above and beyond to ensure complete satisfaction."
+              }
+            ].map((testimonial, index) => (
+              <div 
+                key={index}
+                className="bg-black bg-opacity-30 backdrop-blur-lg p-8 rounded-xl border border-gray-700 hover:border-gold transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group animate-fade-in-up"
+                style={{ animationDelay: `${index * 150}ms` }}
+              >
+                <div className="flex items-center mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-r from-gold to-yellow-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-black font-bold text-xl">{testimonial.name.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-semibold text-lg">{testimonial.name}</h4>
+                    <p className="text-gray-400 text-sm">{testimonial.role}</p>
+                  </div>
+                </div>
+                
+                <div className="flex mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-gold fill-current" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                
+                <p className="text-gray-300 leading-relaxed group-hover:text-white transition-colors duration-300 italic">
+                  "{testimonial.text}"
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Subscription */}
+      <section className="py-16 bg-gradient-to-r from-gray-900 via-black to-gray-900">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-3xl mx-auto animate-fade-in-up">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Stay Updated</h2>
+            <p className="text-xl text-gray-300 mb-8">
+              Subscribe to our newsletter and be the first to know about new arrivals, exclusive offers, and luxury insights.
+            </p>
+            
+            {/* Subscription Status Message */}
+            {subscriptionStatus && (
+              <div className={`mb-6 p-4 rounded-lg border ${
+                subscriptionStatus.includes('Successfully') 
+                  ? 'bg-green-900/30 border-green-500 text-green-300' 
+                  : 'bg-red-900/30 border-red-500 text-red-300'
+              } backdrop-blur-lg animate-fade-in-up`}>
+                {subscriptionStatus}
+              </div>
+            )}
+            
+            <form onSubmit={handleNewsletterSubscription} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                required
+                disabled={isSubscribing}
+                className="flex-1 px-6 py-4 bg-black bg-opacity-30 backdrop-blur-lg border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-300 disabled:opacity-50"
+              />
+              <button 
+                type="submit"
+                disabled={isSubscribing}
+                className="bg-gold text-black px-8 py-4 font-bold uppercase tracking-wide hover:bg-white transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center min-w-[120px]"
+              >
+                {isSubscribing ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Subscribing...
+                  </>
+                ) : (
+                  'Subscribe'
+                )}
+              </button>
+            </form>
+            
+            <p className="text-gray-500 text-sm mt-4">
+              We respect your privacy. Unsubscribe at any time.
+            </p>
           </div>
         </div>
       </section>
