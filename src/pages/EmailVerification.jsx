@@ -38,10 +38,10 @@ const EmailVerification = () => {
       return () => clearTimeout(timer);
     }
     
-    // Show "Get Verification Code" button after 30 seconds
+    // Show "Get Verification Code" button after 60 seconds
     const getCodeTimer = setTimeout(() => {
       setShowGetCodeButton(true);
-    }, 30000);
+    }, 60000);
 
     return () => {
       clearTimeout(getCodeTimer);
