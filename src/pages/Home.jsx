@@ -50,7 +50,7 @@ const Home = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800">Featured Products</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+              <div key={item} className="bg-black bg-opacity-30 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-700">
                 <div className="h-64 bg-gradient-to-r from-gold to-bronze flex items-center justify-center">
                   <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
                 </div>
