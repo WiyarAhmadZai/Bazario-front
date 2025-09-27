@@ -8,7 +8,9 @@ export const register = async (userData) => {
   } catch (error) {
     // Handle different types of errors
     if (error.response && error.response.data) {
-      throw error.response.data;
+      // Return the response data even for error status codes
+      // This allows the frontend to handle redirect_to_verification
+      return error.response.data;
     } else if (error.message) {
       throw { message: error.message };
     } else {
@@ -25,7 +27,9 @@ export const login = async (credentials) => {
   } catch (error) {
     // Handle different types of errors
     if (error.response && error.response.data) {
-      throw error.response.data;
+      // Return the response data even for error status codes
+      // This allows the frontend to handle redirect_to_verification
+      return error.response.data;
     } else if (error.message) {
       throw { message: error.message };
     } else {
