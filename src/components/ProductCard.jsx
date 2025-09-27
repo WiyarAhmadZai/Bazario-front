@@ -51,7 +51,7 @@ const ProductCard = ({ product, onAddToCart, onAddToWishlist }) => {
         
         <button
           onClick={() => onAddToWishlist && onAddToWishlist(product)}
-          className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
+          className="absolute bottom-2 right-2 bg-gray-800 p-2 rounded-full shadow-md hover:bg-gray-700 transition-colors border border-gray-600"
         >
           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
