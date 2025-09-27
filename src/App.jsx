@@ -15,6 +15,8 @@ import Orders from './pages/Orders';
 import Wishlist from './pages/Wishlist';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import EmailVerification from './pages/EmailVerification';
+import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -104,6 +106,12 @@ function App() {
           <Route path="/register" element={
             <RedirectIfAuthenticated>
               <Register />
+            </RedirectIfAuthenticated>
+          } />
+          <Route path="/verify-email" element={<EmailVerification />} />
+          <Route path="/forgot-password" element={
+            <RedirectIfAuthenticated>
+              <ForgotPassword />
             </RedirectIfAuthenticated>
           } />
           <Route path="/profile" element={
