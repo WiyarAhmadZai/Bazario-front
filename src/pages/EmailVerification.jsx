@@ -16,7 +16,7 @@ const EmailVerification = () => {
 
   // Get user data from navigation state
   const userData = location.state || {};
-  const { email } = userData;
+  const { email, verification_code } = userData;
 
   useEffect(() => {
     // Redirect to register if no user data
@@ -25,12 +25,18 @@ const EmailVerification = () => {
       return;
     }
 
+    // If verification code was provided directly, pre-fill it
+    if (verification_code) {
+      const codeArray = verification_code.split('');
+      setVerificationCode(codeArray);
+    }
+
     // Start resend cooldown timer
     if (resendCooldown > 0) {
       const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
       return () => clearTimeout(timer);
     }
-  }, [email, navigate, resendCooldown]);
+  }, [email, verification_code, navigate, resendCooldown]);
 
   const handleCodeChange = (index, value) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
@@ -128,7 +134,15 @@ const EmailVerification = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('Verification code sent! Please check your email.');
+        // Check if verification code was provided directly (email delivery failed)
+        if (data.verification_code) {
+          setSuccess(`Verification code: ${data.verification_code} (email delivery failed)`);
+          // Pre-fill the code
+          const codeArray = data.verification_code.split('');
+          setVerificationCode(codeArray);
+        } else {
+          setSuccess('Verification code sent! Please check your email.');
+        }
         setResendCooldown(60); // 60 seconds cooldown
         setTimeout(() => setSuccess(''), 5000);
       } else {
