@@ -171,24 +171,45 @@ const Home = () => {
                 {/* Background glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                 
-                {/* Product image/icon area */}
-                <div className={`h-64 bg-gradient-to-r ${product.gradient} flex items-center justify-center relative overflow-hidden group-hover:bg-gradient-to-br transition-all duration-700`}>
+                {/* Product image area */}
+                <div className="h-64 relative overflow-hidden group-hover:bg-gradient-to-br transition-all duration-700">
+                  {/* Product Image */}
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    onError={(e) => {
+                      // Fallback to gradient background if image fails to load
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  
+                  {/* Fallback gradient background */}
+                  <div className={`absolute inset-0 bg-gradient-to-r ${product.gradient} flex items-center justify-center" style={{display: 'none'}}>`}>
+                    <div className="text-white text-6xl font-light opacity-50">
+                      {product.name.charAt(0)}
+                    </div>
+                  </div>
+                  
                   {/* Animated background elements */}
                   <div className="absolute top-4 right-4 w-3 h-3 bg-white/20 rounded-full animate-pulse"></div>
                   <div className="absolute bottom-6 left-6 w-2 h-2 bg-white/30 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
                   <div className="absolute top-1/2 left-4 w-1.5 h-1.5 bg-white/25 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
                   
-                  {/* Main icon */}
-                  <div className="text-white transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 relative z-10">
-                    {product.icon}
-                  </div>
-                  
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-0 transition-all duration-500"></div>
+                  {/* Dark overlay on hover */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-500"></div>
                   
                   {/* Price badge */}
-                  <div className="absolute top-4 left-4 bg-black bg-opacity-50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold border border-white/20">
+                  <div className="absolute top-4 left-4 bg-black bg-opacity-60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold border border-white/20">
                     {product.price}
+                  </div>
+                  
+                  {/* Hover overlay with product info */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-4">
+                    <div className="text-white">
+                      <p className="text-sm font-light opacity-90">Premium Quality</p>
+                    </div>
                   </div>
                 </div>
                 
