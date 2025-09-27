@@ -297,10 +297,10 @@ const PrivacyPolicy = () => {
                 Contact Us
               </a>
               <a
-                href="mailto:privacy@luxurystore.com"
+                href="mailto:mrwiyarahmadzai@gmail.com"
                 className="px-6 py-3 bg-gray-800 bg-opacity-50 text-white font-semibold rounded-lg hover:bg-opacity-70 transition-all duration-300"
               >
-                privacy@luxurystore.com
+                mrwiyarahmadzai@gmail.com
               </a>
             </div>
           </div>
