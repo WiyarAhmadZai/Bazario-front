@@ -28,6 +28,19 @@ const Login = () => {
 
     try {
       const response = await login(formData);
+      
+      // Check if email verification is required
+      if (response && response.requires_verification) {
+        navigate('/verify-email', {
+          state: {
+            user_id: response.user_id,
+            email: response.email
+          }
+        });
+        return;
+      }
+      
+      // Normal login flow
       authLogin(response.user, response.token);
       
       // Redirect based on user role
@@ -148,9 +161,9 @@ const Login = () => {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-gold hover:text-yellow-400 transition-colors duration-300">
+              <Link to="/forgot-password" className="font-medium text-gold hover:text-yellow-400 transition-colors duration-300">
                 Forgot password?
-              </a>
+              </Link>
             </div>
           </div>
 
