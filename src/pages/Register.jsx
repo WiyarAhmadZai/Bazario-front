@@ -74,7 +74,16 @@ const Register = () => {
       // Handle different types of errors
       if (err && typeof err === 'object') {
         if (err.message) {
-          setError(err.message);
+          // Check for specific email validation errors
+          if (err.error_type === 'disposable') {
+            setError('❌ ' + err.message);
+          } else if (err.error_type === 'domain') {
+            setError('🌐 ' + err.message);
+          } else if (err.error_type === 'format') {
+            setError('📧 ' + err.message);
+          } else {
+            setError(err.message);
+          }
         } else if (err.errors) {
           // Laravel validation errors
           const errorMessages = Object.values(err.errors).flat();
