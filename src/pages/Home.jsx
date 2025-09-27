@@ -38,82 +38,146 @@ const Home = () => {
   };
   return (
     <div className="home-page">
-      {/* Hero Slider Section */}
-      <section className="relative h-screen overflow-hidden">
-        {/* Background Slides */}
+      {/* Modern Hero Section */}
+      <section className="relative min-h-screen overflow-hidden">
+        {/* Dynamic Background with Parallax Effect */}
         <div className="absolute inset-0">
           {slides.map((slide, index) => (
             <div
               key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                index === currentSlide ? 'opacity-100' : 'opacity-0'
+              className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
               }`}
             >
+              <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/80"></div>
               <img 
                 src={slide.image}
                 alt={`Slide ${index + 1}`}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-70"></div>
             </div>
           ))}
         </div>
         
-        {/* Content */}
-        <div className="relative z-10 h-full flex items-center justify-center">
-          <div className="container mx-auto px-4 text-center">
-            <div className="max-w-4xl mx-auto">
-              <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light text-white mb-8 leading-[1.1] tracking-[-0.02em]">
-                  <span className="block mb-2 transform transition-all duration-700 hover:scale-105 font-thin">
-                    {slides[currentSlide].title.split(' ')[0]}
-                  </span>
-                  <span className="block text-gold mb-2 transform transition-all duration-700 hover:scale-105 font-semibold">
-                    {slides[currentSlide].title.split(' ')[1]}
-                  </span>
-                  <span className="block transform transition-all duration-700 hover:scale-105 font-thin tracking-wide">
-                    {slides[currentSlide].title.split(' ').slice(2).join(' ')}
-                  </span>
-                </h1>
+        {/* Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-2 h-2 bg-gold rounded-full animate-pulse opacity-60"></div>
+          <div className="absolute top-40 right-20 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="absolute bottom-60 left-20 w-1.5 h-1.5 bg-gold rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div className="absolute bottom-40 right-10 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        </div>
+        
+        {/* Main Content */}
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Left Content */}
+              <div className="text-left">
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                  <div className="flex items-center mb-6">
+                    <div className="w-16 h-px bg-gold mr-4"></div>
+                    <span className="text-gold text-sm uppercase tracking-[0.2em] font-medium">
+                      Since 2025
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                  <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-[0.9]">
+                    <span className="block font-light mb-2">
+                      Luxury
+                    </span>
+                    <span className="block text-gold font-black italic transform -skew-x-6">
+                      Redefined
+                    </span>
+                  </h1>
+                </div>
+                
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+                  <p className="text-xl text-gray-300 mb-8 max-w-lg leading-relaxed">
+                    {slides[currentSlide].subtitle}
+                  </p>
+                </div>
+                
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Link 
+                      to="/shop" 
+                      className="group bg-gold text-black px-8 py-4 rounded-none font-bold text-lg transition-all duration-300 hover:bg-white hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center"
+                    >
+                      EXPLORE COLLECTION
+                      <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </Link>
+                    <Link 
+                      to="/about" 
+                      className="border-2 border-white text-white px-8 py-4 rounded-none font-bold text-lg transition-all duration-300 hover:bg-white hover:text-black flex items-center justify-center"
+                    >
+                      OUR STORY
+                    </Link>
+                  </div>
+                </div>
               </div>
               
-              <div className="animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-                <p className="text-xl sm:text-2xl md:text-3xl text-gray-100 mb-10 leading-relaxed font-light tracking-wide max-w-4xl mx-auto">
-                  {slides[currentSlide].subtitle}
-                </p>
-              </div>
-              
-              <div className="animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
-                <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
-                  <Link 
-                    to="/shop" 
-                    className="inline-block bg-gold hover:bg-yellow-600 text-black font-bold py-4 px-8 sm:px-10 rounded-full text-base sm:text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl shadow-xl"
-                  >
-                    Explore Collection
-                  </Link>
-                  <Link 
-                    to="/about" 
-                    className="inline-block bg-transparent border-2 border-white text-white hover:bg-white hover:text-black font-bold py-4 px-8 sm:px-10 rounded-full text-base sm:text-lg transition-all duration-300 hover:shadow-xl"
-                  >
-                    Our Story
-                  </Link>
+              {/* Right Content - Featured Stats */}
+              <div className="hidden lg:block">
+                <div className="animate-fade-in-up" style={{ animationDelay: '1s' }}>
+                  <div className="bg-black/20 backdrop-blur-lg border border-white/10 p-8 rounded-2xl">
+                    <h3 className="text-2xl font-bold text-white mb-6">Premium Experience</h3>
+                    <div className="space-y-6">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gold rounded-full flex items-center justify-center mr-4">
+                          <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold">50K+ Happy Customers</p>
+                          <p className="text-gray-400 text-sm">Worldwide satisfaction</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gold rounded-full flex items-center justify-center mr-4">
+                          <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold">100% Authentic</p>
+                          <p className="text-gray-400 text-sm">Guaranteed quality</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gold rounded-full flex items-center justify-center mr-4">
+                          <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold">Free Shipping</p>
+                          <p className="text-gray-400 text-sm">On orders over $200</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* Slide Indicators */}
+        {/* Bottom Navigation */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
-          <div className="flex space-x-3">
+          <div className="flex space-x-4">
             {slides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`w-4 h-4 rounded-full border-2 transition-all duration-300 hover:scale-125 ${
+                className={`w-12 h-1 transition-all duration-300 ${
                   index === currentSlide
-                    ? 'bg-gold border-gold shadow-lg'
-                    : 'bg-transparent border-white hover:border-gold'
+                    ? 'bg-gold shadow-lg'
+                    : 'bg-white/30 hover:bg-white/60'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
