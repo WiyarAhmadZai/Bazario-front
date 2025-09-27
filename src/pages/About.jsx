@@ -201,19 +201,24 @@ const About = () => {
         <div className="mb-16">
           <h2 className="text-3xl font-bold mb-8 text-white text-center">Our Leadership Team</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {teamMembers.map((member) => (
-              <div key={member.id} className="bg-black bg-opacity-30 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-700">
-                <div className="h-64 overflow-hidden">
+            {teamMembers.map((member, index) => (
+              <div 
+                key={member.id} 
+                className="bg-black bg-opacity-30 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 border border-gray-700 hover:border-gold group animate-fade-in-up"
+                style={{ animationDelay: `${index * 200}ms` }}
+              >
+                <div className="h-64 overflow-hidden relative">
                   <img 
                     src={member.image} 
                     alt={member.name} 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500"></div>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-1 text-white">{member.name}</h3>
-                  <p className="text-gold mb-3">{member.position}</p>
-                  <p className="text-gray-300">{member.bio}</p>
+                <div className="p-6 transform transition-transform duration-300 group-hover:translate-y-[-4px]">
+                  <h3 className="text-xl font-bold mb-1 text-white transition-colors duration-300 group-hover:text-gold">{member.name}</h3>
+                  <p className="text-gold mb-3 transition-colors duration-300 group-hover:text-yellow-400">{member.position}</p>
+                  <p className="text-gray-300 transition-colors duration-300 group-hover:text-white">{member.bio}</p>
                 </div>
               </div>
             ))}
