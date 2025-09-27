@@ -65,20 +65,20 @@ const About = () => {
         </div>
 
         <div className="glass p-8 rounded-xl mb-12 shadow-lg">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Our Story</h2>
+          <h2 className="text-3xl font-bold mb-6 text-white">Our Story</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div>
-              <p className="text-gray-700 mb-4 text-lg leading-relaxed">
+              <p className="text-gray-300 mb-4 text-lg leading-relaxed">
                 Founded in 2025, Luxury Store began with a simple vision: to make premium luxury products accessible to everyone. 
                 What started as a small online boutique has grown into a premier destination for discerning customers seeking 
                 exceptional quality and timeless design.
               </p>
-              <p className="text-gray-700 mb-4 text-lg leading-relaxed">
+              <p className="text-gray-300 mb-4 text-lg leading-relaxed">
                 Our carefully curated collection features only the finest products from renowned artisans and emerging designers 
                 who share our commitment to craftsmanship, sustainability, and innovation. Each item in our store is selected 
                 for its superior quality, unique design, and enduring value.
               </p>
-              <p className="text-gray-700 text-lg leading-relaxed">
+              <p className="text-gray-300 text-lg leading-relaxed">
                 Today, we continue to honor our founding principles while embracing new technologies and trends that enhance 
                 the luxury shopping experience. Our dedicated team works tirelessly to ensure that every interaction with 
                 Luxury Store reflects the excellence we expect from ourselves and our partners.
@@ -101,7 +101,7 @@ const About = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold mb-4 text-gray-800">Authenticity Guaranteed</h3>
+            <h3 className="text-2xl font-bold mb-4 text-white">Authenticity Guaranteed</h3>
             <p className="text-gray-300">
               Every product comes with a certificate of authenticity and our 100% satisfaction guarantee.
             </p>
@@ -113,7 +113,7 @@ const About = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold mb-4 text-gray-800">Worldwide Shipping</h3>
+            <h3 className="text-2xl font-bold mb-4 text-white">Worldwide Shipping</h3>
             <p className="text-gray-300">
               Free express shipping on all orders over $200, with delivery to over 100 countries.
             </p>
@@ -125,7 +125,7 @@ const About = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold mb-4 text-gray-800">24/7 Support</h3>
+            <h3 className="text-2xl font-bold mb-4 text-white">24/7 Support</h3>
             <p className="text-gray-300">
               Our dedicated customer service team is available around the clock to assist you.
             </p>
@@ -133,7 +133,7 @@ const About = () => {
         </div>
         
         <div className="glass p-8 rounded-xl shadow-lg mb-12">
-          <h2 className="text-3xl font-bold mb-8 text-gray-800">Our Values</h2>
+          <h2 className="text-3xl font-bold mb-8 text-white">Our Values</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
               <div className="flex items-start mb-4">
@@ -199,7 +199,7 @@ const About = () => {
 
         {/* Team Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">Our Leadership Team</h2>
+          <h2 className="text-3xl font-bold mb-8 text-white text-center">Our Leadership Team</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {teamMembers.map((member) => (
               <div key={member.id} className="bg-black bg-opacity-30 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-700">
@@ -211,7 +211,7 @@ const About = () => {
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold mb-1">{member.name}</h3>
+                  <h3 className="text-xl font-bold mb-1 text-white">{member.name}</h3>
                   <p className="text-gold mb-3">{member.position}</p>
                   <p className="text-gray-300">{member.bio}</p>
                 </div>
