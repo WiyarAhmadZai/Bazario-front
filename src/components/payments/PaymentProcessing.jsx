@@ -110,7 +110,7 @@ const PaymentProcessing = ({ order, onPaymentSuccess }) => {
                     : 'border-gray-300'
                 }`}>
                   {selectedMethod === method.id && (
-                    <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                    <div className="w-2 h-2 bg-gray-300 rounded-full m-0.5"></div>
                   )}
                 </div>
                 <div>
@@ -129,7 +129,7 @@ const PaymentProcessing = ({ order, onPaymentSuccess }) => {
           <p className="text-sm mb-3">
             Please transfer the amount to the following bank account:
           </p>
-          <div className="bg-white p-3 rounded mb-3">
+          <div className="bg-black bg-opacity-30 backdrop-blur-lg p-3 rounded mb-3 border border-gray-700">
             <div className="flex justify-between mb-1">
               <span>Account Name:</span>
               <span>Luxury Marketplace</span>
