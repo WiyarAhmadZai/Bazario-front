@@ -23,6 +23,9 @@ const Profile = () => {
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
   const [imagePreview, setImagePreview] = useState(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
 
   // Sync form data when user changes
   useEffect(() => {
@@ -47,8 +50,62 @@ const Profile = () => {
         profession: user.profession || '',
         social_links: user.social_links || {}
       });
+      
+      // Check newsletter subscription status
+      checkNewsletterSubscription();
     }
   }, [user]);
+
+  // Function to check newsletter subscription status
+  const checkNewsletterSubscription = async () => {
+    if (!user?.email) return;
+    
+    try {
+      setCheckingSubscription(true);
+      const response = await fetch(`http://localhost:8000/api/newsletter/check-subscription?email=${encodeURIComponent(user.email)}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsSubscribed(data.subscribed);
+      }
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+    } finally {
+      setCheckingSubscription(false);
+    }
+  };
+
+  // Function to handle newsletter unsubscribe
+  const handleNewsletterUnsubscribe = async () => {
+    if (!user?.email) return;
+    
+    try {
+      setNewsletterLoading(true);
+      const response = await fetch('http://localhost:8000/api/newsletter/unsubscribe', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsSubscribed(false);
+        setSuccess('Successfully unsubscribed from newsletter!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.message || 'Failed to unsubscribe');
+        setTimeout(() => setError(''), 3000);
+      }
+    } catch (error) {
+      setError('Error unsubscribing from newsletter');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -383,6 +440,76 @@ const Profile = () => {
                         <p className="text-sm text-gray-400">Verification</p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Newsletter Subscription */}
+                  <div className="bg-gray-800 bg-opacity-50 rounded-lg p-4 mt-6">
+                    <h4 className="text-lg font-medium text-white mb-3 flex items-center">
+                      <svg className="w-5 h-5 mr-2 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Newsletter Subscription
+                    </h4>
+                    
+                    {checkingSubscription ? (
+                      <div className="flex items-center text-gray-400">
+                        <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Checking subscription status...
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300">Status:</span>
+                          <span className={`px-3 py-1 rounded-full text-sm ${
+                            isSubscribed 
+                              ? 'bg-green-500 bg-opacity-20 text-green-300' 
+                              : 'bg-gray-500 bg-opacity-20 text-gray-400'
+                          }`}>
+                            {isSubscribed ? '✓ Subscribed' : '✗ Not Subscribed'}
+                          </span>
+                        </div>
+                        
+                        {isSubscribed && (
+                          <div className="pt-2">
+                            <button
+                              onClick={handleNewsletterUnsubscribe}
+                              disabled={newsletterLoading}
+                              className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center justify-center"
+                            >
+                              {newsletterLoading ? (
+                                <>
+                                  <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Unsubscribing...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                  Unsubscribe from Newsletter
+                                </>
+                              )}
+                            </button>
+                            <p className="text-xs text-gray-500 mt-2 text-center">
+                              You will no longer receive updates and promotional emails
+                            </p>
+                          </div>
+                        )}
+                        
+                        {!isSubscribed && (
+                          <div className="text-center text-gray-400 text-sm">
+                            <p>You're not subscribed to our newsletter.</p>
+                            <p className="mt-1">Visit our homepage to subscribe for updates!</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
