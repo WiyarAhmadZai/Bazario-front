@@ -26,11 +26,8 @@ const EmailVerification = () => {
       return;
     }
 
-    // If verification code was provided directly, pre-fill it
-    if (verification_code) {
-      const codeArray = verification_code.split('');
-      setVerificationCode(codeArray);
-    }
+    // Don't pre-fill the code by default, even if provided
+    // Always start with empty fields
 
     // Start resend cooldown timer
     if (resendCooldown > 0) {
@@ -38,7 +35,7 @@ const EmailVerification = () => {
       return () => clearTimeout(timer);
     }
     
-    // Show "Get Verification Code" button after 60 seconds
+    // Show "Get Verification Code" button after 60 seconds (1 minute)
     const getCodeTimer = setTimeout(() => {
       setShowGetCodeButton(true);
     }, 60000);
@@ -144,15 +141,8 @@ const EmailVerification = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Check if verification code was provided directly (email delivery failed)
-        if (data.verification_code) {
-          setSuccess(`Verification code: ${data.verification_code} (email delivery failed)`);
-          // Pre-fill the code
-          const codeArray = data.verification_code.split('');
-          setVerificationCode(codeArray);
-        } else {
-          setSuccess('Verification code sent! Please check your email.');
-        }
+        // Don't pre-fill the code even if provided directly
+        setSuccess('Verification code sent! Please check your email.');
         setResendCooldown(60); // 60 seconds cooldown
         setTimeout(() => setSuccess(''), 5000);
       } else {
@@ -187,7 +177,7 @@ const EmailVerification = () => {
 
       if (response.ok && data.verification_code) {
         setSuccess(`Your verification code is: ${data.verification_code}`);
-        // Pre-fill the code
+        // Pre-fill the code when user clicks the button
         const codeArray = data.verification_code.split('');
         setVerificationCode(codeArray);
       } else {
@@ -301,7 +291,7 @@ const EmailVerification = () => {
             )}
           </button>
           
-          {/* Button to get verification code manually after 30 seconds */}
+          {/* Button to get verification code manually after 1 minute */}
           {showGetCodeButton && (
             <div className="pt-4">
               <button
@@ -312,7 +302,7 @@ const EmailVerification = () => {
                 {loading ? 'Getting code...' : 'Get verification code manually'}
               </button>
               <p className="text-xs text-gray-500 mt-1">
-                Click this if you haven't received the code after 30 seconds
+                Click this if you haven't received the code after 1 minute
               </p>
             </div>
           )}
