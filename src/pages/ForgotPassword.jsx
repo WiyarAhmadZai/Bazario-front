@@ -7,8 +7,7 @@ const ForgotPassword = () => {
     email: '',
     verification_code: ['', '', '', '', '', ''],
     password: '',
-    password_confirmation: '',
-    user_id: null
+    password_confirmation: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +45,6 @@ const ForgotPassword = () => {
 
       if (response.ok) {
         setSuccess('Password reset code sent to your email!');
-        setFormData(prev => ({ ...prev, user_id: data.user_id }));
         setStep(2);
         setResendCooldown(60);
       } else {
@@ -116,7 +114,7 @@ const ForgotPassword = () => {
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          user_id: formData.user_id,
+          email: formData.email,
           verification_code: code,
           password: formData.password,
           password_confirmation: formData.password_confirmation,
