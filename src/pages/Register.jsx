@@ -46,12 +46,24 @@ const Register = () => {
     try {
       const response = await register(formData);
       
-      // Check if response has the expected structure
-      if (response && response.user && response.token) {
+      // Check if registration requires email verification
+      if (response && response.requires_verification) {
+        setSuccess('Account created successfully! Please check your email for verification.');
+        
+        // Redirect to email verification page
+        setTimeout(() => {
+          navigate('/verify-email', {
+            state: {
+              user_id: response.user_id,
+              email: response.email
+            }
+          });
+        }, 2000);
+      } else if (response && response.user && response.token) {
+        // Old flow - direct login (fallback)
         authLogin(response.user, response.token);
         setSuccess('Account created successfully!');
         
-        // Redirect to home page
         setTimeout(() => {
           navigate('/');
         }, 2000);
