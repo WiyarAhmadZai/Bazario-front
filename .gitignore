@@ -26,6 +26,10 @@ build
 .DS_Store
 Thumbs.db
 
+# Assets - large image files
+assets/
+src/assets/
+
 # Testing and debugging files
 *.test.*
 test-*
