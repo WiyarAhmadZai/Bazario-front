@@ -5,6 +5,7 @@ import './App.css'; // Import the App.css file
 // Import all components
 import Navbar from './components/Header';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetails from './pages/ProductDetails';
@@ -75,7 +76,8 @@ function App() {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-900">
+      <ScrollToTop />
       <Navbar />
       <main className="flex-grow">
         <Routes>
