@@ -53,7 +53,7 @@ const Contact = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Information */}
           <div>
-            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 transform transition-all duration-300 hover:shadow-2xl">
+            <div className="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl shadow-xl p-8 mb-8 transform transition-all duration-300 hover:shadow-2xl border border-gray-700">
               <h2 className="text-3xl font-bold mb-6 text-gray-800">Get in Touch</h2>
               <p className="text-gray-600 mb-8 text-lg">
                 Have questions or feedback? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
@@ -136,7 +136,7 @@ const Contact = () => {
           
           {/* Contact Form */}
           <div>
-            <div className="bg-white rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl">
+            <div className="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl border border-gray-700">
               <h2 className="text-3xl font-bold mb-6 text-gray-800">Send us a Message</h2>
               
               {submitted ? (
