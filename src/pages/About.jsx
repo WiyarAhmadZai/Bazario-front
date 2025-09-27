@@ -57,9 +57,9 @@ const About = () => {
         {/* Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
           {stats.map((stat) => (
-            <div key={stat.id} className="text-center p-6 bg-white rounded-xl shadow-lg border border-gray-100">
+            <div key={stat.id} className="text-center p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-xl shadow-lg border border-gray-700">
               <div className="text-3xl md:text-4xl font-bold text-gold mb-2">{stat.value}</div>
-              <div className="text-gray-600">{stat.label}</div>
+              <div className="text-gray-300">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -102,7 +102,7 @@ const About = () => {
               </svg>
             </div>
             <h3 className="text-2xl font-bold mb-4 text-gray-800">Authenticity Guaranteed</h3>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               Every product comes with a certificate of authenticity and our 100% satisfaction guarantee.
             </p>
           </div>
@@ -114,7 +114,7 @@ const About = () => {
               </svg>
             </div>
             <h3 className="text-2xl font-bold mb-4 text-gray-800">Worldwide Shipping</h3>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               Free express shipping on all orders over $200, with delivery to over 100 countries.
             </p>
           </div>
@@ -126,7 +126,7 @@ const About = () => {
               </svg>
             </div>
             <h3 className="text-2xl font-bold mb-4 text-gray-800">24/7 Support</h3>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               Our dedicated customer service team is available around the clock to assist you.
             </p>
           </div>
@@ -135,61 +135,61 @@ const About = () => {
         <div className="glass p-8 rounded-xl shadow-lg mb-12">
           <h2 className="text-3xl font-bold mb-8 text-gray-800">Our Values</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="p-6 bg-white rounded-lg shadow">
+            <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
               <div className="flex items-start mb-4">
                 <div className="bg-gold h-12 w-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800">Quality First</h3>
+                <h3 className="text-xl font-semibold text-white">Quality First</h3>
               </div>
-              <p className="text-gray-600">
+              <p className="text-gray-300">
                 We never compromise on quality. Every product undergoes rigorous testing and inspection 
                 to ensure it meets our exacting standards.
               </p>
             </div>
             
-            <div className="p-6 bg-white rounded-lg shadow">
+            <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
               <div className="flex items-start mb-4">
                 <div className="bg-gold h-12 w-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800">Sustainability</h3>
+                <h3 className="text-xl font-semibold text-white">Sustainability</h3>
               </div>
-              <p className="text-gray-600">
+              <p className="text-gray-300">
                 We're committed to reducing our environmental impact through responsible sourcing, 
                 eco-friendly packaging, and supporting sustainable brands.
               </p>
             </div>
             
-            <div className="p-6 bg-white rounded-lg shadow">
+            <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
               <div className="flex items-start mb-4">
                 <div className="bg-gold h-12 w-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800">Customer Focus</h3>
+                <h3 className="text-xl font-semibold text-white">Customer Focus</h3>
               </div>
-              <p className="text-gray-600">
+              <p className="text-gray-300">
                 Your satisfaction is our priority. We go above and beyond to ensure every customer 
                 has an exceptional shopping experience.
               </p>
             </div>
             
-            <div className="p-6 bg-white rounded-lg shadow">
+            <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
               <div className="flex items-start mb-4">
                 <div className="bg-gold h-12 w-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800">Innovation</h3>
+                <h3 className="text-xl font-semibold text-white">Innovation</h3>
               </div>
-              <p className="text-gray-600">
+              <p className="text-gray-300">
                 We constantly seek new ways to enhance your shopping experience through technology 
                 and thoughtful design.
               </p>
@@ -202,7 +202,7 @@ const About = () => {
           <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">Our Leadership Team</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {teamMembers.map((member) => (
-              <div key={member.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div key={member.id} className="bg-black bg-opacity-30 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-700">
                 <div className="h-64 overflow-hidden">
                   <img 
                     src={member.image} 
@@ -213,7 +213,7 @@ const About = () => {
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-1">{member.name}</h3>
                   <p className="text-gold mb-3">{member.position}</p>
-                  <p className="text-gray-600">{member.bio}</p>
+                  <p className="text-gray-300">{member.bio}</p>
                 </div>
               </div>
             ))}
