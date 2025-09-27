@@ -54,7 +54,7 @@ const Home = () => {
                 alt={`Slide ${index + 1}`}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+              <div className="absolute inset-0 bg-black bg-opacity-70"></div>
             </div>
           ))}
         </div>
@@ -64,20 +64,11 @@ const Home = () => {
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-4xl mx-auto">
               <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                <div className="mb-6">
-                  <div className="inline-block">
-                    <span className="text-xs md:text-sm uppercase tracking-[0.3em] text-gold font-medium mb-3 block opacity-80">
-                      Premium Luxury Collection
-                    </span>
-                    <div className="w-16 h-px bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mb-6"></div>
-                  </div>
-                </div>
-                
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-white mb-6 leading-[1.1] tracking-[-0.02em]">
-                  <span className="block mb-1 transform transition-all duration-700 hover:scale-105 font-thin">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light text-white mb-8 leading-[1.1] tracking-[-0.02em]">
+                  <span className="block mb-2 transform transition-all duration-700 hover:scale-105 font-thin">
                     {slides[currentSlide].title.split(' ')[0]}
                   </span>
-                  <span className="block text-gold mb-1 transform transition-all duration-700 hover:scale-105 font-semibold">
+                  <span className="block text-gold mb-2 transform transition-all duration-700 hover:scale-105 font-semibold">
                     {slides[currentSlide].title.split(' ')[1]}
                   </span>
                   <span className="block transform transition-all duration-700 hover:scale-105 font-thin tracking-wide">
@@ -87,17 +78,9 @@ const Home = () => {
               </div>
               
               <div className="animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-                <div className="max-w-3xl mx-auto">
-                  <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-4 leading-relaxed font-light tracking-wide">
-                    {slides[currentSlide].subtitle}
-                  </p>
-                  <div className="flex justify-center mb-6">
-                    <div className="w-12 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
-                  </div>
-                  <p className="text-sm sm:text-base md:text-lg text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed font-light tracking-wide opacity-90">
-                    {slides[currentSlide].description}
-                  </p>
-                </div>
+                <p className="text-xl sm:text-2xl md:text-3xl text-gray-100 mb-10 leading-relaxed font-light tracking-wide max-w-4xl mx-auto">
+                  {slides[currentSlide].subtitle}
+                </p>
               </div>
               
               <div className="animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
@@ -160,11 +143,7 @@ const Home = () => {
                 name: "Diamond Elegance Ring",
                 price: "$2,999.99",
                 description: "Exquisite handcrafted diamond ring with platinum setting",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v-4a2 2 0 011-1.732l4-2.732a2 2 0 011 1.732V16a2 2 0 01-1 1.732l-4 2.732A2 2 0 017 18.732V16z" />
-                  </svg>
-                ),
+                image: "/src/assets/jewelry-ring.jpg",
                 gradient: "from-purple-400 via-pink-500 to-red-500"
               },
               {
@@ -172,11 +151,7 @@ const Home = () => {
                 name: "Swiss Luxury Timepiece",
                 price: "$4,599.99",
                 description: "Premium Swiss-made watch with automatic movement",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
+                image: "/src/assets/luxury-watch.jpg",
                 gradient: "from-blue-400 via-purple-500 to-purple-600"
               },
               {
@@ -184,11 +159,7 @@ const Home = () => {
                 name: "Designer Leather Handbag",
                 price: "$1,899.99",
                 description: "Handcrafted Italian leather bag with gold accents",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z" />
-                  </svg>
-                ),
+                image: "/src/assets/designer-bag.jpg",
                 gradient: "from-amber-400 via-orange-500 to-yellow-500"
               }
             ].map((product, index) => (
