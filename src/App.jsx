@@ -26,6 +26,7 @@ import FAQ from './pages/FAQ';
 import ShippingPolicy from './pages/ShippingPolicy';
 import ReturnsExchanges from './pages/ReturnsExchanges';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import SellProduct from './pages/SellProduct';
 
 // Import context
 import { useAuth } from './context/AuthContext';
@@ -122,6 +123,11 @@ function App() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/sell" element={
+            <ProtectedRoute>
+              <SellProduct />
             </ProtectedRoute>
           } />
           <Route path="/contact" element={<Contact />} />
