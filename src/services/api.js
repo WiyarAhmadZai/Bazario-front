@@ -28,11 +28,23 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Only logout automatically on 401 if it's not related to email verification
+    // and if it's a genuine authentication failure (not a temporary issue)
     if (error.response?.status === 401) {
-      // Clear auth data on unauthorized response
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Skip logout for email verification endpoints
+      if (error.config?.url?.includes('verify-email')) {
+        return Promise.reject(error);
+      }
+      
+      // For other 401 errors, check if we should logout
+      // Only logout if we have a token stored (meaning we think we're logged in)
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Clear auth data on unauthorized response
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
