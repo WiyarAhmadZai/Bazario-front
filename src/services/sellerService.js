@@ -3,10 +3,11 @@ import api from './api';
 class SellerService {
   /**
    * Get seller's products
+   * @param {number} page - Page number
    * @returns {Promise}
    */
-  getProducts() {
-    return api.get('/seller/products');
+  getProducts(page = 1) {
+    return api.get(`/seller/products?page=${page}`);
   }
 
   /**
