@@ -1,6 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { updateProfile, getCurrentUser } from '../services/authService';
+import { getCategories } from '../services/categoryService';
+import sellerService from '../services/sellerService';
 
 const Profile = () => {
   const { user, updateProfile: updateAuthProfile } = useContext(AuthContext);
@@ -33,6 +35,11 @@ const Profile = () => {
     password_confirmation: ''
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const [userProducts, setUserProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsPage, setProductsPage] = useState(1);
+  const [productsTotalPages, setProductsTotalPages] = useState(1);
 
   // Sync form data when user changes
   useEffect(() => {
@@ -282,344 +289,85 @@ const Profile = () => {
     );
   }
 
+  // Fetch user's products
+  useEffect(() => {
+    if (user) {
+      fetchUserProducts();
+    }
+  }, [user, productsPage]);
+
+  const fetchUserProducts = async (page = 1) => {
+    setProductsLoading(true);
+    try {
+      const response = await sellerService.getProducts(page);
+      setUserProducts(response.data.data || []);
+      setProductsPage(response.data.current_page || 1);
+      setProductsTotalPages(response.data.last_page || 1);
+    } catch (error) {
+      console.error('Error fetching user products:', error);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">My Profile</h1>
-          <p className="text-gray-300">Manage your account information and preferences</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">My Profile</h1>
+          <p className="text-gray-600">Manage your account information and preferences</p>
         </div>
 
         {/* Profile Card */}
-        <div className="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-700 border-opacity-50 overflow-hidden">
-          {/* Profile Header */}
-          <div className="relative bg-gradient-to-r from-gold to-bronze p-8">
-            <div className="flex flex-col md:flex-row items-center">
-              {/* Avatar */}
-              <div className="relative mb-4 md:mb-0 md:mr-6">
-                <div className="w-32 h-32 bg-black bg-opacity-20 rounded-full flex items-center justify-center border-4 border-white border-opacity-30 relative">
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="w-full h-full rounded-full object-cover" />
-                  ) : user.image ? (
-                    <img 
-                      src={user.image.startsWith('http') ? user.image : `http://localhost:8000/${user.image}`} 
-                      alt={user.name} 
-                      className="w-full h-full rounded-full object-cover" 
-                      onLoad={() => {
-                        console.log('✅ Image loaded successfully:', {
-                          userImage: user.image,
-                          finalUrl: user.image.startsWith('http') ? user.image : `http://localhost:8000/${user.image}`
-                        });
-                      }}
-                      onError={(e) => {
-                        console.error('❌ Image failed to load:', {
-                          userImage: user.image,
-                          attemptedUrl: e.target.src,
-                          constructedUrl: user.image.startsWith('http') ? user.image : `http://localhost:8000/${user.image}`,
-                          error: 'Image load failed'
-                        });
-                        
-                        // Try alternative URL construction
-                        const alternativeUrl = `http://localhost:8000/${user.image.replace('storage/', 'storage/')}`;
-                        console.log('🔄 Trying alternative URL:', alternativeUrl);
-                        
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <span className="text-4xl font-bold text-white">{user.name?.charAt(0) || 'U'}</span>
-                  )}
-                  {loading && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                      <svg className="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <label className={`absolute bottom-0 right-0 bg-white bg-opacity-20 backdrop-blur-sm rounded-full p-2 text-white hover:bg-opacity-30 transition-all duration-300 cursor-pointer ${loading ? 'pointer-events-none opacity-50' : ''}`}>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleImageChange}
-                    className="hidden"
-                    disabled={loading}
-                  />
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </label>
-              </div>
-              
-              {/* User Info */}
-              <div className="text-center md:text-left text-white">
-                <h2 className="text-3xl font-bold mb-2">{user.name}</h2>
-                <p className="text-xl opacity-90 mb-2">{user.email}</p>
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                  {user.profession && (
-                    <span className="bg-white bg-opacity-20 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
-                      {user.profession}
-                    </span>
-                  )}
-                  {user.city && (
-                    <span className="bg-white bg-opacity-20 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
-                      📍 {user.city}, {user.country}
-                    </span>
-                  )}
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    user.verified 
-                      ? 'bg-green-500 bg-opacity-20 text-green-300' 
-                      : 'bg-yellow-500 bg-opacity-20 text-yellow-300'
-                  }`}>
-                    {user.verified ? '✓ Verified' : '⚠ Unverified'}
-                  </span>
-                </div>
-              </div>
-              
-              {/* Edit Button */}
-              <div className="mt-4 md:mt-0 md:ml-auto">
-                <button 
-                  onClick={() => setEditing(!editing)}
-                  className="bg-white bg-opacity-20 backdrop-blur-sm text-white px-6 py-3 rounded-lg hover:bg-opacity-30 transition-all duration-300 flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  {editing ? 'Cancel' : 'Edit Profile'}
-                </button>
-              </div>
-            </div>
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('basic')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'basic'
+                    ? 'border-gold text-gold'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Basic Info
+              </button>
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'products'
+                    ? 'border-gold text-gold'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                My Products
+              </button>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'settings'
+                    ? 'border-gold text-gold'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Settings
+              </button>
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'security'
+                    ? 'border-gold text-gold'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Security
+              </button>
+            </nav>
           </div>
-
-          {/* Messages */}
-          {error && (
-            <div className="mx-8 mt-6 bg-red-900 bg-opacity-50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                {error}
-              </div>
-            </div>
-          )}
           
-          {success && (
-            <div className="mx-8 mt-6 bg-green-900 bg-opacity-50 border border-green-700 text-green-200 px-4 py-3 rounded-lg">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                {success}
-              </div>
-            </div>
-          )}
-
-          {/* Content */}
-          <div className="p-8">
-            {!editing ? (
-              /* View Mode */
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Basic Information */}
-                <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                    <svg className="w-6 h-6 mr-2 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Basic Information
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
-                      <p className="text-white">{user.name || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
-                      <p className="text-white">{user.email}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Phone</label>
-                      <p className="text-white">{user.phone || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Date of Birth</label>
-                      <p className="text-white">{user.date_of_birth || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Gender</label>
-                      <p className="text-white capitalize">{user.gender || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Profession</label>
-                      <p className="text-white">{user.profession || 'Not provided'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Address & Bio */}
-                <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                    <svg className="w-6 h-6 mr-2 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Address & Bio
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Bio</label>
-                      <p className="text-white">{user.bio || 'No bio available'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Address</label>
-                      <p className="text-white">{user.address || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">City</label>
-                      <p className="text-white">{user.city || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1">Country</label>
-                      <p className="text-white">{user.country || 'Not provided'}</p>
-                    </div>
-                  </div>
-
-                  {/* Account Stats */}
-                  <div className="bg-gray-800 bg-opacity-50 rounded-lg p-4 mt-6">
-                    <h4 className="text-lg font-medium text-white mb-3">Account Statistics</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-gold">${user.wallet_balance || '0.00'}</p>
-                        <p className="text-sm text-gray-400">Wallet Balance</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-gold">{user.verified ? '✓' : '✗'}</p>
-                        <p className="text-sm text-gray-400">Verification</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Newsletter Subscription */}
-                  <div className="bg-gray-800 bg-opacity-50 rounded-lg p-4 mt-6">
-                    <h4 className="text-lg font-medium text-white mb-3 flex items-center">
-                      <svg className="w-5 h-5 mr-2 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      Newsletter Subscription
-                    </h4>
-                    
-                    {checkingSubscription ? (
-                      <div className="flex items-center text-gray-400">
-                        <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Checking subscription status...
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-300">Status:</span>
-                          <span className={`px-3 py-1 rounded-full text-sm ${
-                            isSubscribed 
-                              ? 'bg-green-500 bg-opacity-20 text-green-300' 
-                              : 'bg-gray-500 bg-opacity-20 text-gray-400'
-                          }`}>
-                            {isSubscribed ? '✓ Subscribed' : '✗ Not Subscribed'}
-                          </span>
-                        </div>
-                        
-                        {isSubscribed && (
-                          <div className="pt-2">
-                            <button
-                              onClick={handleNewsletterUnsubscribe}
-                              disabled={newsletterLoading}
-                              className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center justify-center"
-                            >
-                              {newsletterLoading ? (
-                                <>
-                                  <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  Unsubscribing...
-                                </>
-                              ) : (
-                                <>
-                                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                  Unsubscribe from Newsletter
-                                </>
-                              )}
-                            </button>
-                            <p className="text-xs text-gray-500 mt-2 text-center">
-                              You will no longer receive updates and promotional emails
-                            </p>
-                          </div>
-                        )}
-                        
-                        {!isSubscribed && (
-                          <div className="text-center text-gray-400 text-sm">
-                            <p>You're not subscribed to our newsletter.</p>
-                            <p className="mt-1">Visit our homepage to subscribe for updates!</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Security Settings */}
-                  <div className="bg-gray-800 bg-opacity-50 rounded-lg p-4 mt-6">
-                    <h4 className="text-lg font-medium text-white mb-3 flex items-center">
-                      <svg className="w-5 h-5 mr-2 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      Security Settings
-                    </h4>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-white font-medium">Password</p>
-                          <p className="text-gray-400 text-sm">Last changed: Not available</p>
-                        </div>
-                        <button
-                          onClick={() => setShowPasswordModal(true)}
-                          className="bg-gold hover:bg-yellow-500 text-black px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center"
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v-2H7v-2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                          Change Password
-                        </button>
-                      </div>
-                      
-                      <div className="border-t border-gray-700 pt-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-white font-medium">Email Verification</p>
-                            <p className="text-gray-400 text-sm">Your email address verification status</p>
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-sm ${
-                            user.email_verified 
-                              ? 'bg-green-500 bg-opacity-20 text-green-300' 
-                              : 'bg-red-500 bg-opacity-20 text-red-300'
-                          }`}>
-                            {user.email_verified ? '✓ Verified' : '✗ Not Verified'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Edit Mode */
+          <div className="px-6 py-8">
+            {activeTab === 'basic' && (
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Tabs */}
                 <div className="flex space-x-1 bg-gray-800 bg-opacity-50 p-1 rounded-lg">
@@ -852,6 +600,193 @@ const Profile = () => {
                   </button>
                 </div>
               </form>
+            )}
+            
+            {activeTab === 'products' && (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">My Products</h3>
+                  <button
+                    onClick={() => {/* Navigate to sell product page */}}
+                    className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-bold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    Add New Product
+                  </button>
+                </div>
+                
+                {productsLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+                  </div>
+                ) : (
+                  <>
+                    {userProducts.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {userProducts.map((product) => (
+                          <div key={product.id} className="bg-gray-50 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                            <div className="relative">
+                              <img 
+                                src={`/src/assets/${product.image || 'abstract-art-circle-clockwork-414579.jpg'}`} 
+                                alt={product.title}
+                                className="w-full h-48 object-cover"
+                              />
+                              {product.is_featured && (
+                                <div className="absolute top-2 right-2 bg-gradient-to-r from-gold to-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
+                                  Featured
+                                </div>
+                              )}
+                            </div>
+                            <div className="p-4">
+                              <h4 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.title}</h4>
+                              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                              <div className="flex justify-between items-center">
+                                <span className="text-lg font-bold text-gold">${product.price.toFixed(2)}</span>
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                  product.status === 'approved' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : product.status === 'pending' 
+                                      ? 'bg-yellow-100 text-yellow-800' 
+                                      : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {product.status}
+                                </span>
+                              </div>
+                              <div className="mt-3 text-sm text-gray-500">
+                                Stock: {product.stock} | Sold: {product.sold || 0}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">No products listed</h3>
+                        <p className="text-gray-500 mb-4">You haven't listed any products yet.</p>
+                        <button
+                          onClick={() => {/* Navigate to sell product page */}}
+                          className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-bold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
+                        >
+                          List Your First Product
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* Pagination for products */}
+                    {productsTotalPages > 1 && (
+                      <div className="flex justify-center mt-8">
+                        <nav className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setProductsPage(productsPage - 1)}
+                            disabled={productsPage === 1}
+                            className={`px-3 py-1 rounded-md ${productsPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                          >
+                            Previous
+                          </button>
+                          
+                          {[...Array(productsTotalPages)].map((_, i) => {
+                            const page = i + 1;
+                            // Show first, last, current, and nearby pages
+                            if (page === 1 || page === productsTotalPages || (page >= productsPage - 1 && page <= productsPage + 1)) {
+                              return (
+                                <button
+                                  key={page}
+                                  onClick={() => setProductsPage(page)}
+                                  className={`px-3 py-1 rounded-md ${productsPage === page ? 'bg-gold text-black font-bold' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                >
+                                  {page}
+                                </button>
+                              );
+                            }
+                            
+                            // Show ellipsis for skipped pages
+                            if (page === productsPage - 2 || page === productsPage + 2) {
+                              return <span key={page} className="px-1 text-gray-500">...</span>;
+                            }
+                            
+                            return null;
+                          })}
+                          
+                          <button
+                            onClick={() => setProductsPage(productsPage + 1)}
+                            disabled={productsPage === productsTotalPages}
+                            className={`px-3 py-1 rounded-md ${productsPage === productsTotalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                          >
+                            Next
+                          </button>
+                        </nav>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+            
+            {activeTab === 'settings' && (
+              <div className="space-y-6">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Account Settings</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-700 font-medium">Email Notifications</p>
+                        <p className="text-gray-500 text-sm">Receive updates and promotional emails</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isSubscribed}
+                          onChange={handleNewsletterUnsubscribe}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {activeTab === 'security' && (
+              <div className="space-y-6">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Security Settings</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-700 font-medium">Password</p>
+                        <p className="text-gray-500 text-sm">Last changed: Not available</p>
+                      </div>
+                      <button
+                        onClick={() => setShowPasswordModal(true)}
+                        className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-bold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
+                      >
+                        Change Password
+                      </button>
+                    </div>
+                    
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-gray-700 font-medium">Email Verification</p>
+                          <p className="text-gray-500 text-sm">Your email address verification status</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          user.email_verified 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {user.email_verified ? '✓ Verified' : '✗ Not Verified'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
