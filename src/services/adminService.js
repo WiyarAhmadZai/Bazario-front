@@ -2,6 +2,14 @@ import api from './api';
 
 class AdminService {
   /**
+   * Get admin dashboard data
+   * @returns {Promise}
+   */
+  getDashboardData() {
+    return api.get('/admin/dashboard');
+  }
+
+  /**
    * Get pending products
    * @returns {Promise}
    */
@@ -105,6 +113,42 @@ class AdminService {
    */
   rejectBankTransfer(transactionId, reason) {
     return api.put(`/admin/bank-transfers/${transactionId}/reject`, { reason });
+  }
+  
+  /**
+   * Get all products (admin)
+   * @returns {Promise}
+   */
+  getProducts() {
+    return api.get('/admin/products');
+  }
+  
+  /**
+   * Create a product (admin)
+   * @param {object} productData
+   * @returns {Promise}
+   */
+  createProduct(productData) {
+    return api.post('/admin/products', productData);
+  }
+  
+  /**
+   * Update a product (admin)
+   * @param {number} productId
+   * @param {object} productData
+   * @returns {Promise}
+   */
+  updateProduct(productId, productData) {
+    return api.put(`/admin/products/${productId}`, productData);
+  }
+  
+  /**
+   * Delete a product (admin)
+   * @param {number} productId
+   * @returns {Promise}
+   */
+  deleteProduct(productId) {
+    return api.delete(`/admin/products/${productId}`);
   }
 }
 
