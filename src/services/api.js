@@ -3,9 +3,8 @@ import axios from 'axios';
 // Create axios instance with default config
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Remove the default Content-Type header so FormData can set it correctly
+  headers: {},
 });
 
 // Add a request interceptor to include auth token
@@ -15,6 +14,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Only set Content-Type to application/json if it's not FormData
+    if (!(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+    
     return config;
   },
   (error) => {
