@@ -83,7 +83,7 @@ const ProductDetails = () => {
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+      <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded relative" role="alert">
         <span className="block sm:inline">{error}</span>
       </div>
     );
@@ -92,11 +92,11 @@ const ProductDetails = () => {
   if (!product) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
-        <p className="text-gray-600 mb-6">The product you're looking for doesn't exist or has been removed.</p>
+        <h2 className="text-2xl font-bold mb-4 text-white">Product Not Found</h2>
+        <p className="text-gray-400 mb-6">The product you're looking for doesn't exist or has been removed.</p>
         <button 
           onClick={() => navigate('/shop')}
-          className="luxury-button"
+          className="bg-gradient-to-r from-gold to-yellow-600 hover:from-yellow-600 hover:to-gold text-black font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
         >
           Continue Shopping
         </button>
@@ -111,7 +111,7 @@ const ProductDetails = () => {
         <div>
           <div className="mb-4">
             <img 
-              src={`/src/assets/${product.image || 'abstract-art-circle-clockwork-414579.jpg'}`} 
+              src={product.images && product.images.length > 0 ? `/storage/${product.images[0]}` : `/src/assets/abstract-art-circle-clockwork-414579.jpg`} 
               alt={product.title}
               className="w-full h-96 object-cover rounded-xl shadow-lg"
             />
@@ -121,9 +121,9 @@ const ProductDetails = () => {
               {product.images.map((image, index) => (
                 <img 
                   key={index}
-                  src={`/src/assets/${image}`} 
+                  src={`/storage/${image}`} 
                   alt={`${product.title} ${index + 1}`}
-                  className={`w-full h-24 object-cover rounded-lg cursor-pointer border-2 ${selectedImage === index ? 'border-gold' : 'border-gray-200'}`}
+                  className={`w-full h-24 object-cover rounded-lg cursor-pointer border-2 ${selectedImage === index ? 'border-gold' : 'border-gray-600'}`}
                   onClick={() => setSelectedImage(index)}
                 />
               ))}
@@ -135,7 +135,7 @@ const ProductDetails = () => {
         <div>
           <div className="mb-4">
             <span className="text-gold font-semibold">{product.category?.name || 'Product'}</span>
-            <h1 className="text-3xl font-bold text-gray-900 mt-2">{product.title}</h1>
+            <h1 className="text-3xl font-bold text-white mt-2">{product.title}</h1>
           </div>
 
           <div className="flex items-center mb-6">
@@ -146,23 +146,23 @@ const ProductDetails = () => {
                 </svg>
               ))}
             </div>
-            <span className="ml-2 text-gray-600">(24 reviews)</span>
+            <span className="ml-2 text-gray-400">(24 reviews)</span>
           </div>
 
-          <p className="text-3xl font-bold text-gray-900 mb-6">${product.price.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-gold mb-6">${product.price.toFixed(2)}</p>
 
-          <p className="text-gray-700 mb-8">{product.description}</p>
+          <p className="text-gray-300 mb-8">{product.description}</p>
 
           {product.features && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-3">Key Features</h3>
+              <h3 className="text-lg font-semibold mb-3 text-white">Key Features</h3>
               <ul className="grid grid-cols-2 gap-2">
                 {product.features.map((feature, index) => (
                   <li key={index} className="flex items-center">
                     <svg className="w-5 h-5 text-gold mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    <span>{feature}</span>
+                    <span className="text-gray-300">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -171,19 +171,19 @@ const ProductDetails = () => {
 
           <div className="flex items-center mb-8">
             <div className="mr-6">
-              <span className="text-gray-700 mr-3">Quantity:</span>
-              <div className="flex items-center border border-gray-300 rounded-lg">
+              <span className="text-gray-300 mr-3">Quantity:</span>
+              <div className="flex items-center border border-gray-600 rounded-lg bg-gray-800">
                 <button 
                   onClick={() => handleQuantityChange(quantity - 1)}
-                  className="px-3 py-2 text-gray-600 hover:text-gray-900"
+                  className="px-3 py-2 text-gray-300 hover:text-white"
                   disabled={quantity <= 1}
                 >
                   -
                 </button>
-                <span className="px-4 py-2">{quantity}</span>
+                <span className="px-4 py-2 text-white">{quantity}</span>
                 <button 
                   onClick={() => handleQuantityChange(quantity + 1)}
-                  className="px-3 py-2 text-gray-600 hover:text-gray-900"
+                  className="px-3 py-2 text-gray-300 hover:text-white"
                   disabled={quantity >= 10}
                 >
                   +
@@ -195,21 +195,21 @@ const ProductDetails = () => {
               {product.in_stock ? (
                 <button 
                   onClick={handleAddToCart}
-                  className="w-full bg-gold hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg transition-colors duration-300 shadow-md hover:shadow-lg"
+                  className="w-full bg-gradient-to-r from-gold to-yellow-600 hover:from-yellow-600 hover:to-gold text-black font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   Add to Cart
                 </button>
               ) : (
-                <button className="w-full bg-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg cursor-not-allowed" disabled>
+                <button className="w-full bg-gray-700 text-gray-500 font-bold py-3 px-6 rounded-lg cursor-not-allowed" disabled>
                   Out of Stock
                 </button>
               )}
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
+          <div className="border-t border-gray-700 pt-6">
             <div className="flex space-x-6">
-              <button className="flex items-center text-gray-600 hover:text-gold transition-colors">
+              <button className="flex items-center text-gray-400 hover:text-gold transition-colors">
                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                 </svg>
@@ -217,7 +217,7 @@ const ProductDetails = () => {
               </button>
               <button 
                 onClick={handleToggleWishlist}
-                className="flex items-center text-gray-600 hover:text-gold transition-colors"
+                className="flex items-center text-gray-400 hover:text-gold transition-colors"
               >
                 <svg 
                   className={`w-5 h-5 mr-2 ${isInWishlist(product.id) ? 'text-red-500 fill-current' : ''}`} 
@@ -236,8 +236,8 @@ const ProductDetails = () => {
 
       {/* Product Reviews */}
       <div className="mt-16">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <h2 className="text-2xl font-bold text-white mb-6">Customer Reviews</h2>
+        <div className="bg-gray-800 rounded-xl shadow-md p-6">
           <div className="flex items-center mb-4">
             <div className="flex text-yellow-400 mr-4">
               {[...Array(5)].map((_, i) => (
@@ -246,14 +246,14 @@ const ProductDetails = () => {
                 </svg>
               ))}
             </div>
-            <span className="text-gray-600">4.8 (24 reviews)</span>
+            <span className="text-gray-400">4.8 (24 reviews)</span>
           </div>
           
           <div className="space-y-6">
             {[1, 2, 3].map((review) => (
-              <div key={review} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+              <div key={review} className="border-b border-gray-700 pb-6 last:border-0 last:pb-0">
                 <div className="flex justify-between mb-2">
-                  <h4 className="font-semibold">John D.</h4>
+                  <h4 className="font-semibold text-white">John D.</h4>
                   <span className="text-gray-500 text-sm">2 days ago</span>
                 </div>
                 <div className="flex text-yellow-400 mb-2">
@@ -263,7 +263,7 @@ const ProductDetails = () => {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-700">
+                <p className="text-gray-300">
                   Absolutely stunning watch! The craftsmanship is exceptional and it looks even better in person. 
                   Worth every penny for a special occasion piece.
                 </p>
