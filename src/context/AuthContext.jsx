@@ -32,6 +32,12 @@ export const AuthProvider = ({ children }) => {
           } catch (error) {
             console.error('Failed to fetch fresh user data:', error);
             // If server request fails, keep using localStorage data
+            // Only logout if it's specifically a 401 error (unauthorized)
+            if (error.response?.status === 401) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              setUser(null);
+            }
           }
         }
       } catch (error) {
@@ -84,7 +90,7 @@ export const AuthProvider = ({ children }) => {
   const isAdmin = user && user.role === 'admin';
 
   // Check if user is authenticated
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user && !!localStorage.getItem('token');
 
   const value = {
     user,
