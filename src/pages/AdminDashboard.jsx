@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { getProducts } from '../services/productService';
-import { getOrders } from '../services/orderService';
-import { getCategories } from '../services/categoryService';
+import adminService from '../services/adminService';
 
 const AdminDashboard = () => {
-  const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -15,29 +12,40 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, ordersRes, categoriesRes] = await Promise.all([
-        getProducts(),
-        getOrders(),
-        getCategories()
-      ]);
+      setLoading(true);
+      setError(null);
       
-      setProducts(productsRes.data);
-      setOrders(ordersRes.data);
-      setCategories(categoriesRes.data);
+      const response = await adminService.getDashboardData();
+      setDashboardData(response.data);
     } catch (err) {
-      console.error('Failed to fetch data');
+      console.error('Failed to fetch dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
 
-  const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.total), 0);
-  const pendingOrders = orders.filter(order => order.status === 'pending').length;
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-900 bg-opacity-50 border border-red-700 text-red-200 px-4 py-3 rounded-lg relative" role="alert">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <span className="block sm:inline">{error}</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -92,7 +100,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm font-medium">Total Revenue</p>
-                <h3 className="text-2xl font-bold text-white mt-1">{formatCurrency(totalRevenue)}</h3>
+                <h3 className="text-2xl font-bold text-white mt-1">{formatCurrency(dashboardData?.total_revenue || 0)}</h3>
               </div>
               <div className="p-3 bg-gold bg-opacity-20 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,7 +122,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm font-medium">Total Orders</p>
-                <h3 className="text-2xl font-bold text-white mt-1">{orders.length}</h3>
+                <h3 className="text-2xl font-bold text-white mt-1">{dashboardData?.total_orders || 0}</h3>
               </div>
               <div className="p-3 bg-blue-500 bg-opacity-20 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -136,7 +144,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm font-medium">Pending Orders</p>
-                <h3 className="text-2xl font-bold text-white mt-1">{pendingOrders}</h3>
+                <h3 className="text-2xl font-bold text-white mt-1">{dashboardData?.pending_orders || 0}</h3>
               </div>
               <div className="p-3 bg-yellow-500 bg-opacity-20 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -158,7 +166,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm font-medium">Products</p>
-                <h3 className="text-2xl font-bold text-white mt-1">{products.length}</h3>
+                <h3 className="text-2xl font-bold text-white mt-1">{dashboardData?.total_products || 0}</h3>
               </div>
               <div className="p-3 bg-green-500 bg-opacity-20 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -199,7 +207,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {orders.slice(0, 5).map((order) => (
+                  {dashboardData?.recent_orders?.slice(0, 5).map((order) => (
                     <tr key={order.id} className="hover:bg-gray-800 transition-colors duration-200">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">#{order.id}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{order.user?.name || 'N/A'}</td>
