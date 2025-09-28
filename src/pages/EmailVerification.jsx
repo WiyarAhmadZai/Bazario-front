@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import api from '../services/api';
 
 const EmailVerification = () => {
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
@@ -76,46 +77,29 @@ const EmailVerification = () => {
     const code = verificationCode.join('');
     
     if (code.length !== 6) {
-      setError('Please enter the complete 6-digit verification code');
+      setError('Please enter all 6 digits');
       return;
     }
-
+    
     setLoading(true);
     setError('');
     setSuccess('');
-
+    
     try {
-      const response = await fetch('http://localhost:8000/api/verify-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          verification_code: code,
-        }),
+      const response = await api.post('/verify-email', {
+        email: email,
+        verification_code: code,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess('Email verified successfully! Redirecting to login...');
-        
+      
+      if (response.data.email_verified) {
+        setSuccess('Email verified successfully!');
+        // Small delay before redirecting to dashboard
         setTimeout(() => {
-          // Redirect to login with success message
-          navigate('/login', { 
-            state: { 
-              message: 'Email verified successfully! You can now log in.',
-              email: email
-            } 
-          });
-        }, 2000);
-      } else {
-        setError(data.message || 'Verification failed');
+          navigate('/dashboard');
+        }, 1500);
       }
     } catch (err) {
-      setError('Network error. Please check your connection and try again.');
+      setError(err.response?.data?.message || 'Verification failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -127,20 +111,13 @@ const EmailVerification = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/resend-verification-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-        }),
+      const response = await api.post('/resend-verification-code', {
+        email: email,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
+      if (response.status === 200) {
         // Don't pre-fill the code even if provided directly
         setSuccess('Verification code sent! Please check your email.');
         setResendCooldown(60); // 60 seconds cooldown
@@ -162,20 +139,13 @@ const EmailVerification = () => {
 
     try {
       // Call the development endpoint to get the verification code
-      const response = await fetch('http://localhost:8000/api/get-verification-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-        }),
+      const response = await api.post('/get-verification-code', {
+        email: email,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok && data.verification_code) {
+      if (response.status === 200 && data.verification_code) {
         setSuccess(`Your verification code is: ${data.verification_code}`);
         // Pre-fill the code when user clicks the button
         const codeArray = data.verification_code.split('');
