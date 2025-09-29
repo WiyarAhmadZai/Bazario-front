@@ -16,7 +16,11 @@ class SellerService {
    * @returns {Promise}
    */
   createProduct(productData) {
-    return api.post('/seller/products', productData);
+    return api.post('/seller/products', productData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   }
 
   /**
@@ -26,7 +30,11 @@ class SellerService {
    * @returns {Promise}
    */
   updateProduct(productId, productData) {
-    return api.put(`/seller/products/${productId}`, productData);
+    return api.post(`/seller/products/${productId}`, productData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   }
 
   /**
