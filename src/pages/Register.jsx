@@ -108,6 +108,8 @@ const Register = () => {
         } else {
           setError('Failed to create account');
         }
+      } else if (err && err.toString) {
+        setError(err.toString());
       } else {
         setError('An unexpected error occurred');
       }
