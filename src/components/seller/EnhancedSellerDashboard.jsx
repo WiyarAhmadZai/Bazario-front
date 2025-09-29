@@ -4,6 +4,7 @@ import sellerService from '../../services/sellerService';
 import ProductForm from './ProductForm';
 import SalesAnalytics from './SalesAnalytics';
 import OrderManagement from './OrderManagement';
+import Swal from 'sweetalert2'; // Add SweetAlert2 import
 
 const EnhancedSellerDashboard = () => {
   const [products, setProducts] = useState([]);
@@ -45,12 +46,32 @@ const EnhancedSellerDashboard = () => {
   };
 
   const handleDelete = async (productId) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
       try {
         await sellerService.deleteProduct(productId);
         setProducts(products.filter(product => product.id !== productId));
+        Swal.fire(
+          'Deleted!',
+          'Your product has been deleted.',
+          'success'
+        );
       } catch (err) {
         console.error('Failed to delete product', err);
+        Swal.fire(
+          'Error!',
+          'Failed to delete product. Please try again.',
+          'error'
+        );
       }
     }
   };
