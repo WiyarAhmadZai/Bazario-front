@@ -84,6 +84,8 @@ const Login = () => {
         } else {
           setError('Failed to login');
         }
+      } else if (err && err.toString) {
+        setError(err.toString());
       } else {
         setError('An unexpected error occurred');
       }
