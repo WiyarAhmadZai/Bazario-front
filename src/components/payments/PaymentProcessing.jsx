@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import paymentService from '../../services/paymentService';
+import Swal from 'sweetalert2';
 
 const PaymentProcessing = ({ order, onPaymentSuccess }) => {
   const [selectedMethod, setSelectedMethod] = useState('');
@@ -36,9 +37,15 @@ const PaymentProcessing = ({ order, onPaymentSuccess }) => {
         
         if (selectedMethod === 'hesab_pay' || selectedMethod === 'momo') {
           // For gateway payments, show simulation option for testing
-          alert(`Redirect to ${selectedMethod} payment gateway. For testing, click OK to simulate payment.`);
-          // Simulate successful payment
-          onPaymentSuccess(`Payment processed successfully via ${selectedMethod}`);
+          Swal.fire({
+            title: 'Redirecting to Payment Gateway',
+            text: `Redirect to ${selectedMethod} payment gateway. For testing, click OK to simulate payment.`,
+            icon: 'info',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            // Simulate successful payment
+            onPaymentSuccess(`Payment processed successfully via ${selectedMethod}`);
+          });
         } else if (selectedMethod === 'cod') {
           onPaymentSuccess('Order placed successfully. You will pay when you receive the order.');
         }
