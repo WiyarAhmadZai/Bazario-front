@@ -111,7 +111,9 @@ const ProductDetails = () => {
         <div>
           <div className="mb-4">
             <img 
-              src={product.images && product.images.length > 0 ? `/storage/${product.images[0]}` : `/src/assets/abstract-art-circle-clockwork-414579.jpg`} 
+              src={product.images && product.images.length > 0 ? 
+                (product.images[0].startsWith('http') ? product.images[0] : `/${product.images[0]}`) : 
+                `/src/assets/abstract-art-circle-clockwork-414579.jpg`} 
               alt={product.title}
               className="w-full h-96 object-cover rounded-xl shadow-lg"
             />
@@ -121,7 +123,7 @@ const ProductDetails = () => {
               {product.images.map((image, index) => (
                 <img 
                   key={index}
-                  src={`/storage/${image}`} 
+                  src={image.startsWith('http') ? image : `/${image}`} 
                   alt={`${product.title} ${index + 1}`}
                   className={`w-full h-24 object-cover rounded-lg cursor-pointer border-2 ${selectedImage === index ? 'border-gold' : 'border-gray-600'}`}
                   onClick={() => setSelectedImage(index)}
