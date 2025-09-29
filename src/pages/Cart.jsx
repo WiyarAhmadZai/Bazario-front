@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { CartContext } from '../context/CartContext';
 import { getCart, updateCartItem, removeFromCart } from '../services/cartService';
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { isAuthenticated } = useContext(AuthContext);
+  const { cartItems, updateQuantity, removeFromCart: removeContextItem } = useContext(CartContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -21,7 +23,7 @@ const Cart = () => {
     try {
       setLoading(true);
       const response = await getCart();
-      setCartItems(response.data || []);
+      // We're using context for cart items, so we don't need to set state here
     } catch (err) {
       setError('Failed to fetch cart items');
       console.error('Error fetching cart:', err);
@@ -30,48 +32,57 @@ const Cart = () => {
     }
   };
 
-  const handleQuantityChange = async (cartItemId, newQuantity) => {
+  const handleQuantityChange = async (itemId, newQuantity) => {
     if (newQuantity <= 0) {
-      handleRemoveFromCart(cartItemId);
+      handleRemoveFromCart(itemId);
       return;
     }
     
-    try {
-      await updateCartItem(cartItemId, newQuantity);
-      setCartItems(prevItems =>
-        prevItems.map(item =>
-          item.id === cartItemId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-    } catch (err) {
-      setError('Failed to update item quantity');
-      console.error('Error updating cart item:', err);
+    if (isAuthenticated) {
+      try {
+        await updateCartItem(itemId, newQuantity);
+        updateQuantity(itemId, newQuantity);
+      } catch (err) {
+        setError('Failed to update item quantity');
+        console.error('Error updating cart item:', err);
+      }
+    } else {
+      // For non-authenticated users, update context only
+      updateQuantity(itemId, newQuantity);
     }
   };
 
-  const handleRemoveFromCart = async (cartItemId) => {
-    try {
-      await removeFromCart(cartItemId);
-      setCartItems(prevItems => prevItems.filter(item => item.id !== cartItemId));
-    } catch (err) {
-      setError('Failed to remove item from cart');
-      console.error('Error removing from cart:', err);
+  const handleRemoveFromCart = async (itemId) => {
+    if (isAuthenticated) {
+      try {
+        await removeFromCart(itemId);
+        removeContextItem(itemId);
+      } catch (err) {
+        setError('Failed to remove item from cart');
+        console.error('Error removing from cart:', err);
+      }
+    } else {
+      // For non-authenticated users, update context only
+      removeContextItem(itemId);
     }
   };
 
   const cartTotal = cartItems.reduce(
-    (total, item) => total + (item.product?.price * item.quantity || 0),
+    (total, item) => total + (item.price * item.quantity || 0),
     0
   );
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && cartItems.length === 0) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-4">Please Login to View Your Cart</h2>
-        <p className="text-gray-600 mb-6">You need to be logged in to manage your cart.</p>
-        <Link to="/login" className="luxury-button">
-          Login
-        </Link>
+        <h2 className="text-2xl font-bold mb-4">Your Cart is Empty</h2>
+        <p className="text-gray-600 mb-6">Looks like you haven't added anything to your cart yet.</p>
+        <button 
+          onClick={() => navigate('/shop')}
+          className="luxury-button"
+        >
+          Continue Shopping
+        </button>
       </div>
     );
   }
@@ -97,9 +108,12 @@ const Cart = () => {
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold mb-4">Your Cart is Empty</h2>
         <p className="text-gray-600 mb-6">Looks like you haven't added anything to your cart yet.</p>
-        <Link to="/shop" className="luxury-button">
+        <button 
+          onClick={() => navigate('/shop')}
+          className="luxury-button"
+        >
           Continue Shopping
-        </Link>
+        </button>
       </div>
     );
   }
@@ -114,10 +128,10 @@ const Cart = () => {
             {cartItems.map((item) => (
               <div key={item.id} className="flex flex-col sm:flex-row items-center p-6 border-b border-gray-200 last:border-0">
                 <div className="bg-gray-200 h-24 w-24 rounded-lg mb-4 sm:mb-0 flex items-center justify-center">
-                  {item.product?.image ? (
+                  {item.images && item.images.length > 0 ? (
                     <img 
-                      src={`/src/assets/${item.product.image}`} 
-                      alt={item.product.title}
+                      src={item.images[0].startsWith('http') ? item.images[0] : `/storage/${item.images[0]}`} 
+                      alt={item.title}
                       className="w-full h-full object-cover rounded-lg"
                     />
                   ) : (
@@ -128,8 +142,8 @@ const Cart = () => {
                 <div className="flex-1 sm:ml-6 w-full">
                   <div className="flex flex-col sm:flex-row justify-between">
                     <div className="mb-4 sm:mb-0">
-                      <h3 className="text-lg font-semibold">{item.product?.title || 'Product'}</h3>
-                      <p className="text-gray-600">${item.product?.price || 0}</p>
+                      <h3 className="text-lg font-semibold">{item.title || 'Product'}</h3>
+                      <p className="text-gray-600">${item.price || 0}</p>
                     </div>
                     
                     <div className="flex items-center space-x-4">
@@ -149,7 +163,7 @@ const Cart = () => {
                         </button>
                       </div>
                       
-                      <div className="font-semibold">${(item.product?.price * item.quantity || 0).toFixed(2)}</div>
+                      <div className="font-semibold">${(item.price * item.quantity || 0).toFixed(2)}</div>
                       
                       <button 
                         className="text-red-500 hover:text-red-700"
@@ -190,13 +204,19 @@ const Cart = () => {
               </div>
             </div>
             
-            <Link to="/checkout" className="luxury-button w-full text-center block">
+            <button 
+              onClick={() => navigate('/checkout')}
+              className="luxury-button w-full text-center block"
+            >
               Proceed to Checkout
-            </Link>
+            </button>
             
-            <Link to="/shop" className="block text-center mt-4 text-gold hover:underline">
+            <button 
+              onClick={() => navigate('/shop')}
+              className="block text-center mt-4 text-gold hover:underline"
+            >
               Continue Shopping
-            </Link>
+            </button>
           </div>
         </div>
       </div>
