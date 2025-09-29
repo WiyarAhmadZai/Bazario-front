@@ -2,9 +2,10 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
   // Remove the default Content-Type header so FormData can set it correctly
   headers: {},
+  timeout: 10000, // 10 second timeout
 });
 
 // Add a request interceptor to include auth token
@@ -33,6 +34,16 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Handle network errors specifically
+    if (!error.response) {
+      // Network error (no response from server)
+      console.error('Network error: No response from server. Please check your connection and ensure the server is running.');
+      throw new Error('Failed to connect to the server. Please make sure the backend server is running.');
+    }
+    
+    // Log the error for debugging
+    console.error('API Error:', error.response?.status, error.response?.data);
+    
     // Only logout automatically on 401 if it's not related to email verification
     // and if it's a genuine authentication failure (not a temporary issue)
     if (error.response?.status === 401) {
