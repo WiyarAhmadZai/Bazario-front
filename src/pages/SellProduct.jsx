@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import sellerService from '../services/sellerService';
 import Select from 'react-select';
+import Swal from 'sweetalert2'; // Add SweetAlert2 import
 
 const SellProduct = ({ isModal = false, closeModal }) => {
   const { user } = useContext(AuthContext);
@@ -212,7 +213,24 @@ const SellProduct = ({ isModal = false, closeModal }) => {
     
     // Set image previews if product has images
     if (product.images && product.images.length > 0) {
-      const previews = product.images.map(url => ({ url, file: null }));
+      // Parse images if they're stored as a JSON string
+      let imagesArray = product.images;
+      if (typeof product.images === 'string') {
+        try {
+          imagesArray = JSON.parse(product.images);
+        } catch (e) {
+          // If parsing fails, treat as a single image path
+          imagesArray = [product.images];
+        }
+      }
+      
+      const previews = Array.isArray(imagesArray) 
+        ? imagesArray.map(url => ({ 
+            url: url.startsWith('http') ? url : `/storage/${url}`, 
+            file: null 
+          }))
+        : [{ url: imagesArray.startsWith('http') ? imagesArray : `/storage/${imagesArray}`, file: null }];
+      
       setImagePreviews(previews);
     } else {
       setImagePreviews([]);
@@ -222,14 +240,49 @@ const SellProduct = ({ isModal = false, closeModal }) => {
   };
 
   const handleDelete = async (productId) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this! This action cannot be undone.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
       try {
+        setLoading(true);
         await sellerService.deleteProduct(productId);
+        Swal.fire(
+          'Deleted!',
+          'Your product has been deleted.',
+          'success'
+        );
         setSuccess('Product deleted successfully!');
         await fetchProducts(); // Refresh the list
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to delete product');
         console.error('Failed to delete product', err);
+        let errorMessage = 'Failed to delete product. ';
+        
+        if (err.response) {
+          if (err.response.data && err.response.data.message) {
+            errorMessage += err.response.data.message;
+          } else {
+            errorMessage += 'Please try again later.';
+          }
+        } else {
+          errorMessage += 'Please check your connection and try again.';
+        }
+        
+        Swal.fire(
+          'Error!',
+          errorMessage,
+          'error'
+        );
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -342,7 +395,7 @@ const SellProduct = ({ isModal = false, closeModal }) => {
                         <div className="flex items-center">
                           {product.images && product.images.length > 0 ? (
                             <img 
-                              src={`/${product.images[0]}`} 
+                              src={product.images[0].startsWith('http') ? product.images[0] : `/storage/${product.images[0]}`} 
                               alt={product.title} 
                               className="w-12 h-12 object-cover rounded-lg mr-4"
                             />
@@ -373,6 +426,15 @@ const SellProduct = ({ isModal = false, closeModal }) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              // View product details
+                              navigate(`/product/${product.id}`);
+                            }}
+                            className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                          >
+                            View
+                          </button>
                           <button
                             onClick={() => handleEdit(product)}
                             className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
