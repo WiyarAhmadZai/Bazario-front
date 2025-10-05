@@ -3,9 +3,13 @@ import api from './api';
 // Get all categories
 export const getCategories = async () => {
   try {
+    console.log('=== CATEGORY SERVICE - GET CATEGORIES ===');
     const response = await api.get('/categories');
+    console.log('Categories response:', response.data);
     return response.data;
   } catch (error) {
+    console.error('=== CATEGORY SERVICE ERROR ===');
+    console.error('Error:', error);
     throw error.response.data;
   }
 };
