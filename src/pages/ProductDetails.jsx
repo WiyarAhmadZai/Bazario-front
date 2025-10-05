@@ -26,7 +26,8 @@ const ProductDetails = () => {
     try {
       setLoading(true);
       const response = await getProductById(id);
-      setProduct(response.data);
+      // The response is the product data directly, not wrapped in a data property
+      setProduct(response);
     } catch (err) {
       setError('Failed to fetch product details');
       console.error('Error fetching product:', err);
