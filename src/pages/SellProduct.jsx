@@ -40,7 +40,20 @@ const SellProduct = ({ isModal = false, closeModal }) => {
   const fetchProducts = async () => {
     try {
       const response = await sellerService.getProducts();
-      setProducts(response.data.data || response.data);
+      console.log('Products API response:', response);
+      const productsData = response.data.data || response.data;
+      console.log('Products data:', productsData);
+      
+      // Log the structure of the first few products to understand the image data format
+      if (productsData && Array.isArray(productsData) && productsData.length > 0) {
+        console.log('First product structure:', productsData[0]);
+        if (productsData[0].images) {
+          console.log('First product images type:', typeof productsData[0].images);
+          console.log('First product images value:', productsData[0].images);
+        }
+      }
+      
+      setProducts(productsData);
     } catch (err) {
       console.error('Failed to fetch products', err);
       setError('Failed to load products');
@@ -342,13 +355,46 @@ const SellProduct = ({ isModal = false, closeModal }) => {
 
   // Get image URL helper function
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+    // Handle null, undefined, or empty paths
+    if (!imagePath || imagePath === '' || imagePath === '[]' || imagePath === 'null' || imagePath === 'undefined') {
+      return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+    }
     
-    // Handle absolute vs relative URLs
-    if (imagePath.startsWith('http')) {
+    // Handle string representations of arrays (JSON) - this is the main fix
+    if (typeof imagePath === 'string' && imagePath.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(imagePath);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          imagePath = parsed[0]; // Get the first image from the parsed array
+        } else {
+          return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+        }
+      } catch (e) {
+        console.error('Error parsing image array:', e);
+        return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+      }
+    }
+    
+    // Handle direct arrays
+    if (Array.isArray(imagePath)) {
+      if (imagePath.length === 0) {
+        return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+      }
+      imagePath = imagePath[0]; // Use the first image
+    }
+    
+    // Additional check for empty or whitespace-only strings
+    if (typeof imagePath === 'string' && imagePath.trim() === '') {
+      return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+    }
+    
+    // Handle absolute URLs (including placeholder URLs)
+    if (typeof imagePath === 'string' && imagePath.startsWith('http')) {
       return imagePath;
-    } else {
-      // Fix: Check if imagePath already starts with 'products/' to avoid duplication
+    }
+    
+    // Handle relative paths - use the same logic as Shop.jsx
+    if (typeof imagePath === 'string') {
       if (imagePath.startsWith('/storage/')) {
         return imagePath;
       } else if (imagePath.startsWith('products/')) {
@@ -357,6 +403,9 @@ const SellProduct = ({ isModal = false, closeModal }) => {
         return `/storage/products/${imagePath}`;
       }
     }
+    
+    // Fallback for any other cases
+    return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
   };
 
   // Render product list view
@@ -413,11 +462,36 @@ const SellProduct = ({ isModal = false, closeModal }) => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           {product.images && product.images.length > 0 ? (
-                            <img 
-                              src={getImageUrl(product.images[0])}
-                              alt={product.title} 
-                              className="w-12 h-12 object-cover rounded-lg mr-4"
-                            />
+                            (() => {
+                              // Get the first image properly
+                              let firstImage = product.images[0];
+                              
+                              // If product.images is a string that represents an array, we need to parse the whole array first
+                              if (typeof product.images === 'string' && product.images.startsWith('[')) {
+                                try {
+                                  const parsedArray = JSON.parse(product.images);
+                                  if (Array.isArray(parsedArray) && parsedArray.length > 0) {
+                                    firstImage = parsedArray[0];
+                                  }
+                                } catch (e) {
+                                  console.error('Error parsing product images array for product', product.id, e);
+                                }
+                              }
+                              // If product.images is already an array, firstImage is already correct
+                              
+                              const imageUrl = getImageUrl(firstImage);
+                              return (
+                                <img 
+                                  src={imageUrl}
+                                  alt={product.title} 
+                                  className="w-12 h-12 object-cover rounded-lg mr-4"
+                                  onError={(e) => {
+                                    console.log('Image load error for product', product.id, ':', e.target.src);
+                                    e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Error';
+                                  }}
+                                />
+                              );
+                            })()
                           ) : (
                             <div className="w-12 h-12 bg-gray-700 rounded-lg mr-4 flex items-center justify-center">
                               <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
