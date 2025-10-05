@@ -111,8 +111,14 @@ const ProductDetails = () => {
     if (imagePath.startsWith('http')) {
       return imagePath;
     } else {
-      // Fix: Use /storage/products/ instead of /storage/ for product images
-      return imagePath.startsWith('/storage/') ? imagePath : `/storage/products/${imagePath}`;
+      // Fix: Check if imagePath already starts with 'products/' to avoid duplication
+      if (imagePath.startsWith('/storage/')) {
+        return imagePath;
+      } else if (imagePath.startsWith('products/')) {
+        return `/storage/${imagePath}`;
+      } else {
+        return `/storage/products/${imagePath}`;
+      }
     }
   };
 
