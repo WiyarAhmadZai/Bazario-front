@@ -54,7 +54,7 @@ const Shop = () => {
       // Build request params
       const params = {
         page: page,
-        status: 'approved',
+        status: 'approved', // Explicitly add approved status for shop page
         per_page: 12,
         sort_by: 'newest', // Explicitly set to newest
         ...filters
@@ -258,9 +258,11 @@ const Shop = () => {
                       <img 
                         src={product.images && product.images.length > 0 ? 
                           (() => {
-                            // Handle both string and array formats
+                            // Handle array of images
                             let imageUrl = '';
-                            if (typeof product.images === 'string') {
+                            if (Array.isArray(product.images) && product.images.length > 0) {
+                              imageUrl = product.images[0];
+                            } else if (typeof product.images === 'string') {
                               try {
                                 // Try to parse as JSON array
                                 const imagesArray = JSON.parse(product.images);
@@ -271,8 +273,6 @@ const Shop = () => {
                                 // If parsing fails, use the string directly
                                 imageUrl = product.images;
                               }
-                            } else if (Array.isArray(product.images)) {
-                              imageUrl = product.images[0];
                             }
                             
                             // Handle absolute vs relative URLs
