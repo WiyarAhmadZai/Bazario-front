@@ -226,10 +226,10 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       
       const previews = Array.isArray(imagesArray) 
         ? imagesArray.map(url => ({ 
-            url: url.startsWith('http') ? url : `/storage/${url}`, 
+            url: url.startsWith('http') ? url : (url.startsWith('/storage/') ? url : `/storage/products/${url}`), 
             file: null 
           }))
-        : [{ url: imagesArray.startsWith('http') ? imagesArray : `/storage/${imagesArray}`, file: null }];
+        : [{ url: imagesArray.startsWith('http') ? imagesArray : (imagesArray.startsWith('/storage/') ? imagesArray : `/storage/products/${imagesArray}`), file: null }];
       
       setImagePreviews(previews);
     } else {
@@ -395,7 +395,7 @@ const SellProduct = ({ isModal = false, closeModal }) => {
                         <div className="flex items-center">
                           {product.images && product.images.length > 0 ? (
                             <img 
-                              src={product.images[0].startsWith('http') ? product.images[0] : `/storage/${product.images[0]}`} 
+                              src={product.images[0].startsWith('http') ? product.images[0] : (product.images[0].startsWith('/storage/') ? product.images[0] : `/storage/products/${product.images[0]}`)} 
                               alt={product.title} 
                               className="w-12 h-12 object-cover rounded-lg mr-4"
                             />
