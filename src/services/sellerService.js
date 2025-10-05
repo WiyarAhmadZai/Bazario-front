@@ -7,7 +7,10 @@ class SellerService {
    * @returns {Promise}
    */
   getProducts(page = 1) {
-    return api.get(`/seller/products?page=${page}`);
+    return api.get(`/seller/products?page=${page}`).then(response => {
+      console.log('Seller products response:', response);
+      return response;
+    });
   }
 
   /**
