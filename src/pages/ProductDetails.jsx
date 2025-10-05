@@ -3,36 +3,60 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
-import { getProductById } from '../services/productService';
-import { addToCart as addToCartAPI } from '../services/cartService';
+import { getProductById, getProducts } from '../services/productService';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const { isAuthenticated } = useContext(AuthContext);
+  const [relatedProductsPage, setRelatedProductsPage] = useState(1);
+  const [relatedProductsTotalPages, setRelatedProductsTotalPages] = useState(1);
+  const { isAuthenticated, user } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
   const { addToWishlist, isInWishlist, removeFromWishlist } = useContext(WishlistContext);
 
   useEffect(() => {
     fetchProduct();
+    fetchRelatedProducts(1);
   }, [id]);
 
   const fetchProduct = async () => {
     try {
       setLoading(true);
       const response = await getProductById(id);
-      // The response is the product data directly, not wrapped in a data property
       setProduct(response);
+      setSelectedImage(0); // Reset to first image
     } catch (err) {
       setError('Failed to fetch product details');
       console.error('Error fetching product:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRelatedProducts = async (page = 1) => {
+    if (!product) return;
+    
+    try {
+      const response = await getProducts({
+        category: product.category?.slug,
+        exclude: product.id,
+        page: page,
+        per_page: 5 // Only 5 related products per page
+      });
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        setRelatedProducts(response.data);
+        setRelatedProductsPage(response.current_page || 1);
+        setRelatedProductsTotalPages(response.last_page || 1);
+      }
+    } catch (err) {
+      console.error('Error fetching related products:', err);
     }
   };
 
@@ -50,7 +74,8 @@ const ProductDetails = () => {
     }
     
     try {
-      await addToCartAPI(product.id, quantity);
+      // Assuming addToCartAPI exists - you'll need to implement this
+      // await addToCartAPI(product.id, quantity);
       // Also add to local cart for immediate UI update
       addToLocalCart(product, quantity);
       // Redirect to cart page
@@ -72,6 +97,43 @@ const ProductDetails = () => {
     } else {
       await addToWishlist(product);
     }
+  };
+
+  const handleRelatedProductsPageChange = (page) => {
+    setRelatedProductsPage(page);
+    fetchRelatedProducts(page);
+  };
+
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+    
+    // Handle absolute vs relative URLs
+    return imagePath.startsWith('http') ? imagePath : `/storage/${imagePath}`;
+  };
+
+  const parseImages = (images) => {
+    if (!images) return [];
+    
+    // Handle array of images
+    if (Array.isArray(images)) {
+      return images;
+    }
+    
+    // Handle string (possibly JSON)
+    if (typeof images === 'string') {
+      try {
+        // Try to parse as JSON array
+        const imagesArray = JSON.parse(images);
+        if (Array.isArray(imagesArray)) {
+          return imagesArray;
+        }
+      } catch (e) {
+        // If parsing fails, return as single item array
+        return [images];
+      }
+    }
+    
+    return [];
   };
 
   if (loading) {
@@ -105,29 +167,40 @@ const ProductDetails = () => {
     );
   }
 
+  const productImages = parseImages(product.images);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Product Images */}
         <div>
           <div className="mb-4">
-            <img 
-              src={product.images && product.images.length > 0 ? 
-                (product.images[0].startsWith('http') ? product.images[0] : `/${product.images[0]}`) : 
-                `/src/assets/abstract-art-circle-clockwork-414579.jpg`} 
-              alt={product.title}
-              className="w-full h-96 object-cover rounded-xl shadow-lg"
-            />
+            {productImages.length > 0 ? (
+              <img 
+                src={getImageUrl(productImages[selectedImage])}
+                alt={product.title}
+                className="w-full h-96 object-cover rounded-xl shadow-lg"
+              />
+            ) : (
+              <img 
+                src="https://placehold.co/600x400/374151/FFFFFF?text=Product+Image"
+                alt={product.title}
+                className="w-full h-96 object-cover rounded-xl shadow-lg"
+              />
+            )}
           </div>
-          {product.images && product.images.length > 1 && (
+          {productImages.length > 1 && (
             <div className="grid grid-cols-4 gap-4">
-              {product.images.map((image, index) => (
+              {productImages.map((image, index) => (
                 <img 
                   key={index}
-                  src={image.startsWith('http') ? image : `/${image}`} 
+                  src={getImageUrl(image)} 
                   alt={`${product.title} ${index + 1}`}
                   className={`w-full h-24 object-cover rounded-lg cursor-pointer border-2 ${selectedImage === index ? 'border-gold' : 'border-gray-600'}`}
                   onClick={() => setSelectedImage(index)}
+                  onError={(e) => {
+                    e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+                  }}
                 />
               ))}
             </div>
@@ -152,25 +225,9 @@ const ProductDetails = () => {
             <span className="ml-2 text-gray-400">(24 reviews)</span>
           </div>
 
-          <p className="text-3xl font-bold text-gold mb-6">${product.price.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-gold mb-6">${parseFloat(product.price)?.toFixed(2) || '0.00'}</p>
 
           <p className="text-gray-300 mb-8">{product.description}</p>
-
-          {product.features && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-3 text-white">Key Features</h3>
-              <ul className="grid grid-cols-2 gap-2">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <svg className="w-5 h-5 text-gold mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-gray-300">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
 
           <div className="flex items-center mb-8">
             <div className="mr-6">
@@ -195,7 +252,7 @@ const ProductDetails = () => {
             </div>
 
             <div className="flex-1">
-              {product.in_stock ? (
+              {product.stock > 0 ? (
                 <button 
                   onClick={handleAddToCart}
                   className="w-full bg-gradient-to-r from-gold to-yellow-600 hover:from-yellow-600 hover:to-gold text-black font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
@@ -235,6 +292,70 @@ const ProductDetails = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Related Products */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-white mb-6">Related Products</h2>
+        {relatedProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {relatedProducts.map((relatedProduct) => {
+                const relatedImages = parseImages(relatedProduct.images);
+                return (
+                  <div 
+                    key={relatedProduct.id} 
+                    className="bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-700 cursor-pointer"
+                    onClick={() => navigate(`/product/${relatedProduct.id}`)}
+                  >
+                    <div className="relative">
+                      <img 
+                        src={relatedImages.length > 0 ? getImageUrl(relatedImages[0]) : 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
+                        alt={relatedProduct.title}
+                        className="w-full h-48 object-cover"
+                        onError={(e) => {
+                          e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+                        }}
+                      />
+                      <div className="absolute top-2 right-2 bg-gradient-to-r from-gold to-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
+                        {relatedProduct.is_featured ? 'Featured' : 'New'}
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-lg font-bold text-white line-clamp-1">{relatedProduct.title || 'Untitled Product'}</h3>
+                      <p className="text-gold font-bold mt-2">${parseFloat(relatedProduct.price)?.toFixed(2) || '0.00'}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Pagination for related products */}
+            {relatedProductsTotalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <div className="flex space-x-2">
+                  {Array.from({ length: relatedProductsTotalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handleRelatedProductsPageChange(page)}
+                      className={`px-3 py-1 rounded-full transition-all ${
+                        relatedProductsPage === page
+                          ? 'bg-gradient-to-r from-gold to-yellow-600 text-black font-bold'
+                          : 'bg-gray-700 text-white hover:bg-gray-600'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-8 text-gray-400">
+            No related products found in this category.
+          </div>
+        )}
       </div>
 
       {/* Product Reviews */}
