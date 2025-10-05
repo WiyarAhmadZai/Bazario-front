@@ -276,7 +276,12 @@ const Shop = () => {
                             }
                             
                             // Handle absolute vs relative URLs
-                            return imageUrl.startsWith('http') ? imageUrl : `/storage/${imageUrl}`;
+                            if (imageUrl.startsWith('http')) {
+                              return imageUrl;
+                            } else {
+                              // Fix: Use /storage/products/ instead of /storage/ for product images
+                              return imageUrl.startsWith('/storage/') ? imageUrl : `/storage/products/${imageUrl}`;
+                            }
                           })() : 
                           'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
                         alt={product.title || 'Product'}
