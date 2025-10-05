@@ -226,10 +226,10 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       
       const previews = Array.isArray(imagesArray) 
         ? imagesArray.map(url => ({ 
-            url: url.startsWith('http') ? url : (url.startsWith('/storage/') ? url : `/storage/products/${url}`), 
+            url: getImageUrl(url),
             file: null 
           }))
-        : [{ url: imagesArray.startsWith('http') ? imagesArray : (imagesArray.startsWith('/storage/') ? imagesArray : `/storage/products/${imagesArray}`), file: null }];
+        : [{ url: getImageUrl(imagesArray), file: null }];
       
       setImagePreviews(previews);
     } else {
@@ -340,6 +340,25 @@ const SellProduct = ({ isModal = false, closeModal }) => {
     }
   };
 
+  // Get image URL helper function
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+    
+    // Handle absolute vs relative URLs
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    } else {
+      // Fix: Check if imagePath already starts with 'products/' to avoid duplication
+      if (imagePath.startsWith('/storage/')) {
+        return imagePath;
+      } else if (imagePath.startsWith('products/')) {
+        return `/storage/${imagePath}`;
+      } else {
+        return `/storage/products/${imagePath}`;
+      }
+    }
+  };
+
   // Render product list view
   const renderProductList = () => {
     return (
@@ -395,7 +414,7 @@ const SellProduct = ({ isModal = false, closeModal }) => {
                         <div className="flex items-center">
                           {product.images && product.images.length > 0 ? (
                             <img 
-                              src={product.images[0].startsWith('http') ? product.images[0] : (product.images[0].startsWith('/storage/') ? product.images[0] : `/storage/products/${product.images[0]}`)} 
+                              src={getImageUrl(product.images[0])}
                               alt={product.title} 
                               className="w-12 h-12 object-cover rounded-lg mr-4"
                             />
