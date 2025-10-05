@@ -254,7 +254,7 @@ const Home = () => {
                 name: "Diamond Elegance Ring",
                 price: "$2,999.99",
                 description: "Exquisite handcrafted diamond ring with platinum setting",
-                image: "/src/assets/jewelry-ring.jpg",
+                image: "/src/assets/wp11994780.jpg",
                 gradient: "from-purple-400 via-pink-500 to-red-500"
               },
               {
@@ -262,7 +262,7 @@ const Home = () => {
                 name: "Swiss Luxury Timepiece",
                 price: "$4,599.99",
                 description: "Premium Swiss-made watch with automatic movement",
-                image: "/src/assets/luxury-watch.jpg",
+                image: "/src/assets/ddd.jpg",
                 gradient: "from-blue-400 via-purple-500 to-purple-600"
               },
               {
@@ -270,7 +270,7 @@ const Home = () => {
                 name: "Designer Leather Handbag",
                 price: "$1,899.99",
                 description: "Handcrafted Italian leather bag with gold accents",
-                image: "/src/assets/designer-bag.jpg",
+                image: "/src/assets/IMG_3623.JPG",
                 gradient: "from-amber-400 via-orange-500 to-yellow-500"
               }
             ].map((product, index) => (
