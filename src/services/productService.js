@@ -1,16 +1,14 @@
 import api from './api';
 
-// Get all products
+// Get all products (public - only approved)
 export const getProducts = async (params = {}) => {
   try {
     console.log('=== PRODUCT SERVICE - GET PRODUCTS ===');
     console.log('Params received:', params);
     
     // Map frontend params to backend params
-    const backendParams = {
-      status: 'approved',
-      ...params
-    };
+    // Only add status filter if it's explicitly provided
+    const backendParams = { ...params };
     
     // Handle search parameter
     if (params.search) {
@@ -71,6 +69,63 @@ export const getProducts = async (params = {}) => {
   }
 };
 
+// Get all products for admin (all statuses)
+export const getAdminProducts = async (params = {}) => {
+  try {
+    console.log('=== PRODUCT SERVICE - GET ADMIN PRODUCTS ===');
+    console.log('Params received:', params);
+    
+    // Map frontend params to backend params
+    const backendParams = { ...params };
+    
+    // Handle search parameter
+    if (params.search) {
+      backendParams.search = params.search;
+    }
+    
+    // Handle min_price and max_price
+    if (params.minPrice) {
+      backendParams.min_price = params.minPrice;
+    }
+    
+    if (params.maxPrice) {
+      backendParams.max_price = params.maxPrice;
+    }
+    
+    console.log('Backend params to send:', backendParams);
+    
+    // Log the full URL that will be requested
+    const urlParams = new URLSearchParams(backendParams).toString();
+    console.log('Full request URL:', `/admin/products?${urlParams}`);
+    
+    const response = await api.get('/admin/products', { params: backendParams });
+    console.log('API Response status:', response.status);
+    console.log('API Response headers:', response.headers);
+    console.log('API Response data:', response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error('=== PRODUCT SERVICE ERROR - GET ADMIN PRODUCTS ===');
+    console.error('Error:', error);
+    if (error.response) {
+      console.error('Error response status:', error.response.status);
+      console.error('Error response data:', error.response.data);
+      if (error.response.data) {
+        throw error.response.data;
+      } else {
+        throw new Error(`HTTP ${error.response.status}: ${error.response.statusText}`);
+      }
+    } else if (error.request) {
+      console.error('Error request:', error.request);
+      throw new Error('No response received from server. Please check your connection.');
+    } else if (error.message) {
+      throw new Error(error.message);
+    } else {
+      throw new Error('An unknown error occurred while fetching admin products');
+    }
+  }
+};
+
 // Get product by ID
 export const getProductById = async (id) => {
   try {
@@ -89,6 +144,38 @@ export const getProductById = async (id) => {
       throw new Error(error.message);
     } else {
       throw new Error('An unknown error occurred');
+    }
+  }
+};
+
+// Update a product (admin only)
+export const updateProduct = async (id, productData) => {
+  try {
+    console.log('=== PRODUCT SERVICE - UPDATE PRODUCT ===');
+    console.log('Product ID:', id);
+    console.log('Product Data:', productData);
+    
+    const response = await api.put(`/admin/products/${id}`, productData);
+    console.log('API Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('=== PRODUCT SERVICE ERROR - UPDATE PRODUCT ===');
+    console.error('Error:', error);
+    if (error.response) {
+      console.error('Error response status:', error.response.status);
+      console.error('Error response data:', error.response.data);
+      if (error.response.data) {
+        throw error.response.data;
+      } else {
+        throw new Error(`HTTP ${error.response.status}: ${error.response.statusText}`);
+      }
+    } else if (error.request) {
+      console.error('Error request:', error.request);
+      throw new Error('No response received from server. Please check your connection.');
+    } else if (error.message) {
+      throw new Error(error.message);
+    } else {
+      throw new Error('An unknown error occurred while updating the product');
     }
   }
 };
