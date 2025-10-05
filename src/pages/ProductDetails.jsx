@@ -108,7 +108,12 @@ const ProductDetails = () => {
     if (!imagePath) return 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
     
     // Handle absolute vs relative URLs
-    return imagePath.startsWith('http') ? imagePath : `/storage/${imagePath}`;
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    } else {
+      // Fix: Use /storage/products/ instead of /storage/ for product images
+      return imagePath.startsWith('/storage/') ? imagePath : `/storage/products/${imagePath}`;
+    }
   };
 
   const parseImages = (images) => {
