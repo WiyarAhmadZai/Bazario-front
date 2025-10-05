@@ -52,8 +52,14 @@ const AdminProducts = () => {
       console.log('Fetching admin products with params:', params);
       
       const response = await getAdminProducts(params);
+      console.log('Admin products response:', response);
       
       if (response && response.data && Array.isArray(response.data)) {
+        // Log the first few products to see their image data
+        response.data.slice(0, 3).forEach(product => {
+          console.log('Product ID:', product.id, 'Images:', product.images, 'Type:', typeof product.images);
+        });
+        
         setProducts(response.data);
         setCurrentPage(response.current_page || 1);
         setTotalPages(response.last_page || 1);
@@ -109,6 +115,68 @@ const AdminProducts = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     fetchProducts(page);
+  };
+
+  // Helper function to get image URL
+  const getImageUrl = (imagePath) => {
+    // Handle null, undefined, or empty paths
+    if (!imagePath || imagePath === '' || imagePath === '[]' || imagePath === 'null' || imagePath === 'undefined') {
+      return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+    }
+    
+    // Handle string representations of arrays (JSON) - this is the main fix
+    if (typeof imagePath === 'string' && imagePath.startsWith('[')) {
+      try {
+        // Check if it's a valid JSON string before parsing
+        if (imagePath.trim().endsWith(']')) {
+          const parsed = JSON.parse(imagePath);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            imagePath = parsed[0]; // Get the first image from the parsed array
+          } else {
+            return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+          }
+        } else {
+          // Malformed JSON, treat as regular string
+          return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+        }
+      } catch (e) {
+        console.error('Error parsing image array:', e, 'Input:', imagePath);
+        // If parsing fails, treat as regular string
+        return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+      }
+    }
+    
+    // Handle direct arrays
+    if (Array.isArray(imagePath)) {
+      if (imagePath.length === 0) {
+        return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+      }
+      imagePath = imagePath[0]; // Use the first image
+    }
+    
+    // Additional check for empty or whitespace-only strings
+    if (typeof imagePath === 'string' && imagePath.trim() === '') {
+      return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+    }
+    
+    // Handle absolute URLs (including placeholder URLs)
+    if (typeof imagePath === 'string' && imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Handle relative paths
+    if (typeof imagePath === 'string') {
+      if (imagePath.startsWith('/storage/')) {
+        return imagePath;
+      } else if (imagePath.startsWith('products/')) {
+        return `/storage/${imagePath}`;
+      } else if (imagePath.trim() !== '') {
+        return `/storage/products/${imagePath}`;
+      }
+    }
+    
+    // Fallback for any other cases
+    return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
   };
 
   // Update product status
@@ -274,36 +342,44 @@ const AdminProducts = () => {
                                 className="h-16 w-16 object-cover rounded-lg" 
                                 src={product.images && product.images.length > 0 ? 
                                   (() => {
-                                    // Handle array of images
-                                    let imageUrl = '';
-                                    if (Array.isArray(product.images) && product.images.length > 0) {
-                                      imageUrl = product.images[0];
-                                    } else if (typeof product.images === 'string') {
-                                      try {
-                                        // Try to parse as JSON array
-                                        const imagesArray = JSON.parse(product.images);
-                                        if (Array.isArray(imagesArray) && imagesArray.length > 0) {
-                                          imageUrl = imagesArray[0];
+                                    // Handle different image data formats
+                                    let firstImage = null;
+                                    
+                                    // If product.images is an array, use the first element
+                                    if (Array.isArray(product.images)) {
+                                      if (product.images.length > 0) {
+                                        firstImage = product.images[0];
+                                      }
+                                    } 
+                                    // If product.images is a string
+                                    else if (typeof product.images === 'string') {
+                                      // If it's a JSON array string, parse it
+                                      if (product.images.startsWith('[')) {
+                                        try {
+                                          const parsedArray = JSON.parse(product.images);
+                                          if (Array.isArray(parsedArray) && parsedArray.length > 0) {
+                                            firstImage = parsedArray[0];
+                                          }
+                                        } catch (e) {
+                                          console.error('Error parsing product images array for product', product.id, e);
+                                          // If parsing fails, use the string directly if it looks like a path
+                                          if (product.images.length > 5 && !product.images.includes('[')) {
+                                            firstImage = product.images;
+                                          }
                                         }
-                                      } catch (e) {
-                                        // If parsing fails, use the string directly
-                                        imageUrl = product.images;
+                                      } else {
+                                        // Regular string path
+                                        firstImage = product.images;
                                       }
                                     }
                                     
-                                    // Handle absolute vs relative URLs
-                                    if (imageUrl.startsWith('http')) {
-                                      return imageUrl;
-                                    } else {
-                                      // Fix: Check if imageUrl already starts with 'products/' to avoid duplication
-                                      if (imageUrl.startsWith('/storage/')) {
-                                        return imageUrl;
-                                      } else if (imageUrl.startsWith('products/')) {
-                                        return `/storage/${imageUrl}`;
-                                      } else {
-                                        return `/storage/products/${imageUrl}`;
-                                      }
+                                    // If we couldn't extract a valid image, use placeholder
+                                    if (!firstImage) {
+                                      return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
                                     }
+                                    
+                                    const finalUrl = getImageUrl(firstImage);
+                                    return finalUrl;
                                   })() : 
                                   'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
                                 alt={product.title || 'Product'}
