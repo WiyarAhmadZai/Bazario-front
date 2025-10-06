@@ -28,6 +28,7 @@ const ProductDetails = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [isAddingReply, setIsAddingReply] = useState(false);
+  const [showReplies, setShowReplies] = useState({});
   const { isAuthenticated, user } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
   const { addToWishlist, isInWishlist, removeFromWishlist } = useContext(WishlistContext);
@@ -35,9 +36,14 @@ const ProductDetails = () => {
 
   useEffect(() => {
     fetchProduct();
-    fetchRelatedProducts(1);
     fetchReviews();
   }, [id]);
+
+  useEffect(() => {
+    if (product) {
+      fetchRelatedProducts(1);
+    }
+  }, [product]);
 
   const fetchProduct = async () => {
     try {
@@ -208,21 +214,87 @@ const ProductDetails = () => {
     
     setIsAddingReply(true);
     try {
+      console.log('Posting reply to review:', reviewId, 'with text:', replyText);
+      
       const response = await addReviewReply(id, reviewId, { comment: replyText });
+      console.log('Reply posted successfully:', response);
       
       // Update the reviews state to include the new reply
-      setReviews(prevReviews => 
-        prevReviews.map(review => 
-          review.id === reviewId 
-            ? { ...review, replies: [...(review.replies || []), response] }
-            : review
-        )
-      );
+      const updateReviewsWithReply = (reviews, targetId, newReply) => {
+        return reviews.map(review => {
+          if (review.id === targetId) {
+            // This is the direct parent
+            return {
+              ...review,
+              replies: [...(review.replies || []), newReply],
+              reply_count: (review.reply_count || 0) + 1
+            };
+          }
+          
+          // Check if targetId is in the replies
+          const updatedReplies = updateRepliesWithReply(review.replies || [], targetId, newReply);
+          if (updatedReplies !== review.replies) {
+            return {
+              ...review,
+              replies: updatedReplies
+            };
+          }
+          
+          return review;
+        });
+      };
+      
+      const updateRepliesWithReply = (replies, targetId, newReply) => {
+        return replies.map(reply => {
+          if (reply.id === targetId) {
+            // This is the direct parent
+            return {
+              ...reply,
+              replies: [...(reply.replies || []), newReply],
+              reply_count: (reply.reply_count || 0) + 1
+            };
+          }
+          
+          // Check if targetId is in nested replies
+          const updatedNestedReplies = updateRepliesWithReply(reply.replies || [], targetId, newReply);
+          if (updatedNestedReplies !== reply.replies) {
+            return {
+              ...reply,
+              replies: updatedNestedReplies
+            };
+          }
+          
+          return reply;
+        });
+      };
+      
+      setReviews(prevReviews => updateReviewsWithReply(prevReviews, reviewId, response));
+      
+      // Show the replies for this review
+      setShowReplies(prev => ({
+        ...prev,
+        [reviewId]: true
+      }));
       
       setReplyText('');
       setReplyingTo(null);
+      
+      // Only show notification for comment replies (not for the person posting)
+      const originalReview = reviews.find(r => r.id === reviewId);
+      if (originalReview && originalReview.user_id !== user.id) {
+        addNotification({
+          type: 'info',
+          title: 'New Reply',
+          message: `Someone replied to your comment on ${product.name}`
+        });
+      }
     } catch (err) {
       console.error('Error adding reply:', err);
+      addNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to post reply. Please try again.'
+      });
     } finally {
       setIsAddingReply(false);
     }
@@ -231,6 +303,85 @@ const ProductDetails = () => {
   const toggleReply = (reviewId) => {
     setReplyingTo(replyingTo === reviewId ? null : reviewId);
     setReplyText('');
+  };
+
+  const toggleReplies = (reviewId) => {
+    setShowReplies(prev => ({
+      ...prev,
+      [reviewId]: !prev[reviewId]
+    }));
+  };
+
+  // Recursive function to render nested replies
+  const renderReplies = (replies, depth = 0) => {
+    if (!replies || replies.length === 0) {
+      return null;
+    }
+    
+    return replies.map((reply) => (
+        <div key={reply.id} className={`${depth > 0 ? 'ml-4 mt-2' : ''} bg-gray-700 rounded-lg p-3`}>
+        <div className="flex justify-between mb-2">
+          <div className="flex items-center">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 w-6 rounded-full flex items-center justify-center mr-2">
+              <span className="text-white font-bold text-xs">{reply.user?.name?.charAt(0) || 'U'}</span>
+            </div>
+            <h5 className="font-medium text-white text-sm">{reply.user?.name || 'Anonymous'}</h5>
+          </div>
+          <span className="text-gray-400 text-xs">{new Date(reply.created_at).toLocaleDateString()}</span>
+        </div>
+        <p className="text-gray-300 text-sm mb-3">{reply.comment}</p>
+        
+        <div className="flex items-center space-x-4 mb-3">
+          <button 
+            onClick={() => toggleReply(reply.id)} 
+            className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
+          >
+            {replyingTo === reply.id ? 'Cancel Reply' : 'Reply'}
+          </button>
+          {reply.reply_count > 0 && (
+            <button 
+              onClick={() => toggleReplies(reply.id)} 
+              className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
+            >
+              {showReplies[reply.id] ? 'Hide' : 'Show'} {reply.reply_count} {reply.reply_count === 1 ? 'reply' : 'replies'}
+            </button>
+          )}
+        </div>
+
+        {replyingTo === reply.id && (
+          <div className="mt-3">
+            <textarea
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder="Write your reply..."
+              className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              rows="3"
+            />
+            <div className="flex space-x-2 mt-2">
+              <button
+                onClick={() => handleReply(reply.id)}
+                disabled={isAddingReply || !replyText.trim()}
+                className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-semibold hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAddingReply ? 'Posting...' : 'Post Reply'}
+              </button>
+              <button
+                onClick={() => toggleReply(reply.id)}
+                className="bg-gray-500 text-white px-2 py-1 rounded text-xs font-semibold hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {reply.replies && reply.replies.length > 0 && showReplies[reply.id] && (
+          <div className="mt-4 pl-4 border-l-2 border-gray-600 space-y-3">
+            {renderReplies(reply.replies, depth + 1)}
+          </div>
+        )}
+      </div>
+    ));
   };
 
   const getImageUrl = (imagePath) => {
@@ -728,7 +879,7 @@ const ProductDetails = () => {
                     {review.comment}
                   </p>
                   
-                  {/* Reply Button */}
+                  {/* Reply Button and Show/Hide Replies */}
                   <div className="flex items-center space-x-4 mb-3">
                     <button
                       onClick={() => toggleReply(review.id)}
@@ -737,9 +888,12 @@ const ProductDetails = () => {
                       {replyingTo === review.id ? 'Cancel Reply' : 'Reply'}
                     </button>
                     {review.reply_count > 0 && (
-                      <span className="text-gray-500 text-sm">
-                        {review.reply_count} {review.reply_count === 1 ? 'reply' : 'replies'}
-                      </span>
+                      <button
+                        onClick={() => toggleReplies(review.id)}
+                        className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                      >
+                        {showReplies[review.id] ? 'Hide' : 'Show'} {review.reply_count} {review.reply_count === 1 ? 'reply' : 'replies'}
+                      </button>
                     )}
                   </div>
 
@@ -766,30 +920,15 @@ const ProductDetails = () => {
                           className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-gray-500"
                         >
                           Cancel
-                        </button>
+                      </button>
                       </div>
                     </div>
                   )}
 
                   {/* Display Replies */}
-                  {review.replies && review.replies.length > 0 && (
+                  {review.replies && review.replies.length > 0 && showReplies[review.id] && (
                     <div className="mt-4 pl-4 border-l-2 border-gray-600 space-y-3">
-                      {review.replies.map((reply) => (
-                        <div key={reply.id} className="bg-gray-700 rounded-lg p-3">
-                          <div className="flex justify-between mb-2">
-                            <div className="flex items-center">
-                              <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 w-6 rounded-full flex items-center justify-center mr-2">
-                                <span className="text-white font-bold text-xs">{reply.user?.name?.charAt(0) || 'U'}</span>
-                              </div>
-                              <h5 className="font-medium text-white text-sm">{reply.user?.name || 'Anonymous'}</h5>
-                            </div>
-                            <span className="text-gray-500 text-xs">{new Date(reply.created_at).toLocaleDateString()}</span>
-                          </div>
-                          <p className="text-gray-300 text-sm">
-                            {reply.comment}
-                          </p>
-                        </div>
-                      ))}
+                      {renderReplies(review.replies)}
                     </div>
                   )}
                 </div>
