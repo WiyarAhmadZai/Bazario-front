@@ -124,8 +124,21 @@ const UserProfile = () => {
       {/* User Profile Header */}
       <div className="bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
         <div className="flex flex-col md:flex-row items-center">
-          <div className="bg-gradient-to-r from-gold to-yellow-500 h-24 w-24 rounded-full flex items-center justify-center mb-4 md:mb-0 md:mr-6">
-            <span className="text-black font-bold text-3xl">{user.name?.charAt(0) || 'U'}</span>
+          <div className="h-24 w-24 rounded-full overflow-hidden border-4 border-gold shadow-lg mb-4 md:mb-0 md:mr-6">
+            {user.avatar ? (
+              <img 
+                src={`http://localhost:8000/storage/${user.avatar}`} 
+                alt={user.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className="bg-gradient-to-r from-gold to-yellow-500 h-full w-full flex items-center justify-center" style={{display: user.avatar ? 'none' : 'flex'}}>
+              <span className="text-black font-bold text-3xl">{user.name?.charAt(0) || 'U'}</span>
+            </div>
           </div>
           <div className="text-center md:text-left">
             <h1 className="text-3xl font-bold text-white mb-2">{user.name}</h1>
