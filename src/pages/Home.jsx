@@ -89,7 +89,7 @@ const Home = () => {
   return (
     <div className="home-page">
       {/* Modern Hero Section */}
-      <section className="relative min-h-screen overflow-hidden">
+      <section className="relative w-full h-screen overflow-hidden">
         {/* Dynamic Background with Parallax Effect */}
         <div className="absolute inset-0">
           {slides.map((slide, index) => (
@@ -117,15 +117,15 @@ const Home = () => {
           <div className="absolute bottom-40 right-10 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
         </div>
         
-        {/* Main Content */}
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
-          <div className="container mx-auto px-4">
+        {/* Main Content - Centered */}
+        <div className="relative z-10 flex items-center justify-center h-full px-4 sm:px-6 lg:px-8">
+          <div className="container mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               {/* Left Content */}
               <div className="text-left">
                 <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                  <div className="flex items-center mb-8">
-                    <div className="w-20 h-px bg-gradient-to-r from-gold to-gold/50 mr-6"></div>
+                  <div className="flex items-center mb-6">
+                    <div className="w-16 h-px bg-gradient-to-r from-gold to-gold/50 mr-4"></div>
                     <span className="text-gold text-xs uppercase tracking-[0.3em] font-semibold opacity-90">
                       Est. 2025 • Premium Luxury
                     </span>
@@ -133,8 +133,8 @@ const Home = () => {
                 </div>
                 
                 <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                  <h1 className="text-5xl md:text-6xl lg:text-8xl font-bold text-white mb-8 leading-[0.85] tracking-tight">
-                    <span className="block font-extralight mb-3 opacity-95">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[0.85] tracking-tight">
+                    <span className="block font-extralight mb-2 opacity-95">
                       LUXURY
                     </span>
                     <span className="block text-gold font-black italic transform -skew-x-3 drop-shadow-lg">
@@ -144,26 +144,26 @@ const Home = () => {
                 </div>
                 
                 <div className="animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-                  <p className="text-lg text-gray-200 mb-10 max-w-md leading-relaxed font-light opacity-90">
+                  <p className="text-base text-gray-200 mb-8 max-w-md leading-relaxed font-light opacity-90">
                     {slides[currentSlide].subtitle}
                   </p>
-                  <div className="w-12 h-px bg-gold mb-8 opacity-70"></div>
+                  <div className="w-10 h-px bg-gold mb-6 opacity-70"></div>
                 </div>
                 
                 <div className="animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
-                  <div className="flex flex-col sm:flex-row gap-6">
+                  <div className="flex flex-col sm:flex-row gap-4">
                     <Link 
                       to="/shop" 
-                      className="group bg-gold text-black px-10 py-5 font-bold text-sm uppercase tracking-[0.1em] transition-all duration-500 hover:bg-white hover:shadow-2xl transform hover:-translate-y-2 flex items-center justify-center border-2 border-gold hover:border-white"
+                      className="group bg-gold text-black px-8 py-4 font-bold text-sm uppercase tracking-[0.1em] transition-all duration-500 hover:bg-white hover:shadow-2xl transform hover:-translate-y-2 flex items-center justify-center border-2 border-gold hover:border-white"
                     >
                       EXPLORE COLLECTION
-                      <svg className="w-4 h-4 ml-3 transform group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 ml-2 transform group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
                     </Link>
                     <Link 
                       to="/about" 
-                      className="border-2 border-white/50 text-white px-10 py-5 font-bold text-sm uppercase tracking-[0.1em] transition-all duration-500 hover:bg-white/10 hover:border-white backdrop-blur-sm flex items-center justify-center"
+                      className="border-2 border-white/50 text-white px-8 py-4 font-bold text-sm uppercase tracking-[0.1em] transition-all duration-500 hover:bg-white/10 hover:border-white backdrop-blur-sm flex items-center justify-center"
                     >
                       DISCOVER STORY
                     </Link>
@@ -174,43 +174,43 @@ const Home = () => {
               {/* Right Content - Featured Stats */}
               <div className="hidden lg:block">
                 <div className="animate-fade-in-up" style={{ animationDelay: '1s' }}>
-                  <div className="bg-black/20 backdrop-blur-xl border border-white/20 p-10 rounded-none shadow-2xl">
-                    <div className="flex items-center mb-8">
+                  <div className="bg-black/20 backdrop-blur-xl border border-white/20 p-8 rounded-none shadow-2xl">
+                    <div className="flex items-center mb-6">
                       <div className="w-8 h-px bg-gold mr-4"></div>
-                      <h3 className="text-xl font-bold text-white uppercase tracking-[0.1em]">Premium Guarantee</h3>
+                      <h3 className="text-lg font-bold text-white uppercase tracking-[0.1em]">Premium Guarantee</h3>
                     </div>
-                    <div className="space-y-8">
+                    <div className="space-y-6">
                       <div className="flex items-start">
-                        <div className="w-14 h-14 bg-gold flex items-center justify-center mr-6 flex-shrink-0">
-                          <svg className="w-7 h-7 text-black" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-gold flex items-center justify-center mr-5 flex-shrink-0">
+                          <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                           </svg>
                         </div>
                         <div>
-                          <p className="text-white font-semibold text-lg mb-1">50,000+ Satisfied Clients</p>
-                          <p className="text-gray-400 text-sm uppercase tracking-wide">Global Excellence</p>
+                          <p className="text-white font-semibold text-base mb-1">50,000+ Satisfied Clients</p>
+                          <p className="text-gray-400 text-xs uppercase tracking-wide">Global Excellence</p>
                         </div>
                       </div>
                       <div className="flex items-start">
-                        <div className="w-14 h-14 bg-gold flex items-center justify-center mr-6 flex-shrink-0">
-                          <svg className="w-7 h-7 text-black" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-gold flex items-center justify-center mr-5 flex-shrink-0">
+                          <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                           </svg>
                         </div>
                         <div>
-                          <p className="text-white font-semibold text-lg mb-1">Certified Authentic</p>
-                          <p className="text-gray-400 text-sm uppercase tracking-wide">Lifetime Guarantee</p>
+                          <p className="text-white font-semibold text-base mb-1">Certified Authentic</p>
+                          <p className="text-gray-400 text-xs uppercase tracking-wide">Lifetime Guarantee</p>
                         </div>
                       </div>
                       <div className="flex items-start">
-                        <div className="w-14 h-14 bg-gold flex items-center justify-center mr-6 flex-shrink-0">
-                          <svg className="w-7 h-7 text-black" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-gold flex items-center justify-center mr-5 flex-shrink-0">
+                          <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M19 7h-1V6a4 4 0 0 0-8 0v1H9a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10.9 6a2.1 2.1 0 0 1 4.2 0v1h-4.2V6z"/>
                           </svg>
                         </div>
                         <div>
-                          <p className="text-white font-semibold text-lg mb-1">Secure & Insured</p>
-                          <p className="text-gray-400 text-sm uppercase tracking-wide">Protected Delivery</p>
+                          <p className="text-white font-semibold text-base mb-1">Secure & Insured</p>
+                          <p className="text-gray-400 text-xs uppercase tracking-wide">Protected Delivery</p>
                         </div>
                       </div>
                     </div>
@@ -222,13 +222,13 @@ const Home = () => {
         </div>
         
         {/* Bottom Navigation */}
-        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-20">
-          <div className="flex space-x-6">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
+          <div className="flex space-x-4">
             {slides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`w-16 h-0.5 transition-all duration-500 ${
+                className={`w-12 h-0.5 transition-all duration-500 ${
                   index === currentSlide
                     ? 'bg-gold shadow-lg shadow-gold/50'
                     : 'bg-white/40 hover:bg-white/70'
@@ -477,7 +477,7 @@ const Home = () => {
                 description: "Delivered to your door with care",
                 icon: (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 104 0 2 2 0 012-2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 )
               },
