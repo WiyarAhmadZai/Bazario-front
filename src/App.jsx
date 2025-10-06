@@ -51,7 +51,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   
   if (requiredRole && user && user.role !== requiredRole) {
     // Redirect to appropriate dashboard based on role
-    return <Navigate to={user.role === 'admin' ? '/admin' : '/'} replace />;
+    return <Navigate to={user && user.role === 'admin' ? '/admin' : '/'} replace />;
   }
   
   return children;
@@ -69,7 +69,7 @@ const RedirectIfAuthenticated = ({ children }) => {
     );
   }
   
-  if (isAuthenticated) {
+  if (isAuthenticated && user) {
     // Redirect to appropriate dashboard based on role
     return <Navigate to={user.role === 'admin' ? '/admin' : '/'} replace />;
   }
