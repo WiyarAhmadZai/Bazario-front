@@ -19,7 +19,13 @@ export const AuthProvider = ({ children }) => {
         if (token && userData) {
           // First set the user from localStorage for immediate UI update
           const parsedUserData = JSON.parse(userData);
-          setUser(parsedUserData);
+          // Ensure the user object has a role property
+          if (parsedUserData && typeof parsedUserData === 'object') {
+            if (!parsedUserData.role) {
+              parsedUserData.role = 'customer'; // Default role
+            }
+            setUser(parsedUserData);
+          }
           
           // Then fetch fresh data from server to ensure sync (but only once)
           try {
@@ -53,6 +59,11 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = (userData, token) => {
     try {
+      // Ensure the user object has a role property
+      if (userData && typeof userData === 'object' && !userData.role) {
+        userData.role = 'customer'; // Default role
+      }
+      
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
@@ -75,6 +86,11 @@ export const AuthProvider = ({ children }) => {
   // Update user profile
   const updateProfile = (userData) => {
     try {
+      // Ensure the user object has a role property
+      if (userData && typeof userData === 'object' && !userData.role) {
+        userData.role = 'customer'; // Default role
+      }
+      
       // Always update both localStorage and state with fresh data
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
