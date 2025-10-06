@@ -131,3 +131,104 @@ main {
 ::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
 }
+
+/* Custom animations */
+@keyframes pulse-gold {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+}
+
+/* Responsive text sizes */
+.responsive-text-4xl {
+  font-size: 2.25rem;
+}
+
+.responsive-text-3xl {
+  font-size: 1.875rem;
+}
+
+.responsive-text-2xl {
+  font-size: 1.5rem;
+}
+
+.responsive-text-xl {
+  font-size: 1.25rem;
+}
+
+.responsive-text-lg {
+  font-size: 1.125rem;
+}
+
+/* Gradient borders */
+.gradient-border {
+  position: relative;
+  border: none;
+  background: linear-gradient(45deg, #111827, #1f2937) padding-box,
+              linear-gradient(45deg, #D4AF37, #CD7F32) border-box;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 0.5rem;
+}
+
+/* Custom shadows */
+.shadow-luxury {
+  box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-luxury-lg {
+  box-shadow: 0 20px 25px -5px rgba(212, 175, 55, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .responsive-text-4xl {
+    font-size: 3rem;
+  }
+  
+  .responsive-text-3xl {
+    font-size: 2.25rem;
+  }
+  
+  .responsive-text-2xl {
+    font-size: 1.875rem;
+  }
+  
+  .responsive-text-xl {
+    font-size: 1.5rem;
+  }
+  
+  .responsive-text-lg {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-text-4xl {
+    font-size: 3.75rem;
+  }
+  
+  .responsive-text-3xl {
+    font-size: 3rem;
+  }
+  
+  .responsive-text-2xl {
+    font-size: 2.25rem;
+  }
+}
