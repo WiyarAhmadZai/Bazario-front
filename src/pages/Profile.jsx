@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { updateProfile, getCurrentUser } from '../services/authService';
 import { getCategories } from '../services/categoryService';
@@ -790,14 +791,16 @@ const Profile = () => {
                         {userProducts.map((product) => (
                           <div key={product.id} className="bg-gray-700 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-gray-600">
                             <div className="relative">
-                              <img 
-                                src={getProductImageUrl(product)}
-                                alt={product.title}
-                                className="w-full h-48 object-cover"
-                                onError={(e) => {
-                                  e.target.src = '/src/assets/abstract-art-circle-clockwork-414579.jpg';
-                                }}
-                              />
+                              <Link to={`/product/${product.id}`} className="block">
+                                <img 
+                                  src={getProductImageUrl(product)}
+                                  alt={product.title}
+                                  className="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-200 cursor-pointer"
+                                  onError={(e) => {
+                                    e.target.src = '/src/assets/abstract-art-circle-clockwork-414579.jpg';
+                                  }}
+                                />
+                              </Link>
                               {product.is_featured && (
                                 <div className="absolute top-2 right-2 bg-gradient-to-r from-gold to-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
                                   Featured
@@ -805,7 +808,9 @@ const Profile = () => {
                               )}
                             </div>
                             <div className="p-4">
-                              <h4 className="font-bold text-white mb-1 line-clamp-1">{product.title}</h4>
+                              <Link to={`/product/${product.id}`} className="block">
+                                <h4 className="font-bold text-white mb-1 line-clamp-1 hover:text-gold transition-colors duration-200 cursor-pointer">{product.title}</h4>
+                              </Link>
                               <p className="text-gray-300 text-sm mb-3 line-clamp-2">{product.description}</p>
                               <div className="flex justify-between items-center">
                                 <span className="text-lg font-bold text-gold">${product.price}</span>
@@ -820,9 +825,14 @@ const Profile = () => {
                                 </span>
                               </div>
                               <div className="mt-3 text-sm text-gray-400">
-                                Stock: {product.stock}
+                                {product.stock > 0 && (
+                                  <span>Stock: {product.stock}</span>
+                                )}
+                                {product.stock > 0 && product.view_count > 0 && (
+                                  <span> | </span>
+                                )}
                                 {product.view_count > 0 && (
-                                  <span> | Views: {product.view_count}</span>
+                                  <span>Views: {product.view_count}</span>
                                 )}
                               </div>
                             </div>
