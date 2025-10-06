@@ -813,20 +813,20 @@ const ProductDetails = () => {
           {/* Product Owner Info */}
           <div className="border-t border-gray-700 pt-6 mb-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <Link 
+                to={`/user/${product.seller?.id}`} 
+                className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
+              >
                 <div className="bg-gradient-to-r from-gold to-yellow-500 h-12 w-12 rounded-full flex items-center justify-center mr-3">
                   <span className="text-black font-bold">{product.seller?.name?.charAt(0) || 'U'}</span>
                 </div>
                 <div>
                   <p className="text-white font-semibold">Posted by</p>
-                  <Link 
-                    to={`/user/${product.seller?.id}`} 
-                    className="text-gold hover:text-yellow-500 transition-colors"
-                  >
+                  <p className="text-gold hover:text-yellow-500 transition-colors">
                     {product.seller?.name || 'Unknown User'}
-                  </Link>
+                  </p>
                 </div>
-              </div>
+              </Link>
               <div className="text-right">
                 <p className="text-gray-400 text-sm">Views</p>
                 <p className="text-white font-bold">{product.view_count || 0}</p>
