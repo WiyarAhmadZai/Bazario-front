@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import { updateProfile, getCurrentUser } from '../services/authService';
 import { getCategories } from '../services/categoryService';
 import sellerService from '../services/sellerService';
+import api from '../services/api';
 
 const Profile = () => {
   const { user, updateProfile: updateAuthProfile } = useContext(AuthContext);
@@ -35,6 +36,9 @@ const Profile = () => {
     password_confirmation: ''
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPasswordVerification, setShowPasswordVerification] = useState(false);
+  const [verificationPassword, setVerificationPassword] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const [userProducts, setUserProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
@@ -194,8 +198,46 @@ const Profile = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  // Password verification function
+  const verifyPassword = async (password) => {
+    try {
+      const response = await api.post('/verify-password', { password });
+      return true;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        throw new Error('Invalid password');
+      } else if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else {
+        throw new Error('Network error. Please check your connection.');
+      }
+    }
+  };
+
+  const handlePasswordVerification = async (e) => {
     e.preventDefault();
+    if (!verificationPassword.trim()) {
+      setError('Please enter your password');
+      return;
+    }
+
+    setIsVerifying(true);
+    setError('');
+
+    try {
+      await verifyPassword(verificationPassword);
+      setShowPasswordVerification(false);
+      setVerificationPassword('');
+      // Proceed with the actual update
+      await performUpdate();
+    } catch (err) {
+      setError(err.message || 'Invalid password');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const performUpdate = async () => {
     setLoading(true);
     setError('');
     setSuccess('');
@@ -241,6 +283,12 @@ const Profile = () => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // Show password verification modal instead of direct update
+    setShowPasswordVerification(true);
+  };
+
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -260,13 +308,16 @@ const Profile = () => {
         
         // Upload image immediately
         const imageFormData = new FormData();
-        imageFormData.append('image', file);
+        imageFormData.append('avatar', file);
         
         const response = await updateProfile(imageFormData, true);
-        updateAuthProfile(response.user);
+        
+        // Handle both old and new response formats
+        const userData = response.user || response;
+        updateAuthProfile(userData);
         
         // Also update localStorage to persist across page refreshes
-        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('user', JSON.stringify(userData));
         
         setSuccess('Profile image updated successfully!');
         setTimeout(() => setSuccess(''), 3000);
@@ -296,69 +347,183 @@ const Profile = () => {
     }
   }, [user, productsPage]);
 
+  // Helper function to get product image URL
+  const getProductImageUrl = (product) => {
+    if (!product.images) {
+      return '/src/assets/abstract-art-circle-clockwork-414579.jpg';
+    }
+    
+    try {
+      const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+      if (images && images.length > 0) {
+        return `http://localhost:8000/storage/${images[0]}`;
+      }
+    } catch (error) {
+      console.error('Error parsing product images:', error);
+    }
+    
+    return '/src/assets/abstract-art-circle-clockwork-414579.jpg';
+  };
+
   const fetchUserProducts = async (page = 1) => {
     setProductsLoading(true);
     try {
-      const response = await sellerService.getProducts(page);
-      setUserProducts(response.data.data || []);
-      setProductsPage(response.data.current_page || 1);
-      setProductsTotalPages(response.data.last_page || 1);
+      const response = await fetch(`/api/seller/products?page=${page}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUserProducts(data.data || []);
+        setProductsPage(data.current_page || 1);
+        setProductsTotalPages(data.last_page || 1);
+      } else {
+        console.error('Failed to fetch products:', response.status);
+        setUserProducts([]);
+      }
     } catch (error) {
       console.error('Error fetching user products:', error);
+      setUserProducts([]);
     } finally {
       setProductsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">My Profile</h1>
-          <p className="text-gray-600">Manage your account information and preferences</p>
+          <h1 className="text-4xl font-bold text-white mb-2">My Profile</h1>
+          <p className="text-gray-300">Manage your account information and preferences</p>
+          
+          {/* Success/Error Messages */}
+          {success && (
+            <div className="mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+              {success}
+            </div>
+          )}
+          {error && (
+            <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-700">
+          {/* Profile Header with Image */}
+          <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-8">
+            <div className="flex items-center space-x-6">
+              {/* Profile Image with Camera Icon */}
+              <div className="relative group">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gold shadow-lg">
+              {imagePreview || user?.avatar ? (
+                <img 
+                  src={imagePreview || `http://localhost:8000/storage/${user.avatar}`} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              {!imagePreview && !user?.avatar && (
+                <div className="w-full h-full bg-gradient-to-r from-gold to-yellow-500 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-black">
+                    {user?.name?.charAt(0) || 'U'}
+                  </span>
+                </div>
+              )}
+                </div>
+                {/* Camera Icon */}
+                <label className={`absolute bottom-0 right-0 rounded-full p-2 cursor-pointer shadow-lg transition-all duration-200 group-hover:scale-110 ${
+                  loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gold hover:bg-yellow-500'
+                }`}>
+                  {loading ? (
+                    <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={loading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              
+              {/* User Info */}
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white mb-1">{user?.name || 'User'}</h2>
+                <p className="text-gray-300 mb-2">{user?.email}</p>
+                <p className="text-gray-400 text-sm">{user?.profession || 'No profession set'}</p>
+                <div className="flex items-center space-x-4 mt-3">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    user?.email_verified 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {user?.email_verified ? '✓ Verified' : '✗ Not Verified'}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-gold text-black">
+                    {user?.role || 'User'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('basic')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'basic'
                     ? 'border-gold text-gold'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
                 }`}
               >
                 Basic Info
               </button>
               <button
                 onClick={() => setActiveTab('products')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'products'
                     ? 'border-gold text-gold'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
                 }`}
               >
                 My Products
               </button>
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'settings'
                     ? 'border-gold text-gold'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
                 }`}
               >
                 Settings
               </button>
               <button
                 onClick={() => setActiveTab('security')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'security'
                     ? 'border-gold text-gold'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
                 }`}
               >
                 Security
@@ -605,7 +770,7 @@ const Profile = () => {
             {activeTab === 'products' && (
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-gray-900">My Products</h3>
+                  <h3 className="text-xl font-bold text-white">My Products</h3>
                   <button
                     onClick={() => {/* Navigate to sell product page */}}
                     className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-bold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
@@ -623,12 +788,15 @@ const Profile = () => {
                     {userProducts.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {userProducts.map((product) => (
-                          <div key={product.id} className="bg-gray-50 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                          <div key={product.id} className="bg-gray-700 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-gray-600">
                             <div className="relative">
                               <img 
-                                src={`/src/assets/${product.image || 'abstract-art-circle-clockwork-414579.jpg'}`} 
+                                src={getProductImageUrl(product)}
                                 alt={product.title}
                                 className="w-full h-48 object-cover"
+                                onError={(e) => {
+                                  e.target.src = '/src/assets/abstract-art-circle-clockwork-414579.jpg';
+                                }}
                               />
                               {product.is_featured && (
                                 <div className="absolute top-2 right-2 bg-gradient-to-r from-gold to-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
@@ -637,10 +805,10 @@ const Profile = () => {
                               )}
                             </div>
                             <div className="p-4">
-                              <h4 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.title}</h4>
-                              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                              <h4 className="font-bold text-white mb-1 line-clamp-1">{product.title}</h4>
+                              <p className="text-gray-300 text-sm mb-3 line-clamp-2">{product.description}</p>
                               <div className="flex justify-between items-center">
-                                <span className="text-lg font-bold text-gold">${product.price.toFixed(2)}</span>
+                                <span className="text-lg font-bold text-gold">${product.price}</span>
                                 <span className={`px-2 py-1 rounded-full text-xs ${
                                   product.status === 'approved' 
                                     ? 'bg-green-100 text-green-800' 
@@ -651,8 +819,11 @@ const Profile = () => {
                                   {product.status}
                                 </span>
                               </div>
-                              <div className="mt-3 text-sm text-gray-500">
-                                Stock: {product.stock} | Sold: {product.sold || 0}
+                              <div className="mt-3 text-sm text-gray-400">
+                                Stock: {product.stock}
+                                {product.view_count > 0 && (
+                                  <span> | Views: {product.view_count}</span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -660,13 +831,13 @@ const Profile = () => {
                       </div>
                     ) : (
                       <div className="text-center py-12">
-                        <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <div className="bg-gray-700 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                           <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                           </svg>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-1">No products listed</h3>
-                        <p className="text-gray-500 mb-4">You haven't listed any products yet.</p>
+                        <h3 className="text-lg font-medium text-white mb-1">No products listed</h3>
+                        <p className="text-gray-400 mb-4">You haven't listed any products yet.</p>
                         <button
                           onClick={() => {/* Navigate to sell product page */}}
                           className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-bold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
@@ -728,13 +899,13 @@ const Profile = () => {
             
             {activeTab === 'settings' && (
               <div className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Account Settings</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-white mb-4">Account Settings</h3>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-gray-700 bg-opacity-50 rounded-lg">
                       <div>
-                        <p className="text-gray-700 font-medium">Email Notifications</p>
-                        <p className="text-gray-500 text-sm">Receive updates and promotional emails</p>
+                        <p className="text-white font-medium">Email Notifications</p>
+                        <p className="text-gray-300 text-sm">Receive updates and promotional emails</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -743,8 +914,33 @@ const Profile = () => {
                           onChange={handleNewsletterUnsubscribe}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
                       </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-gray-700 bg-opacity-50 rounded-lg">
+                      <div>
+                        <p className="text-white font-medium">Profile Visibility</p>
+                        <p className="text-gray-300 text-sm">Make your profile visible to other users</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={true}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold peer-focus:ring-opacity-50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-gray-700 bg-opacity-50 rounded-lg">
+                      <div>
+                        <p className="text-white font-medium">Two-Factor Authentication</p>
+                        <p className="text-gray-300 text-sm">Add an extra layer of security to your account</p>
+                      </div>
+                      <button className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-bold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                        Enable 2FA
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -753,35 +949,71 @@ const Profile = () => {
             
             {activeTab === 'security' && (
               <div className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Security Settings</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-white mb-4">Security Settings</h3>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-gray-700 bg-opacity-50 rounded-lg">
                       <div>
-                        <p className="text-gray-700 font-medium">Password</p>
-                        <p className="text-gray-500 text-sm">Last changed: Not available</p>
+                        <p className="text-white font-medium">Password</p>
+                        <p className="text-gray-300 text-sm">Last changed: Not available</p>
                       </div>
                       <button
                         onClick={() => setShowPasswordModal(true)}
-                        className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-bold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
+                        className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black font-bold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
                       >
                         Change Password
                       </button>
                     </div>
                     
-                    <div className="border-t border-gray-200 pt-3">
-                      <div className="flex items-center justify-between">
+                    <div className="border-t border-gray-600 pt-4">
+                      <div className="flex items-center justify-between p-4 bg-gray-700 bg-opacity-50 rounded-lg">
                         <div>
-                          <p className="text-gray-700 font-medium">Email Verification</p>
-                          <p className="text-gray-500 text-sm">Your email address verification status</p>
+                          <p className="text-white font-medium">Email Verification</p>
+                          <p className="text-gray-300 text-sm">Your email address verification status</p>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           user.email_verified 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-green-900 text-green-300 border border-green-700' 
+                            : 'bg-red-900 text-red-300 border border-red-700'
                         }`}>
                           {user.email_verified ? '✓ Verified' : '✗ Not Verified'}
                         </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-600 pt-4">
+                      <div className="flex items-center justify-between p-4 bg-gray-700 bg-opacity-50 rounded-lg">
+                        <div>
+                          <p className="text-white font-medium">Login Sessions</p>
+                          <p className="text-gray-300 text-sm">Manage your active login sessions</p>
+                        </div>
+                        <button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                          View Sessions
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-600 pt-4">
+                      <div className="flex items-center justify-between p-4 bg-gray-700 bg-opacity-50 rounded-lg">
+                        <div>
+                          <p className="text-white font-medium">Account Activity</p>
+                          <p className="text-gray-300 text-sm">Review recent account activity and security events</p>
+                        </div>
+                        <button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                          View Activity
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-600 pt-4">
+                      <div className="flex items-center justify-between p-4 bg-gray-700 bg-opacity-50 rounded-lg">
+                        <div>
+                          <p className="text-white font-medium">Data Export</p>
+                          <p className="text-gray-300 text-sm">Download a copy of your account data</p>
+                        </div>
+                        <button className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                          Export Data
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -891,6 +1123,81 @@ const Profile = () => {
                     </>
                   ) : (
                     'Change Password'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Password Verification Modal */}
+      {showPasswordVerification && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm">
+          <div className="bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 p-8 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white flex items-center">
+                <svg className="w-6 h-6 mr-2 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Verify Password
+              </h3>
+              <button
+                onClick={() => {
+                  setShowPasswordVerification(false);
+                  setVerificationPassword('');
+                  setError('');
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <p className="text-gray-300 mb-6">Please enter your current password to update your profile information.</p>
+            
+            <form onSubmit={handlePasswordVerification} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                <input
+                  type="password"
+                  value={verificationPassword}
+                  onChange={(e) => setVerificationPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold text-white placeholder-gray-400"
+                  placeholder="Enter your current password"
+                  required
+                />
+              </div>
+              
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordVerification(false);
+                    setVerificationPassword('');
+                    setError('');
+                  }}
+                  className="flex-1 px-4 py-3 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isVerifying}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-gold to-yellow-500 text-black font-medium rounded-lg hover:from-yellow-500 hover:to-gold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isVerifying ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify & Update'
                   )}
                 </button>
               </div>
