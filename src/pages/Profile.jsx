@@ -76,7 +76,7 @@ const Profile = () => {
     
     try {
       setCheckingSubscription(true);
-      const response = await fetch(`http://localhost:8000/api/newsletter/check-subscription?email=${encodeURIComponent(user.email)}`);
+      const response = await fetch(`/api/newsletter/check-subscription?email=${encodeURIComponent(user.email)}`);
       const data = await response.json();
       
       if (response.ok) {
@@ -95,7 +95,7 @@ const Profile = () => {
     
     try {
       setNewsletterLoading(true);
-      const response = await fetch('http://localhost:8000/api/newsletter/unsubscribe', {
+      const response = await fetch('/api/newsletter/unsubscribe', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ const Profile = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/change-password', {
+      const response = await fetch('/api/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
