@@ -33,27 +33,63 @@ const About = () => {
   ]);
 
   return (
-    <div className="about-page py-12">
-      {/* Hero Section */}
-      <section className="relative h-[500px] flex items-center justify-center mb-16">
-        <div className="absolute inset-0 z-0">
+    <div className="about-page">
+      {/* Modern Hero Section */}
+      <section className="relative w-full h-screen overflow-hidden">
+        {/* Background with Overlay */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/90"></div>
           <img 
             src="/src/assets/architecture-art-bridge-cliff-459203.jpg" 
             alt="About Us" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black bg-opacity-60"></div>
         </div>
         
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">About Luxury Store</h1>
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            Crafting exceptional experiences through premium luxury products
-          </p>
+        {/* Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-2 h-2 bg-gold rounded-full animate-pulse opacity-60"></div>
+          <div className="absolute top-40 right-20 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="absolute bottom-60 left-20 w-1.5 h-1.5 bg-gold rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div className="absolute bottom-40 right-10 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        </div>
+        
+        {/* Main Content - Centered */}
+        <div className="relative z-10 flex items-center justify-center h-full px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <span className="inline-block bg-gold/10 text-gold px-4 py-1 rounded-full text-sm font-medium mb-6">
+                OUR STORY
+              </span>
+            </div>
+            
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+                About Luxury Store
+              </h1>
+            </div>
+            
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+              <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Crafting exceptional experiences through premium luxury products
+              </p>
+            </div>
+            
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <a 
+                  href="#our-story" 
+                  className="group bg-gold text-black px-8 py-4 font-bold text-sm uppercase tracking-wider transition-all duration-300 hover:bg-white hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center"
+                >
+                  Discover Our Story
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 py-16">
         {/* Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
           {stats.map((stat) => (
