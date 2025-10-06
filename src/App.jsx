@@ -32,6 +32,7 @@ import SellProduct from './pages/SellProduct';
 
 // Import context
 import { useAuth } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -81,10 +82,11 @@ function App() {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <ScrollToTop />
-      <Navbar />
-      <main className="flex-grow container mx-auto px-4 py-8">
+    <NotificationProvider>
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <ScrollToTop />
+        <Navbar />
+        <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
@@ -155,9 +157,10 @@ function App() {
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </main>
-      <Footer />
-    </div>
+        </main>
+        <Footer />
+      </div>
+    </NotificationProvider>
   );
 }
 
