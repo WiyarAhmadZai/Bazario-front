@@ -5,8 +5,9 @@ import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
 import { useNotifications } from '../context/NotificationContext';
 import { getProductById, getProducts } from '../services/productService';
-import { getProductReviews, addProductReview, addReviewReply } from '../services/reviewsService';
+import { getProductReviews, addProductReview, addReviewReply, deleteReview, updateReview } from '../services/reviewsService';
 import api from '../services/api';
+import Swal from 'sweetalert2';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -29,6 +30,9 @@ const ProductDetails = () => {
   const [replyText, setReplyText] = useState('');
   const [isAddingReply, setIsAddingReply] = useState(false);
   const [showReplies, setShowReplies] = useState({});
+  const [editingReview, setEditingReview] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const { isAuthenticated, user } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
   const { addToWishlist, isInWishlist, removeFromWishlist } = useContext(WishlistContext);
@@ -64,7 +68,7 @@ const ProductDetails = () => {
     
     try {
       const response = await getProducts({
-        category: product.category?.slug,
+        category_id: product.category?.id, // Use category ID instead of slug
         exclude: product.id,
         page: page,
         per_page: 5 // Only 5 related products per page
@@ -312,6 +316,155 @@ const ProductDetails = () => {
     }));
   };
 
+  const canDeleteReview = (review) => {
+    if (!user) return false;
+    
+    // User can delete their own reviews/replies
+    if (review.user_id === user.id) return true;
+    
+    // Admin can delete any review/reply
+    if (user.role === 'admin') return true;
+    
+    // Product owner can delete any review/reply for their product
+    if (product && product.seller_id === user.id) return true;
+    
+    return false;
+  };
+
+  const canEditReview = (review) => {
+    if (!user) return false;
+    
+    // User can edit their own reviews/replies
+    if (review.user_id === user.id) return true;
+    
+    return false;
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review.id);
+    setEditText(review.comment);
+    setIsEditing(false); // Start in non-editing state
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReview(null);
+    setEditText('');
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editText.trim()) {
+      Swal.fire('Error!', 'Please enter some text.', 'error');
+      return;
+    }
+
+    setIsEditing(true); // Show "Saving..." state
+
+    try {
+      const response = await updateReview(editingReview, { comment: editText });
+      
+      // Update the review in state
+      const updateReviewInState = (reviews, targetId, newText) => {
+        return reviews.map(review => {
+          if (review.id === targetId) {
+            return { ...review, comment: newText };
+          }
+          if (review.replies && review.replies.length > 0) {
+            review.replies = updateReviewInState(review.replies, targetId, newText);
+          }
+          return review;
+        });
+      };
+
+      setReviews(prevReviews => updateReviewInState(prevReviews, editingReview, editText));
+      
+      // Reset editing state
+      setEditingReview(null);
+      setEditText('');
+      setIsEditing(false);
+      
+      // No success message - just update silently
+    } catch (err) {
+      console.error('Error updating review:', err);
+      
+      // Reset editing state even on error
+      setEditingReview(null);
+      setEditText('');
+      setIsEditing(false);
+      
+      let errorMessage = 'Failed to update review/reply. Please try again.';
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.errors) {
+        const errors = err.response.data.errors;
+        const errorMessages = Object.values(errors).flat();
+        errorMessage = errorMessages.join(', ');
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      Swal.fire('Error!', errorMessage, 'error');
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    try {
+      await deleteReview(reviewId);
+      
+      // Remove the review from state
+      const removeReviewFromState = (reviews, targetId) => {
+        return reviews.filter(review => {
+          if (review.id === targetId) {
+            return false; // Remove this review
+          }
+          if (review.replies && review.replies.length > 0) {
+            review.replies = removeReviewFromState(review.replies, targetId);
+          }
+          return true;
+        });
+      };
+
+      setReviews(prevReviews => removeReviewFromState(prevReviews, reviewId));
+      
+      // Refresh reviews to get updated average rating
+      fetchReviews();
+      
+      Swal.fire(
+        'Deleted!',
+        'Review/reply has been deleted.',
+        'success'
+      );
+    } catch (err) {
+      console.error('Error deleting review:', err);
+      Swal.fire(
+        'Error!',
+        'Failed to delete review/reply. Please try again.',
+        'error'
+      );
+    }
+  };
+
   // Recursive function to render nested replies
   const renderReplies = (replies, depth = 0) => {
     if (!replies || replies.length === 0) {
@@ -329,23 +482,80 @@ const ProductDetails = () => {
           </div>
           <span className="text-gray-400 text-xs">{new Date(reply.created_at).toLocaleDateString()}</span>
         </div>
-        <p className="text-gray-300 text-sm mb-3">{reply.comment}</p>
+        {editingReview === reply.id ? (
+          <div className="mb-3">
+            <textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              className="w-full p-2 bg-gray-600 border border-gray-500 rounded text-white placeholder-gray-400 focus:border-blue-400 focus:outline-none text-xs resize-none"
+              rows="2"
+              placeholder="Edit your reply..."
+            />
+                 <div className="flex space-x-2 mt-2">
+                   <button 
+                     onClick={handleSaveEdit}
+                     disabled={!editText.trim()}
+                     className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-semibold hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     Save
+                   </button>
+                   <button 
+                     onClick={handleCancelEdit}
+                     className="bg-gray-500 text-white px-2 py-1 rounded text-xs font-semibold hover:bg-gray-600"
+                   >
+                     Cancel
+                   </button>
+                 </div>
+          </div>
+        ) : (
+          <p className="text-gray-300 text-sm mb-3">{reply.comment}</p>
+        )}
         
-        <div className="flex items-center space-x-4 mb-3">
-          <button 
-            onClick={() => toggleReply(reply.id)} 
-            className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
-          >
-            {replyingTo === reply.id ? 'Cancel Reply' : 'Reply'}
-          </button>
-          {reply.reply_count > 0 && (
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-4">
             <button 
-              onClick={() => toggleReplies(reply.id)} 
+              onClick={() => toggleReply(reply.id)} 
               className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
             >
-              {showReplies[reply.id] ? 'Hide' : 'Show'} {reply.reply_count} {reply.reply_count === 1 ? 'reply' : 'replies'}
+              {replyingTo === reply.id ? 'Cancel Reply' : 'Reply'}
             </button>
-          )}
+            {reply.reply_count > 0 && (
+              <button 
+                onClick={() => toggleReplies(reply.id)} 
+                className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
+              >
+                {showReplies[reply.id] ? 'Hide' : 'Show'} {reply.reply_count} {reply.reply_count === 1 ? 'reply' : 'replies'}
+              </button>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            {/* Edit Button for Reply */}
+            {canEditReview(reply) && (
+              <button
+                onClick={() => handleEditReview(reply)}
+                className="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors flex items-center"
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+            )}
+            
+            {/* Delete Button for Reply */}
+            {canDeleteReview(reply) && (
+              <button
+                onClick={() => handleDeleteReview(reply.id)}
+                className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors flex items-center"
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete
+              </button>
+            )}
+          </div>
         </div>
 
         {replyingTo === reply.id && (
@@ -548,7 +758,7 @@ const ProductDetails = () => {
           <div className="flex items-center mb-6">
             <div className="flex text-yellow-400">
               {[...Array(5)].map((_, i) => (
-                <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <svg key={i} className={`w-5 h-5 fill-current ${i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-600'}`} viewBox="0 0 24 24">
                   <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                 </svg>
               ))}
@@ -875,26 +1085,83 @@ const ProductDetails = () => {
                       </svg>
                     ))}
                   </div>
+                  {editingReview === review.id ? (
+                    <div className="mb-3">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent resize-none"
+                        rows="3"
+                        placeholder="Edit your comment..."
+                      />
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          onClick={handleSaveEdit}
+                          disabled={!editText.trim()}
+                          className="bg-gold text-black px-3 py-1 rounded text-sm font-semibold hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-gray-500"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
                   <p className="text-gray-300 mb-3">
                     {review.comment}
                   </p>
+                  )}
                   
                   {/* Reply Button and Show/Hide Replies */}
-                  <div className="flex items-center space-x-4 mb-3">
-                    <button
-                      onClick={() => toggleReply(review.id)}
-                      className="text-gold hover:text-yellow-400 text-sm font-medium transition-colors"
-                    >
-                      {replyingTo === review.id ? 'Cancel Reply' : 'Reply'}
-                    </button>
-                    {review.reply_count > 0 && (
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-4">
                       <button
-                        onClick={() => toggleReplies(review.id)}
-                        className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                        onClick={() => toggleReply(review.id)}
+                        className="text-gold hover:text-yellow-400 text-sm font-medium transition-colors"
                       >
-                        {showReplies[review.id] ? 'Hide' : 'Show'} {review.reply_count} {review.reply_count === 1 ? 'reply' : 'replies'}
+                        {replyingTo === review.id ? 'Cancel Reply' : 'Reply'}
                       </button>
-                    )}
+                      {review.reply_count > 0 && (
+                        <button
+                          onClick={() => toggleReplies(review.id)}
+                          className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                        >
+                          {showReplies[review.id] ? 'Hide' : 'Show'} {review.reply_count} {review.reply_count === 1 ? 'reply' : 'replies'}
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      {/* Edit Button */}
+                      {canEditReview(review) && (
+                        <button
+                          onClick={() => handleEditReview(review)}
+                          className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors flex items-center"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit
+                        </button>
+                      )}
+                      
+                      {/* Delete Button */}
+                      {canDeleteReview(review) && (
+                        <button
+                          onClick={() => handleDeleteReview(review.id)}
+                          className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors flex items-center"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Reply Form */}
