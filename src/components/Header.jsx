@@ -181,7 +181,7 @@ const Header = () => {
                     </svg>
                     User Dashboard
                   </Link>
-                  {user.role === 'admin' && (
+                  {user && user.role === 'admin' && (
                     <Link 
                       to="/admin" 
                       className="block px-4 py-2 text-xs text-white hover:bg-gray-700 hover:bg-opacity-50 flex items-center transition-colors duration-200"
