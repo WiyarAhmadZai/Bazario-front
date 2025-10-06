@@ -227,8 +227,21 @@ const Header = () => {
                 className="flex items-center text-gray-300 hover:text-gold transition-all duration-300 focus:outline-none p-2 rounded-full hover:bg-gray-800 hover:bg-opacity-50 group"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               >
-                <div className="bg-gradient-to-r from-gold to-yellow-500 h-7 w-7 rounded-full flex items-center justify-center">
-                  <span className="text-black font-bold text-xs">{user.name.charAt(0)}</span>
+                <div className="h-7 w-7 rounded-full overflow-hidden border border-gold">
+                  {user.avatar ? (
+                    <img 
+                      src={`http://localhost:8000/storage/${user.avatar}`} 
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className="bg-gradient-to-r from-gold to-yellow-500 h-full w-full flex items-center justify-center" style={{display: user.avatar ? 'none' : 'flex'}}>
+                    <span className="text-black font-bold text-xs">{user.name.charAt(0)}</span>
+                  </div>
                 </div>
                 <span className="ml-2 hidden md:inline font-medium text-sm">{user.name}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ml-1 hidden md:inline transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -237,9 +250,27 @@ const Header = () => {
               </button>
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-xl shadow-2xl py-2 z-50 border border-gray-700 backdrop-blur-lg bg-opacity-90 transform transition-all duration-300 origin-top-right">
-                  <div className="px-4 py-2 border-b border-gray-700">
-                    <p className="text-white font-medium truncate text-sm">{user.name}</p>
-                    <p className="text-gray-400 text-xs truncate">{user.email}</p>
+                  <div className="px-4 py-2 border-b border-gray-700 flex items-center space-x-3">
+                    <div className="h-10 w-10 rounded-full overflow-hidden border border-gold">
+                      {user.avatar ? (
+                        <img 
+                          src={`http://localhost:8000/storage/${user.avatar}`} 
+                          alt={user.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className="bg-gradient-to-r from-gold to-yellow-500 h-full w-full flex items-center justify-center" style={{display: user.avatar ? 'none' : 'flex'}}>
+                        <span className="text-black font-bold text-sm">{user.name.charAt(0)}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-white font-medium truncate text-sm">{user.name}</p>
+                      <p className="text-gray-400 text-xs truncate">{user.email}</p>
+                    </div>
                   </div>
                   <Link 
                     to="/profile" 
