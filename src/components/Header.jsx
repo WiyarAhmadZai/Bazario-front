@@ -3,14 +3,17 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
+import { useNotifications } from '../context/NotificationContext';
 
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
   const { cartCount } = useContext(CartContext);
   const { wishlistCount } = useContext(WishlistContext);
+  const { notifications, getUnreadCount, markAsRead, removeNotification } = useNotifications();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   // Show scroll to top button when page is scrolled down
   useEffect(() => {
@@ -129,6 +132,83 @@ const Header = () => {
               </span>
             )}
           </Link>
+          
+          {/* Notification Icon */}
+          <div className="relative">
+            <button
+              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              className="text-gray-300 hover:text-gold transition-all duration-300 p-2 rounded-full hover:bg-gray-800 hover:bg-opacity-50 group relative"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5-5 5-5h-5m-6 0H4l5 5-5 5h5" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
+              </svg>
+              {getUnreadCount() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold animate-pulse">
+                  {getUnreadCount()}
+                </span>
+              )}
+            </button>
+            
+            {/* Notification Dropdown */}
+            {isNotificationOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-gray-800 rounded-lg shadow-xl border border-gray-700 z-50">
+                <div className="p-4 border-b border-gray-700">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-white font-semibold">Notifications</h3>
+                    <button
+                      onClick={() => setIsNotificationOpen(false)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-4 border-b border-gray-700 hover:bg-gray-700 cursor-pointer ${!notification.read ? 'bg-gray-750' : ''}`}
+                        onClick={() => {
+                          markAsRead(notification.id);
+                          setIsNotificationOpen(false);
+                        }}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className={`w-2 h-2 rounded-full mt-2 ${notification.type === 'success' ? 'bg-green-500' : notification.type === 'error' ? 'bg-red-500' : notification.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
+                          <div className="flex-1">
+                            <h4 className="text-white font-medium text-sm">{notification.title}</h4>
+                            <p className="text-gray-300 text-xs mt-1">{notification.message}</p>
+                            <p className="text-gray-500 text-xs mt-1">
+                              {notification.timestamp.toLocaleTimeString()}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeNotification(notification.id);
+                            }}
+                            className="text-gray-400 hover:text-white"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-400">
+                      No notifications
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           
           <Link to="/cart" className="text-gray-300 hover:text-gold transition-all duration-300 p-2 rounded-full hover:bg-gray-800 hover:bg-opacity-50 group relative">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
