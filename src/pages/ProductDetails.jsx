@@ -3,8 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
+import { useNotifications } from '../context/NotificationContext';
 import { getProductById, getProducts } from '../services/productService';
-import { getProductReviews, addProductReview } from '../services/reviewsService';
+import { getProductReviews, addProductReview, addReviewReply } from '../services/reviewsService';
 import api from '../services/api';
 
 const ProductDetails = () => {
@@ -19,12 +20,18 @@ const ProductDetails = () => {
   const [relatedProductsPage, setRelatedProductsPage] = useState(1);
   const [relatedProductsTotalPages, setRelatedProductsTotalPages] = useState(1);
   const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
   const [isAddingReview, setIsAddingReview] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [isAddingReply, setIsAddingReply] = useState(false);
   const { isAuthenticated, user } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
   const { addToWishlist, isInWishlist, removeFromWishlist } = useContext(WishlistContext);
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     fetchProduct();
@@ -70,7 +77,9 @@ const ProductDetails = () => {
   const fetchReviews = async () => {
     try {
       const response = await getProductReviews(id);
-      setReviews(response);
+      setReviews(response.reviews || []);
+      setAverageRating(response.average_rating || 0);
+      setTotalReviews(response.total_reviews || 0);
     } catch (err) {
       console.error('Error fetching reviews:', err);
     }
@@ -86,6 +95,11 @@ const ProductDetails = () => {
     if (!isAuthenticated) {
       // Add to local cart for non-authenticated users
       addToLocalCart(product, quantity);
+      addNotification({
+        type: 'success',
+        title: 'Added to Cart',
+        message: `${product.name} (${quantity}x) has been added to your cart`
+      });
       return;
     }
     
@@ -97,10 +111,22 @@ const ProductDetails = () => {
       });
       // Also add to local cart for immediate UI update
       addToLocalCart(product, quantity);
+      
+      addNotification({
+        type: 'success',
+        title: 'Added to Cart',
+        message: `${product.name} (${quantity}x) has been added to your cart`
+      });
+      
       // Redirect to cart page
       navigate('/cart');
     } catch (err) {
       setError('Failed to add item to cart');
+      addNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to add item to cart. Please try again.'
+      });
       console.error('Error adding to cart:', err);
     }
   };
@@ -116,11 +142,26 @@ const ProductDetails = () => {
       if (isInWishlist(product.id)) {
         await api.delete(`/wishlist/${product.id}`);
         await removeFromWishlist(product.id);
+        addNotification({
+          type: 'info',
+          title: 'Removed from Wishlist',
+          message: `${product.name} has been removed from your wishlist`
+        });
       } else {
         await api.post('/wishlist', { product_id: product.id });
         await addToWishlist(product);
+        addNotification({
+          type: 'success',
+          title: 'Added to Wishlist',
+          message: `${product.name} has been added to your wishlist`
+        });
       }
     } catch (err) {
+      addNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update wishlist. Please try again.'
+      });
       console.error('Error toggling wishlist:', err);
     }
   };
@@ -142,6 +183,7 @@ const ProductDetails = () => {
       const response = await addProductReview(id, newReview);
       setReviews([response, ...reviews]);
       setNewReview({ rating: 5, comment: '' });
+      fetchReviews(); // Refresh to get updated average rating
       
       // Send notification to product owner and admin if user is not admin
       if (user && user.role !== 'admin') {
@@ -156,9 +198,39 @@ const ProductDetails = () => {
     }
   };
 
-  const handleReplyToReview = async (reviewId, replyText) => {
-    // This would be implemented for admin functionality
-    console.log('Reply to review:', reviewId, replyText);
+  const handleReply = async (reviewId) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
+    if (!replyText.trim()) return;
+    
+    setIsAddingReply(true);
+    try {
+      const response = await addReviewReply(id, reviewId, { comment: replyText });
+      
+      // Update the reviews state to include the new reply
+      setReviews(prevReviews => 
+        prevReviews.map(review => 
+          review.id === reviewId 
+            ? { ...review, replies: [...(review.replies || []), response] }
+            : review
+        )
+      );
+      
+      setReplyText('');
+      setReplyingTo(null);
+    } catch (err) {
+      console.error('Error adding reply:', err);
+    } finally {
+      setIsAddingReply(false);
+    }
+  };
+
+  const toggleReply = (reviewId) => {
+    setReplyingTo(replyingTo === reviewId ? null : reviewId);
+    setReplyText('');
   };
 
   const getImageUrl = (imagePath) => {
@@ -330,7 +402,9 @@ const ProductDetails = () => {
                 </svg>
               ))}
             </div>
-            <span className="ml-2 text-gray-400">({reviews.length} reviews)</span>
+            <span className="ml-2 text-gray-400">
+              {averageRating > 0 ? `${averageRating.toFixed(1)} (${totalReviews} reviews)` : `(${totalReviews} reviews)`}
+            </span>
           </div>
 
           <p className="text-3xl font-bold text-gold mb-6">${(parseFloat(product.price) * quantity).toFixed(2)}</p>
@@ -618,12 +692,16 @@ const ProductDetails = () => {
           <div className="flex items-center mb-4">
             <div className="flex text-yellow-400 mr-4">
               {[...Array(5)].map((_, i) => (
-                <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <svg 
+                  key={i} 
+                  className={`w-5 h-5 ${i < Math.floor(averageRating) ? 'fill-current' : 'text-gray-600'}`} 
+                  viewBox="0 0 24 24"
+                >
                   <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                 </svg>
               ))}
             </div>
-            <span className="text-gray-400">{reviews.length} reviews</span>
+            <span className="text-gray-400">{totalReviews} reviews</span>
           </div>
           
           <div className="space-y-6">
@@ -650,18 +728,68 @@ const ProductDetails = () => {
                     {review.comment}
                   </p>
                   
-                  {/* Admin Reply Section */}
-                  {user && user.role === 'admin' && (
+                  {/* Reply Button */}
+                  <div className="flex items-center space-x-4 mb-3">
+                    <button
+                      onClick={() => toggleReply(review.id)}
+                      className="text-gold hover:text-yellow-400 text-sm font-medium transition-colors"
+                    >
+                      {replyingTo === review.id ? 'Cancel Reply' : 'Reply'}
+                    </button>
+                    {review.reply_count > 0 && (
+                      <span className="text-gray-500 text-sm">
+                        {review.reply_count} {review.reply_count === 1 ? 'reply' : 'replies'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Reply Form */}
+                  {replyingTo === review.id && (
                     <div className="mt-4 pl-4 border-l-2 border-gold">
                       <textarea
                         className="w-full bg-gray-700 text-white rounded-lg p-2 border border-gray-600 focus:border-gold focus:outline-none text-sm"
                         rows="2"
-                        placeholder="Reply to this review..."
-                        // In a real implementation, you would handle the reply submission
+                        placeholder="Write your reply..."
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
                       ></textarea>
-                      <button className="mt-2 bg-gold text-black px-3 py-1 rounded text-sm font-semibold">
-                        Reply
-                      </button>
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          onClick={() => handleReply(review.id)}
+                          disabled={isAddingReply || !replyText.trim()}
+                          className="bg-gold text-black px-3 py-1 rounded text-sm font-semibold hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isAddingReply ? 'Posting...' : 'Post Reply'}
+                        </button>
+                        <button
+                          onClick={() => toggleReply(review.id)}
+                          className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-gray-500"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Display Replies */}
+                  {review.replies && review.replies.length > 0 && (
+                    <div className="mt-4 pl-4 border-l-2 border-gray-600 space-y-3">
+                      {review.replies.map((reply) => (
+                        <div key={reply.id} className="bg-gray-700 rounded-lg p-3">
+                          <div className="flex justify-between mb-2">
+                            <div className="flex items-center">
+                              <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 w-6 rounded-full flex items-center justify-center mr-2">
+                                <span className="text-white font-bold text-xs">{reply.user?.name?.charAt(0) || 'U'}</span>
+                              </div>
+                              <h5 className="font-medium text-white text-sm">{reply.user?.name || 'Anonymous'}</h5>
+                            </div>
+                            <span className="text-gray-500 text-xs">{new Date(reply.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-gray-300 text-sm">
+                            {reply.comment}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
