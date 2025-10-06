@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
 import { getProductById, getProducts } from '../services/productService';
+import api from '../services/api';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -16,6 +17,10 @@ const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [relatedProductsPage, setRelatedProductsPage] = useState(1);
   const [relatedProductsTotalPages, setRelatedProductsTotalPages] = useState(1);
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+  const [isAddingReview, setIsAddingReview] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const { isAuthenticated, user } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
   const { addToWishlist, isInWishlist, removeFromWishlist } = useContext(WishlistContext);
@@ -23,6 +28,7 @@ const ProductDetails = () => {
   useEffect(() => {
     fetchProduct();
     fetchRelatedProducts(1);
+    fetchReviews();
   }, [id]);
 
   const fetchProduct = async () => {
@@ -60,8 +66,17 @@ const ProductDetails = () => {
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      const response = await api.get(`/reviews/${id}`);
+      setReviews(response.data);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    }
+  };
+
   const handleQuantityChange = (value) => {
-    if (value >= 1 && value <= 10) {
+    if (value >= 1 && value <= (product?.stock || 10)) {
       setQuantity(value);
     }
   };
@@ -74,8 +89,11 @@ const ProductDetails = () => {
     }
     
     try {
-      // Assuming addToCartAPI exists - you'll need to implement this
-      // await addToCartAPI(product.id, quantity);
+      // Add to cart API call
+      await api.post('/cart', {
+        product_id: product.id,
+        quantity: quantity
+      });
       // Also add to local cart for immediate UI update
       addToLocalCart(product, quantity);
       // Redirect to cart page
@@ -89,19 +107,56 @@ const ProductDetails = () => {
   const handleToggleWishlist = async () => {
     if (!isAuthenticated) {
       // For non-authenticated users, we could show a login prompt
+      navigate('/login');
       return;
     }
     
-    if (isInWishlist(product.id)) {
-      await removeFromWishlist(product.id);
-    } else {
-      await addToWishlist(product);
+    try {
+      if (isInWishlist(product.id)) {
+        await api.delete(`/wishlist/${product.id}`);
+        await removeFromWishlist(product.id);
+      } else {
+        await api.post('/wishlist', { product_id: product.id });
+        await addToWishlist(product);
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err);
     }
   };
 
   const handleRelatedProductsPageChange = (page) => {
     setRelatedProductsPage(page);
     fetchRelatedProducts(page);
+  };
+
+  const handleAddReview = async (e) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
+    setIsAddingReview(true);
+    try {
+      const response = await api.post(`/reviews/${id}`, newReview);
+      setReviews([response.data, ...reviews]);
+      setNewReview({ rating: 5, comment: '' });
+      
+      // Send notification to product owner and admin if user is not admin
+      if (user && user.role !== 'admin') {
+        // In a real app, this would be handled by the backend
+        console.log('Notification sent to product owner and admin');
+      }
+    } catch (err) {
+      console.error('Error adding review:', err);
+    } finally {
+      setIsAddingReview(false);
+    }
+  };
+
+  const handleReplyToReview = async (reviewId, replyText) => {
+    // This would be implemented for admin functionality
+    console.log('Reply to review:', reviewId, replyText);
   };
 
   const getImageUrl = (imagePath) => {
@@ -145,6 +200,24 @@ const ProductDetails = () => {
     }
     
     return [];
+  };
+
+  const shareProduct = (platform) => {
+    const url = window.location.href;
+    const title = product?.title || 'Check out this product';
+    
+    const shareUrls = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`,
+      email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`Check out this product: ${url}`)}`
+    };
+    
+    if (shareUrls[platform]) {
+      window.open(shareUrls[platform], '_blank');
+    }
+    setShowShareModal(false);
   };
 
   if (loading) {
@@ -233,10 +306,10 @@ const ProductDetails = () => {
                 </svg>
               ))}
             </div>
-            <span className="ml-2 text-gray-400">(24 reviews)</span>
+            <span className="ml-2 text-gray-400">({reviews.length} reviews)</span>
           </div>
 
-          <p className="text-3xl font-bold text-gold mb-6">${parseFloat(product.price)?.toFixed(2) || '0.00'}</p>
+          <p className="text-3xl font-bold text-gold mb-6">${(parseFloat(product.price) * quantity).toFixed(2)}</p>
 
           <p className="text-gray-300 mb-8">{product.description}</p>
 
@@ -255,7 +328,7 @@ const ProductDetails = () => {
                 <button 
                   onClick={() => handleQuantityChange(quantity + 1)}
                   className="px-3 py-2 text-gray-300 hover:text-white"
-                  disabled={quantity >= 10}
+                  disabled={quantity >= (product.stock || 10)}
                 >
                   +
                 </button>
@@ -278,9 +351,36 @@ const ProductDetails = () => {
             </div>
           </div>
 
+          {/* Product Owner Info */}
+          <div className="border-t border-gray-700 pt-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="bg-gradient-to-r from-gold to-yellow-500 h-12 w-12 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-black font-bold">{product.seller?.name?.charAt(0) || 'U'}</span>
+                </div>
+                <div>
+                  <p className="text-white font-semibold">Sold by</p>
+                  <Link 
+                    to={`/seller/${product.seller?.id}`} 
+                    className="text-gold hover:text-yellow-500 transition-colors"
+                  >
+                    {product.seller?.name || 'Unknown Seller'}
+                  </Link>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-gray-400 text-sm">Views</p>
+                <p className="text-white font-bold">{product.view_count || 0}</p>
+              </div>
+            </div>
+          </div>
+
           <div className="border-t border-gray-700 pt-6">
             <div className="flex space-x-6">
-              <button className="flex items-center text-gray-400 hover:text-gold transition-colors">
+              <button 
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center text-gray-400 hover:text-gold transition-colors"
+              >
                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                 </svg>
@@ -304,6 +404,84 @@ const ProductDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">Share Product</h3>
+              <button 
+                onClick={() => setShowShareModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <button 
+                onClick={() => shareProduct('facebook')}
+                className="flex flex-col items-center p-3 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <svg className="w-6 h-6 text-white mb-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
+                </svg>
+                <span className="text-white text-sm">Facebook</span>
+              </button>
+              <button 
+                onClick={() => shareProduct('twitter')}
+                className="flex flex-col items-center p-3 bg-blue-400 rounded-lg hover:bg-blue-500 transition-colors"
+              >
+                <svg className="w-6 h-6 text-white mb-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/>
+                </svg>
+                <span className="text-white text-sm">Twitter</span>
+              </button>
+              <button 
+                onClick={() => shareProduct('whatsapp')}
+                className="flex flex-col items-center p-3 bg-green-500 rounded-lg hover:bg-green-600 transition-colors"
+              >
+                <svg className="w-6 h-6 text-white mb-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.386"/>
+                </svg>
+                <span className="text-white text-sm">WhatsApp</span>
+              </button>
+              <button 
+                onClick={() => shareProduct('linkedin')}
+                className="flex flex-col items-center p-3 bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors"
+              >
+                <svg className="w-6 h-6 text-white mb-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+                <span className="text-white text-sm">LinkedIn</span>
+              </button>
+              <button 
+                onClick={() => shareProduct('email')}
+                className="flex flex-col items-center p-3 bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-6 h-6 text-white mb-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                <span className="text-white text-sm">Email</span>
+              </button>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  setShowShareModal(false);
+                }}
+                className="flex flex-col items-center p-3 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <svg className="w-6 h-6 text-white mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span className="text-white text-sm">Copy Link</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Related Products */}
       <div className="mt-16">
@@ -372,6 +550,49 @@ const ProductDetails = () => {
       {/* Product Reviews */}
       <div className="mt-16">
         <h2 className="text-2xl font-bold text-white mb-6">Customer Reviews</h2>
+        
+        {/* Add Review Form */}
+        {isAuthenticated && (
+          <div className="bg-gray-800 rounded-xl shadow-md p-6 mb-8">
+            <h3 className="text-xl font-bold text-white mb-4">Add Your Review</h3>
+            <form onSubmit={handleAddReview}>
+              <div className="mb-4">
+                <label className="block text-gray-300 mb-2">Rating</label>
+                <div className="flex space-x-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setNewReview({...newReview, rating: star})}
+                      className={`text-2xl ${star <= newReview.rating ? 'text-yellow-400' : 'text-gray-600'}`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-300 mb-2">Comment</label>
+                <textarea
+                  value={newReview.comment}
+                  onChange={(e) => setNewReview({...newReview, comment: e.target.value})}
+                  className="w-full bg-gray-700 text-white rounded-lg p-3 border border-gray-600 focus:border-gold focus:outline-none"
+                  rows="4"
+                  placeholder="Share your experience with this product..."
+                ></textarea>
+              </div>
+              <button
+                type="submit"
+                disabled={isAddingReview}
+                className="bg-gradient-to-r from-gold to-yellow-600 hover:from-yellow-600 hover:to-gold text-black font-bold py-2 px-6 rounded-lg transition-all duration-300 disabled:opacity-50"
+              >
+                {isAddingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+          </div>
+        )}
+        
+        {/* Reviews List */}
         <div className="bg-gray-800 rounded-xl shadow-md p-6">
           <div className="flex items-center mb-4">
             <div className="flex text-yellow-400 mr-4">
@@ -381,29 +602,54 @@ const ProductDetails = () => {
                 </svg>
               ))}
             </div>
-            <span className="text-gray-400">4.8 (24 reviews)</span>
+            <span className="text-gray-400">{reviews.length} reviews</span>
           </div>
           
           <div className="space-y-6">
-            {[1, 2, 3].map((review) => (
-              <div key={review} className="border-b border-gray-700 pb-6 last:border-0 last:pb-0">
-                <div className="flex justify-between mb-2">
-                  <h4 className="font-semibold text-white">John D.</h4>
-                  <span className="text-gray-500 text-sm">2 days ago</span>
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <div key={review.id} className="border-b border-gray-700 pb-6 last:border-0 last:pb-0">
+                  <div className="flex justify-between mb-2">
+                    <div className="flex items-center">
+                      <div className="bg-gradient-to-r from-gold to-yellow-500 h-8 w-8 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-black font-bold text-sm">{review.user?.name?.charAt(0) || 'U'}</span>
+                      </div>
+                      <h4 className="font-semibold text-white">{review.user?.name || 'Anonymous'}</h4>
+                    </div>
+                    <span className="text-gray-500 text-sm">{new Date(review.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex text-yellow-400 mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className={`w-4 h-4 fill-current ${i < review.rating ? 'text-yellow-400' : 'text-gray-600'}`} viewBox="0 0 24 24">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-gray-300 mb-3">
+                    {review.comment}
+                  </p>
+                  
+                  {/* Admin Reply Section */}
+                  {user && user.role === 'admin' && (
+                    <div className="mt-4 pl-4 border-l-2 border-gold">
+                      <textarea
+                        className="w-full bg-gray-700 text-white rounded-lg p-2 border border-gray-600 focus:border-gold focus:outline-none text-sm"
+                        rows="2"
+                        placeholder="Reply to this review..."
+                        // In a real implementation, you would handle the reply submission
+                      ></textarea>
+                      <button className="mt-2 bg-gold text-black px-3 py-1 rounded text-sm font-semibold">
+                        Reply
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="flex text-yellow-400 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-gray-300">
-                  Absolutely stunning watch! The craftsmanship is exceptional and it looks even better in person. 
-                  Worth every penny for a special occasion piece.
-                </p>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                No reviews yet. Be the first to review this product!
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
