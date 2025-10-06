@@ -72,8 +72,55 @@ export const addReviewReply = async (productId, reviewId, replyData) => {
   }
 };
 
+// Delete a review or reply
+export const deleteReview = async (reviewId) => {
+  try {
+    console.log("=== REVIEWS SERVICE - DELETE REVIEW ===");
+    console.log("Review ID:", reviewId);
+
+    const response = await api.delete(`/reviews/${reviewId}`);
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("=== REVIEWS SERVICE ERROR - DELETE REVIEW ===");
+    console.error("Error:", error);
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    } else if (error.message) {
+      throw new Error(error.message);
+    } else {
+      throw new Error("An unknown error occurred");
+    }
+  }
+};
+
+// Update a review or reply
+export const updateReview = async (reviewId, reviewData) => {
+  try {
+    console.log("=== REVIEWS SERVICE - UPDATE REVIEW ===");
+    console.log("Review ID:", reviewId);
+    console.log("Review Data:", reviewData);
+
+    const response = await api.put(`/reviews/${reviewId}`, reviewData);
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("=== REVIEWS SERVICE ERROR - UPDATE REVIEW ===");
+    console.error("Error:", error);
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    } else if (error.message) {
+      throw new Error(error.message);
+    } else {
+      throw new Error("An unknown error occurred");
+    }
+  }
+};
+
 export default {
   getProductReviews,
   addProductReview,
   addReviewReply,
+  deleteReview,
+  updateReview,
 };
