@@ -35,7 +35,7 @@ const About = () => {
   return (
     <div className="about-page">
       {/* Modern Hero Section */}
-      <section className="relative w-full h-screen overflow-hidden">
+      <section className="relative w-full h-[70vh] overflow-hidden -mt-20 pt-20">
         {/* Background with Overlay */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/90"></div>
@@ -46,40 +46,32 @@ const About = () => {
           />
         </div>
         
-        {/* Floating Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-2 h-2 bg-gold rounded-full animate-pulse opacity-60"></div>
-          <div className="absolute top-40 right-20 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
-          <div className="absolute bottom-60 left-20 w-1.5 h-1.5 bg-gold rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
-          <div className="absolute bottom-40 right-10 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
-        </div>
-        
         {/* Main Content - Centered */}
-        <div className="relative z-10 flex items-center justify-center h-full px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
+        <div className="relative z-10 flex items-center justify-center h-full px-4 sm:px-6">
+          <div className="text-center max-w-3xl mx-auto">
             <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <span className="inline-block bg-gold/10 text-gold px-4 py-1 rounded-full text-sm font-medium mb-6">
+              <span className="inline-block bg-gold/10 text-gold px-3 py-1 rounded-full text-xs font-medium mb-4">
                 OUR STORY
               </span>
             </div>
             
             <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
                 About Luxury Store
               </h1>
             </div>
             
             <div className="animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-              <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base md:text-lg text-gray-200 mb-6 max-w-xl mx-auto leading-relaxed">
                 Crafting exceptional experiences through premium luxury products
               </p>
             </div>
             
             <div className="animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex justify-center">
                 <a 
                   href="#our-story" 
-                  className="group bg-gold text-black px-8 py-4 font-bold text-sm uppercase tracking-wider transition-all duration-300 hover:bg-white hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center"
+                  className="group bg-gold text-black px-6 py-3 font-bold text-xs uppercase tracking-wider transition-all duration-300 hover:bg-white hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center"
                 >
                   Discover Our Story
                 </a>
@@ -89,143 +81,143 @@ const About = () => {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-12">
         {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {stats.map((stat) => (
-            <div key={stat.id} className="text-center p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-xl shadow-lg border border-gray-700">
-              <div className="text-3xl md:text-4xl font-bold text-gold mb-2">{stat.value}</div>
-              <div className="text-gray-300">{stat.label}</div>
+            <div key={stat.id} className="text-center p-4 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
+              <div className="text-2xl font-bold text-gold mb-1">{stat.value}</div>
+              <div className="text-gray-300 text-sm">{stat.label}</div>
             </div>
           ))}
         </div>
 
-        <div className="glass p-8 rounded-xl mb-12 shadow-lg">
-          <h2 className="text-3xl font-bold mb-6 text-white">Our Story</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div id="our-story" className="bg-black bg-opacity-30 backdrop-blur-lg p-6 rounded-lg mb-10 shadow border border-gray-700">
+          <h2 className="text-2xl font-bold mb-5 text-white">Our Story</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div>
-              <p className="text-gray-300 mb-4 text-lg leading-relaxed">
+              <p className="text-gray-300 mb-3 text-base leading-relaxed">
                 Founded in 2025, Luxury Store began with a simple vision: to make premium luxury products accessible to everyone. 
                 What started as a small online boutique has grown into a premier destination for discerning customers seeking 
                 exceptional quality and timeless design.
               </p>
-              <p className="text-gray-300 mb-4 text-lg leading-relaxed">
+              <p className="text-gray-300 mb-3 text-base leading-relaxed">
                 Our carefully curated collection features only the finest products from renowned artisans and emerging designers 
                 who share our commitment to craftsmanship, sustainability, and innovation. Each item in our store is selected 
                 for its superior quality, unique design, and enduring value.
               </p>
-              <p className="text-gray-300 text-lg leading-relaxed">
+              <p className="text-gray-300 text-base leading-relaxed">
                 Today, we continue to honor our founding principles while embracing new technologies and trends that enhance 
                 the luxury shopping experience. Our dedicated team works tirelessly to ensure that every interaction with 
                 Luxury Store reflects the excellence we expect from ourselves and our partners.
               </p>
             </div>
-            <div className="bg-gray-200 h-80 rounded-xl flex items-center justify-center">
+            <div className="bg-gray-200 h-60 rounded-lg flex items-center justify-center">
               <img 
                 src="/src/assets/apple-computer-decor-design-326502.jpg" 
                 alt="Our Store" 
-                className="w-full h-full object-cover rounded-xl"
+                className="w-full h-full object-cover rounded-lg"
               />
             </div>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="glass p-8 rounded-xl text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="bg-gold h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+          <div className="bg-black bg-opacity-30 backdrop-blur-lg p-5 rounded-lg text-center shadow border border-gray-700 hover:shadow-lg transition-shadow duration-300">
+            <div className="bg-gold h-14 w-14 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold mb-4 text-white">Authenticity Guaranteed</h3>
-            <p className="text-gray-300">
+            <h3 className="text-lg font-bold mb-2 text-white">Authenticity Guaranteed</h3>
+            <p className="text-gray-300 text-sm">
               Every product comes with a certificate of authenticity and our 100% satisfaction guarantee.
             </p>
           </div>
           
-          <div className="glass p-8 rounded-xl text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="bg-gold h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-black bg-opacity-30 backdrop-blur-lg p-5 rounded-lg text-center shadow border border-gray-700 hover:shadow-lg transition-shadow duration-300">
+            <div className="bg-gold h-14 w-14 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold mb-4 text-white">Worldwide Shipping</h3>
-            <p className="text-gray-300">
+            <h3 className="text-lg font-bold mb-2 text-white">Worldwide Shipping</h3>
+            <p className="text-gray-300 text-sm">
               Free express shipping on all orders over $200, with delivery to over 100 countries.
             </p>
           </div>
           
-          <div className="glass p-8 rounded-xl text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="bg-gold h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="bg-black bg-opacity-30 backdrop-blur-lg p-5 rounded-lg text-center shadow border border-gray-700 hover:shadow-lg transition-shadow duration-300">
+            <div className="bg-gold h-14 w-14 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold mb-4 text-white">24/7 Support</h3>
-            <p className="text-gray-300">
+            <h3 className="text-lg font-bold mb-2 text-white">24/7 Support</h3>
+            <p className="text-gray-300 text-sm">
               Our dedicated customer service team is available around the clock to assist you.
             </p>
           </div>
         </div>
         
-        <div className="glass p-8 rounded-xl shadow-lg mb-12">
-          <h2 className="text-3xl font-bold mb-8 text-white">Our Values</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
-              <div className="flex items-start mb-4">
-                <div className="bg-gold h-12 w-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="bg-black bg-opacity-30 backdrop-blur-lg p-6 rounded-lg shadow mb-10 border border-gray-700">
+          <h2 className="text-2xl font-bold mb-6 text-white">Our Values</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="p-4 bg-gray-900 bg-opacity-50 rounded shadow border border-gray-700">
+              <div className="flex items-start mb-3">
+                <div className="bg-gold h-10 w-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-white">Quality First</h3>
+                <h3 className="text-lg font-semibold text-white">Quality First</h3>
               </div>
-              <p className="text-gray-300">
+              <p className="text-gray-300 text-sm">
                 We never compromise on quality. Every product undergoes rigorous testing and inspection 
                 to ensure it meets our exacting standards.
               </p>
             </div>
             
-            <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
-              <div className="flex items-start mb-4">
-                <div className="bg-gold h-12 w-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-4 bg-gray-900 bg-opacity-50 rounded shadow border border-gray-700">
+              <div className="flex items-start mb-3">
+                <div className="bg-gold h-10 w-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-white">Sustainability</h3>
+                <h3 className="text-lg font-semibold text-white">Sustainability</h3>
               </div>
-              <p className="text-gray-300">
+              <p className="text-gray-300 text-sm">
                 We're committed to reducing our environmental impact through responsible sourcing, 
                 eco-friendly packaging, and supporting sustainable brands.
               </p>
             </div>
             
-            <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
-              <div className="flex items-start mb-4">
-                <div className="bg-gold h-12 w-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-4 bg-gray-900 bg-opacity-50 rounded shadow border border-gray-700">
+              <div className="flex items-start mb-3">
+                <div className="bg-gold h-10 w-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-white">Customer Focus</h3>
+                <h3 className="text-lg font-semibold text-white">Customer Focus</h3>
               </div>
-              <p className="text-gray-300">
+              <p className="text-gray-300 text-sm">
                 Your satisfaction is our priority. We go above and beyond to ensure every customer 
                 has an exceptional shopping experience.
               </p>
             </div>
             
-            <div className="p-6 bg-black bg-opacity-30 backdrop-blur-lg rounded-lg shadow border border-gray-700">
-              <div className="flex items-start mb-4">
-                <div className="bg-gold h-12 w-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-4 bg-gray-900 bg-opacity-50 rounded shadow border border-gray-700">
+              <div className="flex items-start mb-3">
+                <div className="bg-gold h-10 w-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-white">Innovation</h3>
+                <h3 className="text-lg font-semibold text-white">Innovation</h3>
               </div>
-              <p className="text-gray-300">
+              <p className="text-gray-300 text-sm">
                 We constantly seek new ways to enhance your shopping experience through technology 
                 and thoughtful design.
               </p>
@@ -234,27 +226,25 @@ const About = () => {
         </div>
 
         {/* Team Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-white text-center">Our Leadership Team</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {teamMembers.map((member, index) => (
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-white text-center">Our Leadership Team</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {teamMembers.map((member) => (
               <div 
                 key={member.id} 
-                className="bg-black bg-opacity-30 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 border border-gray-700 hover:border-gold group animate-fade-in-up"
-                style={{ animationDelay: `${index * 200}ms` }}
+                className="bg-black bg-opacity-30 backdrop-blur-lg rounded-lg overflow-hidden shadow border border-gray-700 hover:shadow-lg transition-all duration-300 hover:border-gold"
               >
-                <div className="h-64 overflow-hidden relative">
+                <div className="h-48 overflow-hidden">
                   <img 
                     src={member.image} 
                     alt={member.name} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500"></div>
                 </div>
-                <div className="p-6 transform transition-transform duration-300 group-hover:translate-y-[-4px]">
-                  <h3 className="text-xl font-bold mb-1 text-white transition-colors duration-300 group-hover:text-gold">{member.name}</h3>
-                  <p className="text-gold mb-3 transition-colors duration-300 group-hover:text-yellow-400">{member.position}</p>
-                  <p className="text-gray-300 transition-colors duration-300 group-hover:text-white">{member.bio}</p>
+                <div className="p-4">
+                  <h3 className="text-lg font-bold mb-1 text-white">{member.name}</h3>
+                  <p className="text-gold text-sm mb-2">{member.position}</p>
+                  <p className="text-gray-300 text-sm">{member.bio}</p>
                 </div>
               </div>
             ))}
