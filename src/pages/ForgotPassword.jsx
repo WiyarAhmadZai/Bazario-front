@@ -30,7 +30,7 @@ const ForgotPassword = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/send-password-reset-code', {
+      const response = await fetch('/api/send-password-reset-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ const ForgotPassword = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/reset-password', {
+      const response = await fetch('/api/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ const ForgotPassword = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/send-password-reset-code', {
+      const response = await fetch('/api/send-password-reset-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
