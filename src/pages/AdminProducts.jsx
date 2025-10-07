@@ -57,7 +57,10 @@ const AdminProducts = () => {
       if (response && response.data && Array.isArray(response.data)) {
         // Log the first few products to see their image data
         response.data.slice(0, 3).forEach(product => {
-          console.log('Product ID:', product.id, 'Images:', product.images, 'Type:', typeof product.images);
+          console.log('Product ID:', product.id, 'Title:', product.title);
+          console.log('Images:', product.images, 'Type:', typeof product.images);
+          console.log('Parsed image URL:', getImageUrl(product.images));
+          console.log('---');
         });
         
         setProducts(response.data);
@@ -119,6 +122,8 @@ const AdminProducts = () => {
 
   // Helper function to get image URL
   const getImageUrl = (imagePath) => {
+    console.log('Processing image path:', imagePath, 'Type:', typeof imagePath);
+    
     // Handle null, undefined, or empty paths
     if (!imagePath || imagePath === '' || imagePath === '[]' || imagePath === 'null' || imagePath === 'undefined') {
       return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
@@ -127,31 +132,28 @@ const AdminProducts = () => {
     // Handle string representations of arrays (JSON) - this is the main fix
     if (typeof imagePath === 'string' && imagePath.startsWith('[')) {
       try {
-        // Check if it's a valid JSON string before parsing
-        if (imagePath.trim().endsWith(']')) {
-          const parsed = JSON.parse(imagePath);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            imagePath = parsed[0]; // Get the first image from the parsed array
-          } else {
-            return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
-          }
+        const parsed = JSON.parse(imagePath);
+        console.log('Parsed image array:', parsed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          imagePath = parsed[0]; // Get the first image from the parsed array
+          console.log('Using first image:', imagePath);
         } else {
-          // Malformed JSON, treat as regular string
           return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
         }
       } catch (e) {
         console.error('Error parsing image array:', e, 'Input:', imagePath);
-        // If parsing fails, treat as regular string
         return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
       }
     }
     
     // Handle direct arrays
     if (Array.isArray(imagePath)) {
+      console.log('Direct array found:', imagePath);
       if (imagePath.length === 0) {
         return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
       }
       imagePath = imagePath[0]; // Use the first image
+      console.log('Using first image from array:', imagePath);
     }
     
     // Additional check for empty or whitespace-only strings
@@ -176,15 +178,44 @@ const AdminProducts = () => {
     }
     
     // Fallback for any other cases
+    console.log('Using fallback image');
     return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
   };
 
-  // Update product status
+  // Update product status with confirmation
   const updateProductStatus = async (productId, status) => {
+    // Show confirmation dialog first
+    const result = await Swal.fire({
+      title: 'Confirm Status Change',
+      text: `Are you sure you want to change this product's status to "${status}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, change it!',
+      cancelButtonText: 'Cancel'
+    });
+
+    // If user cancels, don't proceed
+    if (!result.isConfirmed) {
+      return;
+    }
+
     try {
       console.log(`Updating product ${productId} to status ${status}`);
-      await updateProduct(productId, { status });
+      
+      // Show loading state
+      setLoading(true);
+      
+      const response = await updateProduct(productId, { status });
+      console.log('Update response:', response);
+      console.log('Response status field:', response.status);
+      console.log('Response product field:', response.product);
       console.log(`Successfully updated product ${productId} to status ${status}`);
+      
+      // Use the status from the response if available
+      const actualStatus = response.status || response.product?.status || status;
+      console.log('Actual status from response:', actualStatus);
       
       // Show success message with SweetAlert
       Swal.fire({
@@ -198,17 +229,43 @@ const AdminProducts = () => {
       // Update the product status in the local state without reloading the page
       setProducts(prevProducts => 
         prevProducts.map(product => 
-          product.id === productId ? { ...product, status } : product
+          product.id === productId ? { ...product, status: actualStatus } : product
         )
       );
+      
+      // Clear any previous errors
+      setError('');
+      
+      // Force refresh the products list to ensure we have the latest data
+      setTimeout(() => {
+        fetchProducts(currentPage);
+      }, 1000);
+      
     } catch (err) {
       console.error('Error updating product status:', err);
       let errorMessage = 'Failed to update product status.';
-      if (err.response && err.response.data && err.response.data.message) {
-        errorMessage = err.response.data.message;
+      
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response data:', err.response.data);
+        
+        if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data && err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else if (err.response.status === 403) {
+          errorMessage = 'Access denied. Admin privileges required.';
+        } else if (err.response.status === 401) {
+          errorMessage = 'Authentication required. Please login again.';
+        } else if (err.response.status === 404) {
+          errorMessage = 'Product not found.';
+        }
+      } else if (err.request) {
+        errorMessage = 'No response from server. Please check your connection.';
       } else if (err.message) {
         errorMessage = err.message;
       }
+      
       setError(errorMessage);
       
       // Show error message with SweetAlert
@@ -219,6 +276,8 @@ const AdminProducts = () => {
         confirmButtonText: 'OK',
         confirmButtonColor: '#d33'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -238,7 +297,20 @@ const AdminProducts = () => {
       <div className="flex flex-col md:flex-row justify-between items-center mb-12">
         <div>
           <h1 className="text-4xl font-extrabold text-white mb-2">Product Management</h1>
-          <p className="text-lg text-gray-300">Manage product approvals and status</p>
+          <p className="text-lg text-gray-300">Manage product approvals and status ({products.length} products)</p>
+        </div>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => fetchProducts(currentPage)}
+            disabled={loading}
+            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center disabled:opacity-50"
+            title="Refresh products list"
+          >
+            <svg className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
         </div>
       </div>
 
