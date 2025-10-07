@@ -45,6 +45,8 @@ const Profile = () => {
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsPage, setProductsPage] = useState(1);
   const [productsTotalPages, setProductsTotalPages] = useState(1);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedProductImage, setSelectedProductImage] = useState(null);
 
   // Security section states
   const [showSessions, setShowSessions] = useState(false);
@@ -395,6 +397,18 @@ const Profile = () => {
     }
     
     return '/src/assets/abstract-art-circle-clockwork-414579.jpg';
+  };
+
+  // Calculate discount percentage
+  const calculateDiscountPercentage = (price, discount) => {
+    if (!discount || discount <= 0) return 0;
+    return Math.round((discount / price) * 100);
+  };
+
+  // Handle image modal
+  const handleImageClick = (product) => {
+    setSelectedProductImage(getProductImageUrl(product));
+    setShowImageModal(true);
   };
 
   const fetchUserProducts = async (page = 1) => {
@@ -879,56 +893,78 @@ const Profile = () => {
                   <>
                     {userProducts.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {userProducts.map((product) => (
-                          <div key={product.id} className="bg-gray-700 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-gray-600">
-                            <div className="relative">
-                              <Link to={`/product/${product.id}`} className="block">
+                        {userProducts.map((product) => {
+                          const discountPercentage = calculateDiscountPercentage(parseFloat(product.price), parseFloat(product.discount || 0));
+                          const discountedPrice = parseFloat(product.price) - parseFloat(product.discount || 0);
+                          
+                          return (
+                            <div key={product.id} className="bg-gray-700 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-gray-600">
+                              <div className="relative">
                                 <img 
                                   src={getProductImageUrl(product)}
                                   alt={product.title}
                                   className="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-200 cursor-pointer"
+                                  onClick={() => handleImageClick(product)}
                                   onError={(e) => {
                                     e.target.src = '/src/assets/abstract-art-circle-clockwork-414579.jpg';
                                   }}
                                 />
-                              </Link>
-                              {product.is_featured && (
-                                <div className="absolute top-2 right-2 bg-gradient-to-r from-gold to-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
-                                  Featured
+                                {product.is_featured && (
+                                  <div className="absolute top-2 right-2 bg-gradient-to-r from-gold to-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
+                                    Featured
+                                  </div>
+                                )}
+                                {discountPercentage > 0 && (
+                                  <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                    -{discountPercentage}%
+                                  </div>
+                                )}
+                              </div>
+                              <div className="p-4">
+                                <Link to={`/product/${product.id}`} className="block">
+                                  <h4 className="font-bold text-white mb-1 line-clamp-1 hover:text-gold transition-colors duration-200 cursor-pointer">{product.title}</h4>
+                                </Link>
+                                <p className="text-gray-300 text-sm mb-3 line-clamp-2">{product.description}</p>
+                                
+                                {/* Price Section */}
+                                <div className="mb-3">
+                                  {discountPercentage > 0 ? (
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-lg font-bold text-gold">${discountedPrice.toFixed(2)}</span>
+                                      <span className="text-sm text-gray-400 line-through">${product.price}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-lg font-bold text-gold">${product.price}</span>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                            <div className="p-4">
-                              <Link to={`/product/${product.id}`} className="block">
-                                <h4 className="font-bold text-white mb-1 line-clamp-1 hover:text-gold transition-colors duration-200 cursor-pointer">{product.title}</h4>
-                              </Link>
-                              <p className="text-gray-300 text-sm mb-3 line-clamp-2">{product.description}</p>
-                              <div className="flex justify-between items-center">
-                                <span className="text-lg font-bold text-gold">${product.price}</span>
-                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                  product.status === 'approved' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : product.status === 'pending' 
-                                      ? 'bg-yellow-100 text-yellow-800' 
-                                      : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {product.status}
-                                </span>
-                              </div>
-                              <div className="mt-3 text-sm text-gray-400">
-                                {product.stock > 0 && (
-                                  <span>Stock: {product.stock}</span>
-                                )}
-                                {product.stock > 0 && product.view_count > 0 && (
-                                  <span> | </span>
-                                )}
-                                {product.view_count > 0 && (
-                                  <span>Views: {product.view_count}</span>
-                                )}
+                                
+                                <div className="flex justify-between items-center">
+                                  <span className={`px-2 py-1 rounded-full text-xs ${
+                                    product.status === 'approved' 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : product.status === 'pending' 
+                                        ? 'bg-yellow-100 text-yellow-800' 
+                                        : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {product.status}
+                                  </span>
+                                </div>
+                                
+                                <div className="mt-3 text-sm text-gray-400">
+                                  {product.stock > 0 && (
+                                    <span>Stock: {product.stock}</span>
+                                  )}
+                                  {product.stock > 0 && product.view_count > 0 && (
+                                    <span> | </span>
+                                  )}
+                                  {product.view_count > 0 && (
+                                    <span>Views: {product.view_count}</span>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="text-center py-12">
@@ -1441,6 +1477,32 @@ const Profile = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Modal */}
+      {showImageModal && selectedProductImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+          <div className="relative max-w-4xl max-h-full">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute -top-4 -right-4 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors duration-200 z-10"
+              title="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Image */}
+            <img
+              src={selectedProductImage}
+              alt="Product"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              style={{ maxHeight: '80vh', maxWidth: '80vw' }}
+            />
           </div>
         </div>
       )}
