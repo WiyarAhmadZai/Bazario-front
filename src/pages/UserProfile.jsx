@@ -183,7 +183,8 @@ const UserProfile = () => {
   // Calculate discount percentage
   const calculateDiscountPercentage = (originalPrice, discount) => {
     if (!discount || discount <= 0) return 0;
-    return Math.round((discount / originalPrice) * 100);
+    // Discount is already stored as a percentage, so return it directly
+    return Math.round(discount);
   };
 
   const getImageUrl = (imagePath) => {
@@ -281,17 +282,17 @@ const UserProfile = () => {
                 onClick={() => setShowImageModal(true)}
                 title="Click to view full size"
               >
-                {user.avatar ? (
-                  <img 
-                    src={`http://localhost:8000/storage/${user.avatar}`} 
-                    alt={user.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
+            {user.avatar ? (
+              <img 
+                src={`http://localhost:8000/storage/${user.avatar}`} 
+                alt={user.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
                 <div className="bg-gradient-to-br from-gold via-yellow-500 to-yellow-600 h-full w-full flex items-center justify-center" style={{display: user.avatar ? 'none' : 'flex'}}>
                   <span className="text-black font-bold text-5xl xl:text-6xl">{user.name?.charAt(0) || 'U'}</span>
                 </div>
@@ -422,8 +423,8 @@ const UserProfile = () => {
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
+            </div>
+          </div>
             )}
           </div>
         </div>
@@ -437,7 +438,7 @@ const UserProfile = () => {
             {products.map((product) => {
               const productImages = parseImages(product.images);
               const discountPercentage = calculateDiscountPercentage(product.price, product.discount);
-              const discountedPrice = product.price - (product.discount || 0);
+              const discountedPrice = product.price - (product.price * (product.discount || 0) / 100);
               const likeInfo = productLikes[product.id] || { likeCount: 0, liked: false };
               
               return (
@@ -459,7 +460,7 @@ const UserProfile = () => {
                     {discountPercentage > 0 && (
                       <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
                         -{discountPercentage}%
-                      </div>
+                    </div>
                     )}
                     <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
                       {formatDate(product.created_at)}
