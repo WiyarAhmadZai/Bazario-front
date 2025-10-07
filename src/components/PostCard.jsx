@@ -13,6 +13,7 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
   const [favoritesCount, setFavoritesCount] = useState(post.favorites_count || 0);
   const [isFollowing, setIsFollowing] = useState(post.is_following || false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(post.notifications_enabled || false);
+
   const [showComments, setShowComments] = useState(false);
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
