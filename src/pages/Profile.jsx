@@ -1483,11 +1483,17 @@ const Profile = () => {
 
       {/* Image Modal */}
       {showImageModal && selectedProductImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-          <div className="relative max-w-4xl max-h-full">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative max-w-6xl max-h-full">
             {/* Close Button */}
             <button
-              onClick={() => setShowImageModal(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowImageModal(false);
+              }}
               className="absolute -top-4 -right-4 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors duration-200 z-10"
               title="Close"
             >
@@ -1501,7 +1507,8 @@ const Profile = () => {
               src={selectedProductImage}
               alt="Product"
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-              style={{ maxHeight: '80vh', maxWidth: '80vw' }}
+              style={{ maxHeight: '90vh', maxWidth: '90vw' }}
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </div>
