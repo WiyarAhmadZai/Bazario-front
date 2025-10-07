@@ -41,6 +41,18 @@ export const getLikeStatus = async (productId) => {
     if (error.response?.status === 401) {
       return { liked: false };
     }
+    // Handle network errors gracefully
+    if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+      console.warn("Like status request timed out, returning default value");
+      return { liked: false };
+    }
+    if (
+      error.message.includes("Network Error") ||
+      error.message.includes("No response from server")
+    ) {
+      console.warn("Like status network error, returning default value");
+      return { liked: false };
+    }
     throw error;
   }
 };
@@ -52,6 +64,18 @@ export const getLikeCount = async (productId) => {
     return response.data;
   } catch (error) {
     console.error("Error getting like count:", error);
+    // Return default value instead of throwing error
+    if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+      console.warn("Like count request timed out, returning default value");
+      return { like_count: 0 };
+    }
+    if (
+      error.message.includes("Network Error") ||
+      error.message.includes("No response from server")
+    ) {
+      console.warn("Like count network error, returning default value");
+      return { like_count: 0 };
+    }
     throw error;
   }
 };

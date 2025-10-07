@@ -5,7 +5,7 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   // Remove the default Content-Type header so FormData can set it correctly
   headers: {},
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // 30 second timeout
 });
 
 // Add a request interceptor to include auth token
