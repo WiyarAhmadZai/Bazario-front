@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 class SellerService {
   /**
@@ -7,10 +7,19 @@ class SellerService {
    * @returns {Promise}
    */
   getProducts(page = 1) {
-    return api.get(`/seller/products?page=${page}`).then(response => {
-      console.log('Seller products response:', response);
+    return api.get(`/seller/products?page=${page}`).then((response) => {
+      console.log("Seller products response:", response);
       return response;
     });
+  }
+
+  /**
+   * Get a specific product by ID
+   * @param {number} productId
+   * @returns {Promise}
+   */
+  getProduct(productId) {
+    return api.get(`/seller/products/${productId}`);
   }
 
   /**
@@ -19,10 +28,10 @@ class SellerService {
    * @returns {Promise}
    */
   createProduct(productData) {
-    return api.post('/seller/products', productData, {
+    return api.post("/seller/products", productData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        "Content-Type": "multipart/form-data",
+      },
     });
   }
 
@@ -33,10 +42,10 @@ class SellerService {
    * @returns {Promise}
    */
   updateProduct(productId, productData) {
-    return api.post(`/seller/products/${productId}`, productData, {
+    return api.put(`/seller/products/${productId}`, productData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        "Content-Type": "multipart/form-data",
+      },
     });
   }
 

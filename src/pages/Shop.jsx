@@ -268,7 +268,8 @@ const Shop = () => {
   // Calculate discount percentage
   const calculateDiscountPercentage = (originalPrice, discount) => {
     if (!discount || discount <= 0) return 0;
-    return Math.round((discount / originalPrice) * 100);
+    // Discount is already stored as a percentage, so return it directly
+    return Math.round(discount);
   };
 
   return (
@@ -428,7 +429,7 @@ const Shop = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {products.map((product) => {
                   const discountPercentage = calculateDiscountPercentage(product.price, product.discount);
-                  const discountedPrice = product.price - (product.discount || 0);
+                  const discountedPrice = product.price - (product.price * (product.discount || 0) / 100);
                   const likeInfo = productLikes[product.id] || { likeCount: 0, liked: false };
                   
                   return (
