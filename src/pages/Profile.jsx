@@ -47,6 +47,10 @@ const Profile = () => {
   const [productsTotalPages, setProductsTotalPages] = useState(1);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedProductImage, setSelectedProductImage] = useState(null);
+  const [showProfileImageModal, setShowProfileImageModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Security section states
   const [showSessions, setShowSessions] = useState(false);
@@ -402,13 +406,81 @@ const Profile = () => {
   // Calculate discount percentage
   const calculateDiscountPercentage = (price, discount) => {
     if (!discount || discount <= 0) return 0;
-    return Math.round((discount / price) * 100);
+    // Discount is already stored as a percentage, so return it directly
+    return Math.round(discount);
   };
 
   // Handle image modal
   const handleImageClick = (product) => {
     setSelectedProductImage(getProductImageUrl(product));
     setShowImageModal(true);
+  };
+
+  // Handle profile image click
+  const handleProfileImageClick = () => {
+    if (user?.avatar) {
+      setShowProfileImageModal(true);
+    }
+  };
+
+  // Handle product edit
+  const handleEditProduct = (productId) => {
+    // Navigate to sell product page with edit mode and form view
+    window.location.href = `/sell?edit=${productId}&view=form`;
+  };
+
+  // Handle product delete
+  const handleDeleteProduct = (product) => {
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+
+  // Confirm delete
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/seller/products/${productToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Remove product from local state
+        setUserProducts(prev => prev.filter(p => p.id !== productToDelete.id));
+        setSuccess('Product deleted successfully');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to delete product');
+        setTimeout(() => setError(''), 3000);
+      }
+    } catch (err) {
+      setError('Failed to delete product');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+    }
+  };
+
+  // Format time ago
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+    return `${Math.floor(diffInSeconds / 31536000)} years ago`;
   };
 
   const fetchUserProducts = async (page = 1) => {
@@ -619,7 +691,11 @@ const Profile = () => {
             <div className="flex items-center space-x-6">
               {/* Profile Image with Camera Icon */}
               <div className="relative group">
-                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gold shadow-lg">
+                <div 
+                  className="w-24 h-24 rounded-full overflow-hidden border-4 border-gold shadow-lg cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                  onClick={handleProfileImageClick}
+                  title="Click to view full size"
+                >
               {imagePreview || user?.avatar ? (
                 <img 
                   src={imagePreview || `http://localhost:8000/storage/${user.avatar}`} 
@@ -895,27 +971,28 @@ const Profile = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {userProducts.map((product) => {
                           const discountPercentage = calculateDiscountPercentage(parseFloat(product.price), parseFloat(product.discount || 0));
-                          const discountedPrice = parseFloat(product.price) - parseFloat(product.discount || 0);
+                          const discountedPrice = parseFloat(product.price) - (parseFloat(product.price) * parseFloat(product.discount || 0) / 100);
                           
                           return (
                             <div key={product.id} className="bg-gray-700 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-gray-600">
                               <div className="relative">
-                                <img 
-                                  src={getProductImageUrl(product)}
-                                  alt={product.title}
-                                  className="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-200 cursor-pointer"
-                                  onClick={() => handleImageClick(product)}
-                                  onError={(e) => {
-                                    e.target.src = '/src/assets/abstract-art-circle-clockwork-414579.jpg';
-                                  }}
-                                />
+                                <Link to={`/product/${product.id}`}>
+                                  <img 
+                                    src={getProductImageUrl(product)}
+                                    alt={product.title}
+                                    className="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-200 cursor-pointer"
+                                    onError={(e) => {
+                                      e.target.src = '/src/assets/abstract-art-circle-clockwork-414579.jpg';
+                                    }}
+                                  />
+                                </Link>
                                 {product.is_featured && (
-                                  <div className="absolute top-2 right-2 bg-gradient-to-r from-gold to-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
+                                  <div className="absolute top-2 left-2 bg-gradient-to-r from-gold to-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
                                     Featured
                                   </div>
                                 )}
                                 {discountPercentage > 0 && (
-                                  <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
                                     -{discountPercentage}%
                                   </div>
                                 )}
@@ -951,16 +1028,57 @@ const Profile = () => {
                                 </div>
                                 
                                 <div className="mt-3 text-sm text-gray-400">
-                                  {product.stock > 0 && (
-                                    <span>Stock: {product.stock}</span>
-                                  )}
-                                  {product.stock > 0 && product.view_count > 0 && (
-                                    <span> | </span>
-                                  )}
-                                  {product.view_count > 0 && (
-                                    <span>Views: {product.view_count}</span>
-                                  )}
+                                  <div className="flex justify-between items-center">
+                                    <div>
+                                      {product.stock > 0 && (
+                                        <span>Stock: {product.stock}</span>
+                                      )}
+                                      {product.stock > 0 && product.view_count > 0 && (
+                                        <span> | </span>
+                                      )}
+                                      {product.view_count > 0 && (
+                                        <span>Views: {product.view_count}</span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {formatTimeAgo(product.created_at)}
+                                    </div>
+                                  </div>
                                 </div>
+                                
+                                {/* Edit and Delete Icons - Only show for the product owner */}
+                                {user && product.seller_id === user.id && (
+                                  <div className="flex justify-end space-x-2 mt-3 pt-3 border-t border-gray-600">
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleEditProduct(product.id);
+                                      }}
+                                      className="flex items-center space-x-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg transition-colors duration-200"
+                                      title="Edit Product"
+                                    >
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                      </svg>
+                                      <span>Edit</span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleDeleteProduct(product);
+                                      }}
+                                      className="flex items-center space-x-1 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors duration-200"
+                                      title="Delete Product"
+                                    >
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                      <span>Delete</span>
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
@@ -1481,7 +1599,7 @@ const Profile = () => {
         </div>
       )}
 
-      {/* Image Modal */}
+      {/* Product Image Modal */}
       {showImageModal && selectedProductImage && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
@@ -1510,6 +1628,70 @@ const Profile = () => {
               style={{ maxHeight: '90vh', maxWidth: '90vw' }}
               onClick={(e) => e.stopPropagation()}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Profile Image Modal */}
+      {showProfileImageModal && user?.avatar && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowProfileImageModal(false)}
+        >
+          <div className="relative max-w-4xl max-h-full">
+            {/* Close Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowProfileImageModal(false);
+              }}
+              className="absolute -top-4 -right-4 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors duration-200 z-10"
+              title="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Profile Image */}
+            <img
+              src={`http://localhost:8000/storage/${user.avatar}`}
+              alt="Profile"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              style={{ maxHeight: '90vh', maxWidth: '90vw' }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && productToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
+            <h3 className="text-xl font-bold text-white mb-4">Delete Product</h3>
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to delete "{productToDelete.title}"? This action cannot be undone.
+            </p>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setProductToDelete(null);
+                }}
+                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}
