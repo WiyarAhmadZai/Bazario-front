@@ -5,6 +5,20 @@ import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
 import { getProducts } from '../services/productService';
 import { getCategories } from '../services/categoryService';
+import { likeProduct, unlikeProduct, getLikeStatus, getLikeCount } from '../services/likeService';
+import ShareModal from '../components/ShareModal';
+// SVG Icons
+const HeartIcon = ({ filled = false }) => (
+  <svg className="w-4 h-4" fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+  </svg>
+);
+
+const ShareIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+  </svg>
+);
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -18,6 +32,9 @@ const Shop = () => {
     search: '',
     sort_by: 'newest'
   });
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productLikes, setProductLikes] = useState({});
   
   const { isAuthenticated } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
@@ -76,6 +93,31 @@ const Shop = () => {
         setProducts(response.data);
         setCurrentPage(response.current_page || 1);
         setTotalPages(response.last_page || 1);
+        
+        // Fetch like counts and status for all products
+        const likePromises = response.data.map(async (product) => {
+          try {
+            const [likeCountResponse, likeStatusResponse] = await Promise.all([
+              getLikeCount(product.id),
+              getLikeStatus(product.id)
+            ]);
+            return { 
+              productId: product.id, 
+              likeCount: likeCountResponse.like_count,
+              liked: likeStatusResponse.liked
+            };
+          } catch (err) {
+            console.error(`Error fetching like data for product ${product.id}:`, err);
+            return { productId: product.id, likeCount: 0, liked: false };
+          }
+        });
+        
+        const likeData = await Promise.all(likePromises);
+        const likesMap = {};
+        likeData.forEach(({ productId, likeCount, liked }) => {
+          likesMap[productId] = { likeCount, liked };
+        });
+        setProductLikes(likesMap);
       } else {
         setProducts([]);
         setCurrentPage(1);
@@ -145,6 +187,46 @@ const Shop = () => {
     } else {
       navigate('/sell');
     }
+  };
+
+  // Like functionality
+  const handleLike = async (productId, e) => {
+    e.stopPropagation();
+    try {
+      const currentLikeStatus = productLikes[productId];
+      if (currentLikeStatus?.liked) {
+        await unlikeProduct(productId);
+        setProductLikes(prev => ({
+          ...prev,
+          [productId]: { ...prev[productId], liked: false, likeCount: prev[productId].likeCount - 1 }
+        }));
+      } else {
+        await likeProduct(productId);
+        setProductLikes(prev => ({
+          ...prev,
+          [productId]: { ...prev[productId], liked: true, likeCount: prev[productId].likeCount + 1 }
+        }));
+      }
+    } catch (err) {
+      console.error('Error toggling like:', err);
+      if (err.message === "Please login to like products" || err.message === "Please login to unlike products") {
+        alert("Please login to like products");
+        // Optionally redirect to login page
+        // navigate('/login');
+      }
+    }
+  };
+
+  const handleShare = (product, e) => {
+    e.stopPropagation();
+    setSelectedProduct(product);
+    setShowShareModal(true);
+  };
+
+  // Calculate discount percentage
+  const calculateDiscountPercentage = (originalPrice, discount) => {
+    if (!discount || discount <= 0) return 0;
+    return Math.round((discount / originalPrice) * 100);
   };
 
   return (
@@ -251,103 +333,143 @@ const Shop = () => {
           {products && products.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {products.map((product) => (
-                  <div key={product.id} className="bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-700">
-                    <div className="relative">
-                      {/* Product Image */}
-                      <img 
-                        src={product.images && product.images.length > 0 ? 
-                          (() => {
-                            // Handle array of images
-                            let imageUrl = '';
-                            if (Array.isArray(product.images) && product.images.length > 0) {
-                              imageUrl = product.images[0];
-                            } else if (typeof product.images === 'string') {
-                              try {
-                                // Try to parse as JSON array
-                                const imagesArray = JSON.parse(product.images);
-                                if (Array.isArray(imagesArray) && imagesArray.length > 0) {
-                                  imageUrl = imagesArray[0];
+                {products.map((product) => {
+                  const discountPercentage = calculateDiscountPercentage(product.price, product.discount);
+                  const discountedPrice = product.price - (product.discount || 0);
+                  const likeInfo = productLikes[product.id] || { likeCount: 0, liked: false };
+                  
+                  return (
+                    <div key={product.id} className="bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-700">
+                      <div className="relative">
+                        {/* Product Image */}
+                        <img 
+                          src={product.images && product.images.length > 0 ? 
+                            (() => {
+                              // Handle array of images
+                              let imageUrl = '';
+                              if (Array.isArray(product.images) && product.images.length > 0) {
+                                imageUrl = product.images[0];
+                              } else if (typeof product.images === 'string') {
+                                try {
+                                  // Try to parse as JSON array
+                                  const imagesArray = JSON.parse(product.images);
+                                  if (Array.isArray(imagesArray) && imagesArray.length > 0) {
+                                    imageUrl = imagesArray[0];
+                                  }
+                                } catch (e) {
+                                  // If parsing fails, use the string directly
+                                  imageUrl = product.images;
                                 }
-                              } catch (e) {
-                                // If parsing fails, use the string directly
-                                imageUrl = product.images;
                               }
-                            }
-                            
-                            // Handle absolute vs relative URLs
-                            if (imageUrl.startsWith('http')) {
-                              return imageUrl;
-                            } else {
-                              // Fix: Check if imageUrl already starts with 'products/' to avoid duplication
-                              if (imageUrl.startsWith('/storage/')) {
+                              
+                              // Handle absolute vs relative URLs
+                              if (imageUrl.startsWith('http')) {
                                 return imageUrl;
-                              } else if (imageUrl.startsWith('products/')) {
-                                return `/storage/${imageUrl}`;
                               } else {
-                                return `/storage/products/${imageUrl}`;
+                                // Fix: Check if imageUrl already starts with 'products/' to avoid duplication
+                                if (imageUrl.startsWith('/storage/')) {
+                                  return imageUrl;
+                                } else if (imageUrl.startsWith('products/')) {
+                                  return `/storage/${imageUrl}`;
+                                } else {
+                                  return `/storage/products/${imageUrl}`;
+                                }
                               }
-                            }
-                          })() : 
-                          'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
-                        alt={product.title || 'Product'}
-                        className="w-full h-64 object-cover cursor-pointer"
-                        onClick={() => handleViewProduct(product.id)}
-                        onError={(e) => {
-                          e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
-                        }}
-                      />
-                      <div className="absolute top-4 right-4 bg-gradient-to-r from-gold to-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold shadow-md">
-                        {product.is_featured ? 'Featured' : 'New'}
-                      </div>
-                      <button
-                        onClick={() => handleToggleWishlist(product)}
-                        className="absolute bottom-4 right-4 bg-gray-900 p-2 rounded-full shadow-md hover:bg-gray-700 transition-colors"
-                        aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
-                      >
-                        <svg 
-                          className={`w-5 h-5 ${isInWishlist(product.id) ? 'text-red-500 fill-current' : 'text-gray-300'}`} 
-                          fill={isInWishlist(product.id) ? "currentColor" : "none"} 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24" 
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 
-                          className="text-xl font-bold text-white line-clamp-1 cursor-pointer hover:text-gold transition-colors"
+                            })() : 
+                            'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
+                          alt={product.title || 'Product'}
+                          className="w-full h-64 object-cover cursor-pointer"
                           onClick={() => handleViewProduct(product.id)}
-                        >
-                          {product.title || 'Untitled Product'}
-                        </h3>
-                        {product.seller && (
-                          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">
-                            By {product.seller.name}
-                          </span>
+                          onError={(e) => {
+                            e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+                          }}
+                        />
+                        {/* Discount Badge */}
+                        {discountPercentage > 0 && (
+                          <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
+                            -{discountPercentage}%
+                          </div>
                         )}
+                        <button
+                          onClick={() => handleToggleWishlist(product)}
+                          className="absolute bottom-4 right-4 bg-gray-900 p-2 rounded-full shadow-md hover:bg-gray-700 transition-colors"
+                          aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                        >
+                          <svg 
+                            className={`w-5 h-5 ${isInWishlist(product.id) ? 'text-red-500 fill-current' : 'text-gray-300'}`} 
+                            fill={isInWishlist(product.id) ? "currentColor" : "none"} 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24" 
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        </button>
                       </div>
-                      <p className="text-gray-300 mb-4 line-clamp-2 text-sm">{product.description || 'No description available'}</p>
-                      <div className="flex justify-between items-center">
-                        <div className="flex flex-col">
-                          <span className="text-2xl font-bold text-gold">${product.price || '0.00'}</span>
-                          {product.view_count !== undefined && (
-                            <span className="text-xs text-gray-400">Views: {product.view_count}</span>
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 
+                            className="text-xl font-bold text-white line-clamp-1 cursor-pointer hover:text-gold transition-colors"
+                            onClick={() => handleViewProduct(product.id)}
+                          >
+                            {product.title || 'Untitled Product'}
+                          </h3>
+                          {product.seller && (
+                            <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">
+                              By {product.seller.name}
+                            </span>
                           )}
                         </div>
+                        <p className="text-gray-300 mb-4 line-clamp-2 text-sm">{product.description || 'No description available'}</p>
+                        
+                        {/* Price Section */}
+                        <div className="mb-4">
+                          {discountPercentage > 0 ? (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-2xl font-bold text-gold">${discountedPrice.toFixed(2)}</span>
+                              <span className="text-gray-400 line-through text-sm">${parseFloat(product.price).toFixed(2)}</span>
+                            </div>
+                          ) : (
+                            <span className="text-2xl font-bold text-gold">${product.price || '0.00'}</span>
+                          )}
+                          {product.view_count !== undefined && (
+                            <span className="text-xs text-gray-400 block">Views: {product.view_count}</span>
+                          )}
+                        </div>
+                        
+                        {/* Like and Share Buttons */}
+                        <div className="flex items-center justify-between mb-4">
+                          <button
+                            onClick={(e) => handleLike(product.id, e)}
+                            className={`group flex items-center space-x-2 px-4 py-2 rounded-full text-sm transition-all duration-300 ${
+                              likeInfo.liked 
+                                ? 'bg-red-500 text-white shadow-lg' 
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:shadow-md'
+                            }`}
+                          >
+                            <HeartIcon filled={likeInfo.liked} />
+                            <span className="font-medium">{likeInfo.likeCount}</span>
+                          </button>
+                          
+                          <button
+                            onClick={(e) => handleShare(product, e)}
+                            className="group flex items-center space-x-2 px-4 py-2 rounded-full text-sm bg-gray-700 text-gray-300 hover:bg-gray-600 hover:shadow-md transition-all duration-300"
+                          >
+                            <ShareIcon />
+                            <span className="font-medium">Share</span>
+                          </button>
+                        </div>
+                        
                         <button
                           onClick={() => handleAddToCart(product)}
-                          className="bg-gradient-to-r from-gold to-yellow-600 hover:from-yellow-600 hover:to-gold text-black font-bold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
+                          className="w-full bg-gradient-to-r from-gold to-yellow-600 hover:from-yellow-600 hover:to-gold text-black font-bold py-2 px-4 rounded-full transition-all duration-300 shadow-md hover:shadow-lg"
                         >
                           Add to Cart
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               
               {/* Pagination */}
@@ -379,6 +501,13 @@ const Shop = () => {
           )}
         </div>
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        product={selectedProduct}
+      />
     </div>
   );
 };
