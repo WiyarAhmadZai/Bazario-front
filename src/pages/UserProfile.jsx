@@ -71,6 +71,24 @@ const UserProfile = () => {
     fetchUserProducts();
   }, [id]);
 
+  // Refresh data when products are updated
+  useEffect(() => {
+    const checkForUpdates = () => {
+      const lastUpdate = localStorage.getItem('productUpdated');
+      if (lastUpdate) {
+        const updateTime = parseInt(lastUpdate);
+        const now = Date.now();
+        // If update was within last 30 seconds, refresh data
+        if (now - updateTime < 30000) {
+          fetchUserProducts();
+          localStorage.removeItem('productUpdated');
+        }
+      }
+    };
+
+    checkForUpdates(); // Check immediately when component mounts
+  }, []);
+
   const fetchUserProfile = async () => {
     try {
       const response = await getUserProfile(id);
