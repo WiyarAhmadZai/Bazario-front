@@ -174,6 +174,24 @@ const Shop = () => {
     fetchProducts(1);
   }, []);
 
+  // Refresh data when products are updated
+  useEffect(() => {
+    const checkForUpdates = () => {
+      const lastUpdate = localStorage.getItem('productUpdated');
+      if (lastUpdate) {
+        const updateTime = parseInt(lastUpdate);
+        const now = Date.now();
+        // If update was within last 30 seconds, refresh data
+        if (now - updateTime < 30000) {
+          fetchProducts(currentPage);
+          localStorage.removeItem('productUpdated');
+        }
+      }
+    };
+
+    checkForUpdates(); // Check immediately when component mounts
+  }, [currentPage]);
+
   // Remove this useEffect as we now handle filter changes directly in handleFilterChange
 
   // Handle filter changes
