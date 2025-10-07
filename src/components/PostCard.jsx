@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { likePost, favoritePost, deletePost } from '../services/postService';
+import { likePost, deletePost } from '../services/postService';
+import { addToFavorites, removeFromFavorites } from '../services/favoriteService';
 import { followUser, toggleNotification } from '../services/followService';
 import Swal from 'sweetalert2';
 
@@ -10,7 +11,7 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
   const [isFavorited, setIsFavorited] = useState(post.is_favorited || false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [favoritesCount, setFavoritesCount] = useState(post.favorites_count || 0);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(post.is_following || false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showImageGallery, setShowImageGallery] = useState(false);
@@ -78,11 +79,29 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
 
     try {
       setLoading(true);
-      const response = await favoritePost(post.id);
+      
+      // Optimistic update
+      const newFavoritedState = !isFavorited;
+      setIsFavorited(newFavoritedState);
+      setFavoritesCount(prev => newFavoritedState ? prev + 1 : Math.max(0, prev - 1));
+
+      let response;
+      if (newFavoritedState) {
+        response = await addToFavorites(post.id);
+      } else {
+        response = await removeFromFavorites(post.id);
+      }
+      
+      // Update with server response
       setIsFavorited(response.is_favorited);
       setFavoritesCount(response.favorites_count);
     } catch (error) {
       console.error('Error favoriting post:', error);
+      
+      // Revert optimistic update
+      setIsFavorited(!isFavorited);
+      setFavoritesCount(prev => isFavorited ? prev + 1 : Math.max(0, prev - 1));
+      
       if (error.response?.status === 401) {
         Swal.fire({
           title: 'Login Required',
@@ -251,7 +270,6 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
                   </span>
                 )}
               </div>
-              <p className="text-gray-400 text-sm">{post.time_ago}</p>
             </div>
           </div>
 
