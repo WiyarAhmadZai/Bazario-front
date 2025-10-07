@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
@@ -32,9 +32,11 @@ const Shop = () => {
     search: '',
     sort_by: 'newest'
   });
+  const [searchTerm, setSearchTerm] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productLikes, setProductLikes] = useState({});
+  const [isSearching, setIsSearching] = useState(false);
   
   const { isAuthenticated } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
@@ -62,19 +64,51 @@ const Shop = () => {
     }
   };
 
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    (() => {
+      let timeoutId;
+      return (searchValue) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setFilters(prev => {
+            const newFilters = {
+              ...prev,
+              search: searchValue
+            };
+            setIsSearching(false);
+            // Reset to page 1 and fetch products
+            setCurrentPage(1);
+            fetchProducts(1, newFilters);
+            return newFilters;
+          });
+        }, 500); // 500ms delay
+      };
+    })(),
+    []
+  );
+
+  // Handle search input change
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setIsSearching(true);
+    debouncedSearch(value);
+  };
+
   // Fetch products
-  const fetchProducts = async (page = 1) => {
+  const fetchProducts = async (page = 1, customFilters = null) => {
     setLoading(true);
     setError('');
     
     try {
       // Build request params
+      const activeFilters = customFilters || filters;
       const params = {
         page: page,
         status: 'approved', // Explicitly add approved status for shop page
         per_page: 12,
-        sort_by: 'newest', // Explicitly set to newest
-        ...filters
+        ...activeFilters
       };
       
       // Remove empty filters
@@ -140,24 +174,32 @@ const Shop = () => {
     fetchProducts(1);
   }, []);
 
-  // Fetch products when filters change
-  useEffect(() => {
-    fetchProducts(1);
-  }, [filters]);
+  // Remove this useEffect as we now handle filter changes directly in handleFilterChange
 
   // Handle filter changes
   const handleFilterChange = (e) => {
-    setFilters({
+    const { name, value } = e.target;
+    const newFilters = {
       ...filters,
-      [e.target.name]: e.target.value
-    });
+      [name]: value
+    };
+    setFilters(newFilters);
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+    fetchProducts(1, newFilters);
   };
 
-  const handleSearchChange = (e) => {
-    setFilters({
-      ...filters,
-      search: e.target.value
-    });
+  // Clear all filters
+  const clearFilters = () => {
+    const clearedFilters = {
+      category: '',
+      search: '',
+      sort_by: 'newest'
+    };
+    setFilters(clearedFilters);
+    setSearchTerm('');
+    setCurrentPage(1);
+    fetchProducts(1, clearedFilters);
   };
 
   const handlePageChange = (page) => {
@@ -253,17 +295,68 @@ const Shop = () => {
 
       {/* Filters */}
       <div className="rounded-2xl shadow-lg p-6 mb-10 bg-gradient-to-r from-gray-800 to-gray-900">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-xl font-semibold text-white">Filter Products</h3>
+            {(filters.search || filters.category || filters.sort_by !== 'newest') && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {filters.search && (
+                  <span className="px-2 py-1 bg-gold text-black text-xs rounded-full">
+                    Search: "{filters.search}"
+                  </span>
+                )}
+                {filters.category && (
+                  <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-full">
+                    Category: {categories.find(c => c.slug === filters.category)?.name || filters.category}
+                  </span>
+                )}
+                {filters.sort_by !== 'newest' && (
+                  <span className="px-2 py-1 bg-green-500 text-white text-xs rounded-full">
+                    Sort: {filters.sort_by.replace('_', ' ')}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={clearFilters}
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors text-sm font-medium"
+          >
+            Clear All Filters
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-white mb-2">Search</label>
-            <input
-              type="text"
-              name="search"
-              value={filters.search}
-              onChange={handleSearchChange}
-              placeholder="Search products..."
-              className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all text-white"
-            />
+            <label className="block text-sm font-medium text-white mb-2">
+              Search {isSearching && <span className="text-gold text-xs">(Searching...)</span>}
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="search"
+                value={searchTerm}
+                onChange={handleSearchInputChange}
+                placeholder="Search products..."
+                className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all text-white"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    const clearedFilters = { ...filters, search: '' };
+                    setFilters(clearedFilters);
+                    setCurrentPage(1);
+                    fetchProducts(1, clearedFilters);
+                  }}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  title="Clear search"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
           
           <div>
