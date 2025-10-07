@@ -409,7 +409,7 @@ const AdminProducts = () => {
         // Update local state
         setProducts(prev => prev.map(p => 
           p.id === product.id 
-            ? { ...p, sponsor: false, sponsor_start_time: null, sponsor_end_time: null }
+            ? { ...p, sponsor: 0, sponsor_start_time: null, sponsor_end_time: null }
             : p
         ));
 
@@ -483,7 +483,7 @@ const AdminProducts = () => {
             p.id === product.id 
               ? { 
                   ...p, 
-                  sponsor: true, 
+                  sponsor: 1, 
                   sponsor_start_time: response.sponsor_start_time,
                   sponsor_end_time: response.sponsor_end_time
                 }
@@ -778,11 +778,11 @@ const AdminProducts = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              product.sponsor ? 'bg-gold text-black' : 'bg-gray-100 text-gray-800'
+                              product.sponsor === 1 ? 'bg-gold text-black' : 'bg-gray-100 text-gray-800'
                             }`}>
-                              {product.sponsor ? 'Sponsored' : 'Not Sponsored'}
+                              {product.sponsor === 1 ? 'Sponsored' : 'Not Sponsored'}
                             </span>
-                            {product.sponsor && product.sponsor_end_time && (
+                            {product.sponsor === 1 && product.sponsor_end_time && (
                               <span className="ml-2 text-xs text-gray-400">
                                 Until {new Date(product.sponsor_end_time).toLocaleDateString()}
                               </span>
@@ -823,13 +823,13 @@ const AdminProducts = () => {
                           <button
                             onClick={() => toggleSponsorStatus(product)}
                             className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                              product.sponsor 
+                              product.sponsor === 1 
                                 ? 'bg-red-100 text-red-800 hover:bg-red-200' 
                                 : 'bg-gold text-black hover:bg-yellow-500'
                             }`}
                             disabled={loading}
                           >
-                            {product.sponsor ? 'Remove Sponsor' : 'Sponsor'}
+                            {product.sponsor === 1 ? 'Remove Sponsor' : 'Sponsor'}
                           </button>
                         </td>
                       </tr>
