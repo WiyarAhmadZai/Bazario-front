@@ -190,8 +190,6 @@ const AdminProducts = () => {
       text: `Are you sure you want to change this product's status to "${status}"?`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, change it!',
       cancelButtonText: 'Cancel'
     });
@@ -222,8 +220,7 @@ const AdminProducts = () => {
         title: 'Success!',
         text: `Product status successfully changed to ${status}!`,
         icon: 'success',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#3085d6'
+        confirmButtonText: 'OK'
       });
       
       // Update the product status in the local state without reloading the page
@@ -273,8 +270,7 @@ const AdminProducts = () => {
         title: 'Error!',
         text: `Error: ${errorMessage}`,
         icon: 'error',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#d33'
+        confirmButtonText: 'OK'
       });
     } finally {
       setLoading(false);
