@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { likePost, deletePost } from '../services/postService';
+import { likePost, deletePost, getPostComments, addPostComment } from '../services/postService';
 import { addToFavorites, removeFromFavorites } from '../services/favoriteService';
 import { followUser, toggleNotification } from '../services/followService';
 import Swal from 'sweetalert2';
@@ -12,11 +12,15 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [favoritesCount, setFavoritesCount] = useState(post.favorites_count || 0);
   const [isFollowing, setIsFollowing] = useState(post.is_following || false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(post.notifications_enabled || false);
   const [showComments, setShowComments] = useState(false);
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [newReply, setNewReply] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
 
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -138,21 +142,10 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
       setLoading(true);
       const response = await followUser(post.user.id);
       setIsFollowing(response.is_following);
-      
-      Swal.fire({
-        title: 'Success',
-        text: response.message,
-        icon: 'success',
-        confirmButtonText: 'OK'
-      });
     } catch (error) {
       console.error('Error following user:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to follow user',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
+      // Revert the state on error
+      setIsFollowing(!isFollowing);
     } finally {
       setLoading(false);
     }
@@ -171,6 +164,99 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Load comments when comments section is opened
+  const loadComments = async () => {
+    try {
+      const response = await getPostComments(post.id);
+      setComments(response.data || []);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
+  };
+
+  // Handle adding a comment
+  const handleAddComment = async () => {
+    if (!user) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please login to comment',
+        icon: 'info',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    if (!newComment.trim()) return;
+
+    try {
+      setLoading(true);
+      const response = await addPostComment(post.id, { content: newComment.trim() });
+      setComments(prev => [response.comment, ...prev]);
+      setNewComment('');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to add comment',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle adding a reply
+  const handleAddReply = async (parentId) => {
+    if (!user) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please login to reply',
+        icon: 'info',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    if (!newReply.trim()) return;
+
+    try {
+      setLoading(true);
+      const response = await addPostComment(post.id, { 
+        content: newReply.trim(), 
+        parent_id: parentId 
+      });
+      
+      // Update comments with the new reply
+      setComments(prev => prev.map(comment => 
+        comment.id === parentId 
+          ? { ...comment, replies: [...(comment.replies || []), response.comment] }
+          : comment
+      ));
+      
+      setNewReply('');
+      setReplyingTo(null);
+    } catch (error) {
+      console.error('Error adding reply:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to add reply',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Toggle comments section
+  const toggleComments = () => {
+    if (!showComments) {
+      loadComments();
+    }
+    setShowComments(!showComments);
   };
 
   // Handle delete post
@@ -399,10 +485,10 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
               <span className="text-sm font-medium">{likesCount}</span>
             </button>
 
-            <button
-              onClick={() => setShowComments(!showComments)}
-              className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-500 hover:bg-opacity-10 transition-all"
-            >
+                            <button
+                              onClick={toggleComments}
+                              className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-500 hover:bg-opacity-10 transition-all"
+                            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -447,6 +533,136 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
       )}
 
       {/* Image Gallery Modal */}
+      {/* Comments Section */}
+      {showComments && (
+        <div className="px-6 py-4 border-t border-gray-700 bg-gray-750">
+          <div className="space-y-4">
+            {/* Add Comment Form */}
+            {user && (
+              <div className="flex space-x-3">
+                <img
+                  src={user.avatar || 'https://placehold.co/32x32/374151/FFFFFF?text=' + user.name.charAt(0)}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <textarea
+                    placeholder="Write a comment..."
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gold focus:outline-none resize-none"
+                    rows="2"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  />
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim() || loading}
+                      className="px-4 py-2 bg-gold text-black font-medium rounded-lg hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Comment
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Comments List */}
+            <div className="space-y-3">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex space-x-3">
+                  <img
+                    src={comment.user.avatar || 'https://placehold.co/32x32/374151/FFFFFF?text=' + comment.user.name.charAt(0)}
+                    alt={comment.user.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <div className="flex-1">
+                    <div className="bg-gray-700 rounded-lg p-3">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-white text-sm">{comment.user.name}</span>
+                        <span className="text-gray-400 text-xs">{comment.time_ago}</span>
+                      </div>
+                      <p className="text-gray-300 text-sm">{comment.content}</p>
+                    </div>
+                    
+                    {/* Reply Button */}
+                    <button
+                      onClick={() => setReplyingTo(comment.id)}
+                      className="text-xs text-gray-400 hover:text-gold mt-1 ml-3"
+                    >
+                      Reply
+                    </button>
+
+                    {/* Reply Form */}
+                    {replyingTo === comment.id && (
+                      <div className="mt-2 ml-4">
+                        <div className="flex space-x-2">
+                          <img
+                            src={user?.avatar || 'https://placehold.co/24x24/374151/FFFFFF?text=' + (user?.name?.charAt(0) || 'U')}
+                            alt={user?.name || 'User'}
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                          <div className="flex-1">
+                            <textarea
+                              placeholder="Write a reply..."
+                              className="w-full px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500 focus:border-gold focus:outline-none resize-none text-sm"
+                              rows="1"
+                              value={newReply}
+                              onChange={(e) => setNewReply(e.target.value)}
+                            />
+                            <div className="flex justify-end space-x-2 mt-1">
+                              <button
+                                onClick={() => {
+                                  setReplyingTo(null);
+                                  setNewReply('');
+                                }}
+                                className="px-3 py-1 text-xs text-gray-400 hover:text-white"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleAddReply(comment.id)}
+                                disabled={!newReply.trim() || loading}
+                                className="px-3 py-1 bg-gold text-black text-xs font-medium rounded hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Reply
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Replies */}
+                    {comment.replies && comment.replies.length > 0 && (
+                      <div className="mt-2 ml-4 space-y-2">
+                        {comment.replies.map((reply) => (
+                          <div key={reply.id} className="flex space-x-2">
+                            <img
+                              src={reply.user.avatar || 'https://placehold.co/24x24/374151/FFFFFF?text=' + reply.user.name.charAt(0)}
+                              alt={reply.user.name}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                            <div className="flex-1">
+                              <div className="bg-gray-600 rounded-lg p-2">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <span className="font-medium text-white text-xs">{reply.user.name}</span>
+                                  <span className="text-gray-400 text-xs">{reply.time_ago}</span>
+                                </div>
+                                <p className="text-gray-300 text-xs">{reply.content}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showImageGallery && post.image_urls && post.image_urls.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div className="max-w-4xl max-h-full p-4">
