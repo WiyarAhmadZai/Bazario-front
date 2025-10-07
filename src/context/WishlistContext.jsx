@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { AuthContext } from './AuthContext';
-import { getWishlist, addToWishlist, removeFromWishlist } from '../services/wishlistService';
+import { getFavorites, addToFavorites, removeFromFavorites } from '../services/favoriteService';
 
 // Create the context
 export const WishlistContext = createContext();
@@ -24,7 +24,7 @@ export const WishlistProvider = ({ children }) => {
   const fetchWishlist = async () => {
     try {
       setLoading(true);
-      const response = await getWishlist();
+      const response = await getFavorites();
       setWishlistItems(response.data || []);
     } catch (error) {
       console.error('Error loading wishlist from API:', error);
@@ -43,12 +43,12 @@ export const WishlistProvider = ({ children }) => {
     }
     
     try {
-      const response = await addToWishlist(product.id);
+      await addToFavorites(product.id);
       // Add to local state
       setWishlistItems(prevItems => {
-        const exists = prevItems.find(item => item.id === response.data.id);
+        const exists = prevItems.find(item => item.id === product.id);
         if (!exists) {
-          return [...prevItems, response.data];
+          return [...prevItems, product];
         }
         return prevItems;
       });
@@ -66,7 +66,7 @@ export const WishlistProvider = ({ children }) => {
     }
     
     try {
-      await removeFromWishlist(productId);
+      await removeFromFavorites(productId);
       // Remove from local state
       setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId));
     } catch (error) {
