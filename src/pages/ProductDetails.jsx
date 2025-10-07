@@ -601,13 +601,13 @@ const ProductDetails = () => {
     if (imagePath.startsWith('http')) {
       return imagePath;
     } else {
-      // Fix: Check if imagePath already starts with 'products/' to avoid duplication
+      // Use the correct API base URL for images
       if (imagePath.startsWith('/storage/')) {
-        return imagePath;
+        return `http://localhost:8000${imagePath}`;
       } else if (imagePath.startsWith('products/')) {
-        return `/storage/${imagePath}`;
+        return `http://localhost:8000/storage/${imagePath}`;
       } else {
-        return `/storage/products/${imagePath}`;
+        return `http://localhost:8000/storage/products/${imagePath}`;
       }
     }
   };
