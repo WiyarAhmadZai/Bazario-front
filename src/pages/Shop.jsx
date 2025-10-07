@@ -7,6 +7,8 @@ import { getProducts } from '../services/productService';
 import { getCategories } from '../services/categoryService';
 import { likeProduct, unlikeProduct, getLikeStatus, getLikeCount } from '../services/likeService';
 import ShareModal from '../components/ShareModal';
+import Pagination from '../components/Pagination';
+import RecordsPerPageSelector from '../components/RecordsPerPageSelector';
 // SVG Icons
 const HeartIcon = ({ filled = false }) => (
   <svg className="w-4 h-4" fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
@@ -27,6 +29,7 @@ const Shop = () => {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [recordsPerPage, setRecordsPerPage] = useState(12);
   const [filters, setFilters] = useState({
     category: '',
     search: '',
@@ -107,7 +110,7 @@ const Shop = () => {
       const params = {
         page: page,
         status: 'approved', // Explicitly add approved status for shop page
-        per_page: 12,
+        per_page: recordsPerPage,
         ...activeFilters
       };
       
@@ -223,6 +226,13 @@ const Shop = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     fetchProducts(page);
+  };
+
+  const handleRecordsPerPageChange = (e) => {
+    const newRecordsPerPage = parseInt(e.target.value);
+    setRecordsPerPage(newRecordsPerPage);
+    setCurrentPage(1); // Reset to first page
+    fetchProducts(1);
   };
 
   const handleViewProduct = (productId) => {
@@ -344,7 +354,7 @@ const Shop = () => {
             Clear All Filters
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-white mb-2">
               Search {isSearching && <span className="text-gold text-xs">(Searching...)</span>}
@@ -409,6 +419,12 @@ const Shop = () => {
               <option value="price_high" className="bg-gray-700">Price: High to Low</option>
             </select>
           </div>
+          
+          <RecordsPerPageSelector
+            value={recordsPerPage}
+            onChange={handleRecordsPerPageChange}
+            label="Records per Page"
+          />
         </div>
       </div>
 
@@ -584,26 +600,14 @@ const Shop = () => {
                 })}
               </div>
               
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-12">
-                  <div className="flex space-x-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-full transition-all ${
-                          currentPage === page
-                            ? 'bg-gradient-to-r from-gold to-yellow-600 text-black font-bold'
-                            : 'bg-gray-700 text-white hover:bg-gray-600'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Enhanced Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                totalItems={products.length}
+                itemsPerPage={recordsPerPage}
+              />
             </>
           ) : (
             <div className="col-span-full text-center py-12">
