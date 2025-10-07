@@ -27,7 +27,7 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
 
   // Handle profile navigation
   const handleProfileClick = () => {
-    navigate(`/users/${post.user.id}`);
+    navigate(`/user/${post.user.id}`);
   };
 
   // Handle like/unlike
@@ -442,26 +442,26 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
       <div className="p-6">
         <p className="text-white text-lg leading-relaxed mb-4">{post.content}</p>
 
-        {/* Images */}
+        {/* Images - Show only one image */}
         {((post.image_urls && post.image_urls.length > 0) || (post.images && post.images.length > 0)) && (
-          <div className={`grid gap-3 mb-6 ${getImageLayoutClass((post.image_urls || post.images || []).length)}`}>
-            {(post.image_urls || post.images || []).slice(0, 4).map((imageUrl, index) => (
-              <div key={index} className="relative group">
-                <img
-                  src={imageUrl}
-                  alt={`Post image ${index + 1}`}
-                  className="w-full h-56 object-cover rounded-xl cursor-pointer hover:opacity-90 transition-all duration-300 hover:scale-105"
-                  onClick={() => setShowImageGallery(true)}
-                />
-                {index === 3 && (post.image_urls || post.images || []).length > 4 && (
-                  <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-xl">
-                    <span className="text-white text-xl font-bold">
-                      +{(post.image_urls || post.images || []).length - 4} more
-                    </span>
-                  </div>
-                )}
+          <div className="mb-6">
+            <div className="relative group">
+              <img
+                src={(post.image_urls || post.images || [])[0]}
+                alt="Post image"
+                className="w-full h-64 object-cover rounded-xl cursor-pointer hover:opacity-90 transition-all duration-300 hover:scale-105"
+                onClick={() => navigate(`/product/${post.id}`)}
+              />
+              {/* Hover overlay for click indication */}
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center rounded-xl">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         )}
       </div>
