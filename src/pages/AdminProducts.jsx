@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../context/AuthContext';
 import { getAdminProducts, updateProduct } from '../services/productService';
+import { toggleSponsor } from '../services/adminService';
 import Pagination from '../components/Pagination';
 import RecordsPerPageSelector from '../components/RecordsPerPageSelector';
 
@@ -384,6 +385,132 @@ const AdminProducts = () => {
     }
   };
 
+  // Toggle sponsor status
+  const toggleSponsorStatus = async (product) => {
+    const isCurrentlySponsored = product.sponsor;
+    
+    if (isCurrentlySponsored) {
+      // Remove sponsorship
+      const result = await Swal.fire({
+        title: 'Remove Sponsorship',
+        text: 'Are you sure you want to remove sponsorship from this product?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        setLoading(true);
+        await toggleSponsor(product.id, { sponsor: false });
+        
+        // Update local state
+        setProducts(prev => prev.map(p => 
+          p.id === product.id 
+            ? { ...p, sponsor: false, sponsor_start_time: null, sponsor_end_time: null }
+            : p
+        ));
+
+        Swal.fire({
+          title: 'Success!',
+          text: 'Sponsorship removed successfully',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+      } catch (error) {
+        console.error('Error removing sponsorship:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to remove sponsorship',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Add sponsorship - show form for start/end times
+      const { value: formValues } = await Swal.fire({
+        title: 'Sponsor Product',
+        html: `
+          <div class="text-left">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+            <input id="sponsor_start_time" type="datetime-local" class="swal2-input" required>
+            <label class="block text-sm font-medium text-gray-700 mb-2 mt-4">End Time</label>
+            <input id="sponsor_end_time" type="datetime-local" class="swal2-input" required>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Sponsor Product',
+        cancelButtonText: 'Cancel',
+        preConfirm: () => {
+          const startTime = document.getElementById('sponsor_start_time').value;
+          const endTime = document.getElementById('sponsor_end_time').value;
+          
+          if (!startTime || !endTime) {
+            Swal.showValidationMessage('Please fill in both start and end times');
+            return false;
+          }
+          
+          if (new Date(startTime) >= new Date(endTime)) {
+            Swal.showValidationMessage('End time must be after start time');
+            return false;
+          }
+          
+          if (new Date(startTime) < new Date()) {
+            Swal.showValidationMessage('Start time cannot be in the past');
+            return false;
+          }
+          
+          return { sponsor_start_time: startTime, sponsor_end_time: endTime };
+        }
+      });
+
+      if (formValues) {
+        try {
+          setLoading(true);
+          const response = await toggleSponsor(product.id, {
+            sponsor: true,
+            sponsor_start_time: formValues.sponsor_start_time,
+            sponsor_end_time: formValues.sponsor_end_time
+          });
+          
+          // Update local state
+          setProducts(prev => prev.map(p => 
+            p.id === product.id 
+              ? { 
+                  ...p, 
+                  sponsor: true, 
+                  sponsor_start_time: response.sponsor_start_time,
+                  sponsor_end_time: response.sponsor_end_time
+                }
+              : p
+          ));
+
+          Swal.fire({
+            title: 'Success!',
+            text: 'Product sponsored successfully',
+            icon: 'success',
+            confirmButtonText: 'OK'
+          });
+        } catch (error) {
+          console.error('Error adding sponsorship:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to sponsor product',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+  };
+
   if (!user || user.role !== 'admin') {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -542,6 +669,7 @@ const AdminProducts = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Seller</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Sponsor</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -647,6 +775,20 @@ const AdminProducts = () => {
                             {product.status || 'Unknown'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              product.sponsor ? 'bg-gold text-black' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {product.sponsor ? 'Sponsored' : 'Not Sponsored'}
+                            </span>
+                            {product.sponsor && product.sponsor_end_time && (
+                              <span className="ml-2 text-xs text-gray-400">
+                                Until {new Date(product.sponsor_end_time).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           {product.status !== 'approved' && (
                             <button
@@ -674,9 +816,20 @@ const AdminProducts = () => {
                           )}
                           <button
                             onClick={() => navigate(`/product/${product.id}`)}
-                            className="text-blue-500 hover:text-blue-700"
+                            className="text-blue-500 hover:text-blue-700 mr-3"
                           >
                             View
+                          </button>
+                          <button
+                            onClick={() => toggleSponsorStatus(product)}
+                            className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                              product.sponsor 
+                                ? 'bg-red-100 text-red-800 hover:bg-red-200' 
+                                : 'bg-gold text-black hover:bg-yellow-500'
+                            }`}
+                            disabled={loading}
+                          >
+                            {product.sponsor ? 'Remove Sponsor' : 'Sponsor'}
                           </button>
                         </td>
                       </tr>
