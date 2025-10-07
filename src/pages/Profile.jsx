@@ -385,6 +385,37 @@ const Profile = () => {
     }
   }, [user, productsPage]);
 
+  // Refresh data when returning from edit page
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user) {
+        fetchUserProducts(productsPage);
+      }
+    };
+
+    // Check for product update flag
+    const checkForUpdates = () => {
+      const lastUpdate = localStorage.getItem('productUpdated');
+      console.log('Profile: Checking for updates, lastUpdate:', lastUpdate);
+      if (lastUpdate && user) {
+        const updateTime = parseInt(lastUpdate);
+        const now = Date.now();
+        console.log('Profile: Update time diff:', now - updateTime);
+        // If update was within last 30 seconds, refresh data
+        if (now - updateTime < 30000) {
+          console.log('Profile: Refreshing data due to product update');
+          fetchUserProducts(productsPage);
+          localStorage.removeItem('productUpdated');
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    checkForUpdates(); // Check immediately when component mounts
+    
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, productsPage]);
+
   // Helper function to get product image URL
   const getProductImageUrl = (product) => {
     if (!product.images) {
@@ -673,13 +704,31 @@ const Profile = () => {
           
           {/* Success/Error Messages */}
           {success && (
-            <div className="mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-              {success}
+            <div className="mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+              <span>{success}</span>
+              <button
+                onClick={() => setSuccess('')}
+                className="ml-4 text-green-600 hover:text-green-800 transition-colors duration-200"
+                title="Close"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           )}
           {error && (
-            <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-              {error}
+            <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
+              <span>{error}</span>
+              <button
+                onClick={() => setError('')}
+                className="ml-4 text-red-600 hover:text-red-800 transition-colors duration-200"
+                title="Close"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           )}
         </div>
