@@ -121,9 +121,9 @@ const Wishlist = () => {
                   <div key={product.id} className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                     <Link to={`/products/${product.id}`}>
                       <div className="aspect-w-16 aspect-h-12">
-                        {product.images && product.images.length > 0 ? (
+                        {product.image_urls && product.image_urls.length > 0 ? (
                           <img
-                            src={product.images[0]}
+                            src={product.image_urls[0]}
                             alt={product.title}
                             className="w-full h-48 object-cover"
                           />
