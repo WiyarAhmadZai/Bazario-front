@@ -1,100 +1,187 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { WishlistContext } from '../context/WishlistContext';
+import { getFavorites } from '../services/favoriteService';
+import { Link } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const Wishlist = () => {
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { isAuthenticated } = useContext(AuthContext);
-  const { wishlistItems, removeFromWishlist, loading } = useContext(WishlistContext);
-  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  if (!isAuthenticated) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-4">Please Login to View Your Wishlist</h2>
-        <p className="text-gray-600 mb-6">You need to be logged in to manage your wishlist.</p>
-        <button 
-          onClick={() => navigate('/login')}
-          className="luxury-button"
-        >
-          Login
-        </button>
-      </div>
-    );
-  }
+  const { user } = useContext(AuthContext);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (user) {
+      fetchFavorites();
+    }
+  }, [user]);
 
-  if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <span className="block sm:inline">{error}</span>
-      </div>
-    );
-  }
+  const fetchFavorites = async (page = 1) => {
+    setLoading(true);
+    setError('');
 
-  if (wishlistItems.length === 0) {
+    try {
+      const response = await getFavorites({ page });
+      
+      if (response && response.data) {
+        setFavorites(response.data);
+        setCurrentPage(response.current_page || 1);
+        setTotalPages(response.last_page || 1);
+      } else {
+        setFavorites([]);
+        setCurrentPage(1);
+        setTotalPages(1);
+      }
+    } catch (err) {
+      console.error('Error fetching favorites:', err);
+      setError('Failed to fetch favorites: ' + (err.message || 'Unknown error'));
+      setFavorites([]);
+      setCurrentPage(1);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchFavorites(page);
+  };
+
+  if (!user) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-4">Your Wishlist is Empty</h2>
-        <p className="text-gray-600 mb-6">Looks like you haven't added anything to your wishlist yet.</p>
-        <button 
-          onClick={() => navigate('/shop')}
-          className="luxury-button"
-        >
-          Continue Shopping
-        </button>
+      <div className="min-h-screen bg-gray-900 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <div className="bg-gray-800 rounded-2xl p-12">
+              <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <h3 className="text-xl font-bold text-white mb-2">Login Required</h3>
+              <p className="text-gray-400 mb-6">Please login to view your wishlist</p>
+              <Link
+                to="/login"
+                className="inline-flex items-center px-6 py-3 bg-gold text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+              >
+                Login
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="wishlist-page">
-      <h1 className="text-3xl font-bold mb-8">My Wishlist</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {wishlistItems.map((item) => (
-          <div key={item.id} className="product-card relative">
-            <button 
-              className="absolute top-2 right-2 text-red-500 hover:text-red-700 z-10"
-              onClick={() => removeFromWishlist(item.id)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+    <div className="min-h-screen bg-gray-900 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">My Wishlist</h1>
+          <p className="text-gray-400 mt-2">Your favorite products</p>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-            </button>
-            
-            <div className="bg-gray-200 h-48 rounded-lg mb-4 flex items-center justify-center">
-              {item.images && item.images.length > 0 ? (
-                <img 
-                  src={item.images[0].startsWith('http') ? item.images[0] : `/storage/${item.images[0]}`} 
-                  alt={item.title}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              ) : (
-                <div className="bg-gray-300 border-2 border-dashed rounded-xl w-16 h-16" />
-              )}
+              <span className="block sm:inline">{error}</span>
             </div>
-            <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-            <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-bold text-gold">${item.price}</span>
+            <div className="mt-2">
               <button 
-                onClick={() => navigate(`/product/${item.id}`)}
-                className="luxury-button px-4 py-2 text-sm"
+                onClick={() => fetchFavorites(currentPage)}
+                className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
               >
-                View Product
+                Retry
               </button>
             </div>
           </div>
-        ))}
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gold"></div>
+            <p className="text-gray-400 mt-4">Loading wishlist...</p>
+          </div>
+        )}
+
+        {/* Favorites Grid */}
+        {!loading && (
+          <>
+            {favorites && favorites.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {favorites.map((product) => (
+                  <div key={product.id} className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                    <Link to={`/products/${product.id}`}>
+                      <div className="aspect-w-16 aspect-h-12">
+                        {product.images && product.images.length > 0 ? (
+                          <img
+                            src={product.images[0]}
+                            alt={product.title}
+                            className="w-full h-48 object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
+                            <svg className="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                    
+                    <div className="p-6">
+                      <Link to={`/products/${product.id}`}>
+                        <h3 className="text-white font-semibold text-lg mb-2 hover:text-gold transition-colors line-clamp-2">
+                          {product.title}
+                        </h3>
+                      </Link>
+                      
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-2xl font-bold text-gold">
+                          ${product.price}
+                        </span>
+                        {product.discount > 0 && (
+                          <span className="text-sm text-gray-400 line-through">
+                            ${(parseFloat(product.price) + parseFloat(product.discount)).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm text-gray-400">
+                        <span>By {product.seller?.name || 'Unknown'}</span>
+                        <span>{product.category?.name || 'Uncategorized'}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="bg-gray-800 rounded-2xl p-12">
+                  <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  <h3 className="text-xl font-bold text-white mb-2">Your wishlist is empty</h3>
+                  <p className="text-gray-400 mb-6">Start adding products to your wishlist to see them here!</p>
+                  <Link
+                    to="/products"
+                    className="inline-flex items-center px-6 py-3 bg-gold text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors"
+                  >
+                    Browse Products
+                  </Link>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
