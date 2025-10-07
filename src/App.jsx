@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
+import Posts from './pages/Posts';
 import ProductDetails from './pages/ProductDetails';
 import UserProfile from './pages/UserProfile';
 import Cart from './pages/Cart';
@@ -90,6 +91,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/posts" element={<Posts />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/user/:id" element={<UserProfile />} />
           <Route path="/cart" element={<Cart />} />
