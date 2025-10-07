@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import sellerService from '../services/sellerService';
 import Select from 'react-select';
-import Swal from 'sweetalert2'; // Add SweetAlert2 import
+// Removed SweetAlert2 import - using custom modal instead
 
 const SellProduct = ({ isModal = false, closeModal }) => {
   const { user } = useContext(AuthContext);
@@ -16,6 +16,9 @@ const SellProduct = ({ isModal = false, closeModal }) => {
   const [success, setSuccess] = useState('');
   const [activeView, setActiveView] = useState('list'); // 'list' or 'form'
   const [editingProduct, setEditingProduct] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -28,6 +31,17 @@ const SellProduct = ({ isModal = false, closeModal }) => {
   });
   
   const [imagePreviews, setImagePreviews] = useState([]);
+
+  // Auto-hide success messages
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess('');
+      }, 5000); // Hide after 5 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   useEffect(() => {
     if (!user) {
@@ -56,10 +70,29 @@ const SellProduct = ({ isModal = false, closeModal }) => {
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const response = await sellerService.getProducts();
       console.log('Products API response:', response);
-      const productsData = response.data.data || response.data;
+      
+      // Handle different response structures
+      let productsData;
+      if (response.data) {
+        if (response.data.data) {
+          // Paginated response
+          productsData = response.data.data;
+        } else if (Array.isArray(response.data)) {
+          // Direct array response
+          productsData = response.data;
+        } else {
+          // Fallback
+          productsData = [];
+        }
+      } else {
+        productsData = [];
+      }
+      
       console.log('Products data:', productsData);
+      console.log('Products count:', productsData.length);
       
       // Log the structure of the first few products to understand the image data format
       if (productsData && Array.isArray(productsData) && productsData.length > 0) {
@@ -71,9 +104,13 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       }
       
       setProducts(productsData);
+      setError(''); // Clear any previous errors
     } catch (err) {
       console.error('Failed to fetch products', err);
       setError('Failed to load products');
+      setProducts([]); // Set empty array on error
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,6 +167,14 @@ const SellProduct = ({ isModal = false, closeModal }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('You must be logged in to update products');
+      return;
+    }
+    
     setLoading(true);
     setError('');
     setSuccess('');
@@ -141,37 +186,78 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       // Add text fields
       Object.keys(formData).forEach(key => {
         if (key !== 'images') {
-          submitData.append(key, formData[key]);
+          const value = formData[key] || '';
+          submitData.append(key, value);
         }
       });
       
-      // Add image files correctly as an array
+      // Add image files
       if (formData.images.length > 0) {
         for (let i = 0; i < formData.images.length; i++) {
           const image = formData.images[i];
-          // Only append actual File objects
           if (image instanceof File) {
             submitData.append('images[]', image);
           }
         }
       }
       
-      // Log FormData for debugging
-      console.log('FormData contents:');
-      for (let [key, value] of submitData.entries()) {
-        console.log(key, value);
-      }
-      
       if (editingProduct) {
         // Update existing product
-        console.log('Updating product with ID:', editingProduct.id);
-        await sellerService.updateProduct(editingProduct.id, submitData);
-        setSuccess('Product updated successfully!');
+        try {
+          const response = await sellerService.updateProduct(editingProduct.id, submitData);
+          
+          if (response.status === 200 || response.status === 201) {
+            setSuccess('Product updated successfully!');
+            
+            // Reset form and editing state
+            setEditingProduct(null);
+            setFormData({
+              title: '',
+              description: '',
+              price: '',
+              discount: '',
+              stock: '',
+              category_enum: '',
+              images: []
+            });
+            setImagePreviews([]);
+          } else {
+            throw new Error(`Unexpected response status: ${response.status}`);
+          }
+        } catch (updateError) {
+          console.error('Update error:', updateError);
+          if (updateError.response && updateError.response.data) {
+            if (updateError.response.data.errors) {
+              const errorMessages = Object.values(updateError.response.data.errors).flat();
+              setError(errorMessages.join(', '));
+            } else if (updateError.response.data.message) {
+              setError(updateError.response.data.message);
+            } else {
+              setError('Failed to update product. Please try again.');
+            }
+          } else {
+            setError('Failed to update product. Please try again.');
+          }
+          throw updateError;
+        }
+        
+        // Set flag to refresh other pages
+        const updateTime = Date.now().toString();
+        localStorage.setItem('productUpdated', updateTime);
+        console.log('SellProduct: Set productUpdated flag:', updateTime);
+        
+        // Refresh the products list
+        fetchProducts();
       } else {
         // Create new product
-        console.log('Creating new product');
-        await sellerService.createProduct(submitData);
+        const response = await sellerService.createProduct(submitData);
+        console.log('Product creation response:', response);
         setSuccess('Product created successfully!');
+        
+        // Set flag to refresh other pages
+        const updateTime = Date.now().toString();
+        localStorage.setItem('productUpdated', updateTime);
+        console.log('SellProduct: Set productUpdated flag:', updateTime);
       }
       
       // Reset form
@@ -186,8 +272,11 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       });
       setImagePreviews([]);
       
-      // Refresh products list
-      await fetchProducts();
+      // Force refresh products list with a small delay to ensure data is committed
+      setTimeout(async () => {
+        console.log('Refreshing products list...');
+        await fetchProducts();
+      }, 500);
       
       // Switch back to list view
       setActiveView('list');
@@ -239,10 +328,8 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       // If product not found in local array, fetch it from API
       if (!product) {
         try {
-          console.log('Product not found locally, fetching from API...');
           const response = await sellerService.getProduct(productOrId);
           product = response.data.data || response.data;
-          console.log('Fetched product:', product);
         } catch (error) {
           console.error('Failed to fetch product:', error);
           setError('Failed to load product for editing');
@@ -254,7 +341,7 @@ const SellProduct = ({ isModal = false, closeModal }) => {
     }
     
     setEditingProduct(product);
-    setFormData({
+    const newFormData = {
       title: product.title || '',
       description: product.description || '',
       price: product.price || '',
@@ -262,7 +349,9 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       stock: product.stock || '',
       category_enum: product.category_enum || product.category?.name || '',
       images: []
-    });
+    };
+    
+    setFormData(newFormData);
     
     // Set image previews if product has images
     if (product.images && product.images.length > 0) {
@@ -292,51 +381,39 @@ const SellProduct = ({ isModal = false, closeModal }) => {
     setActiveView('form');
   };
 
-  const handleDelete = async (productId) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this! This action cannot be undone.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
-    });
+  const handleDelete = (productId) => {
+    const product = products.find(p => p.id === productId);
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
 
-    if (result.isConfirmed) {
-      try {
-        setLoading(true);
-        await sellerService.deleteProduct(productId);
-        Swal.fire(
-          'Deleted!',
-          'Your product has been deleted.',
-          'success'
-        );
-        setSuccess('Product deleted successfully!');
-        await fetchProducts(); // Refresh the list
-      } catch (err) {
-        console.error('Failed to delete product', err);
-        let errorMessage = 'Failed to delete product. ';
-        
-        if (err.response) {
-          if (err.response.data && err.response.data.message) {
-            errorMessage += err.response.data.message;
-          } else {
-            errorMessage += 'Please try again later.';
-          }
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    
+    setDeleting(true);
+    try {
+      await sellerService.deleteProduct(productToDelete.id);
+      setSuccess('Product deleted successfully!');
+      await fetchProducts(); // Refresh the list
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete product', err);
+      let errorMessage = 'Failed to delete product. ';
+      
+      if (err.response) {
+        if (err.response.data && err.response.data.message) {
+          errorMessage += err.response.data.message;
         } else {
-          errorMessage += 'Please check your connection and try again.';
+          errorMessage += 'Please try again later.';
         }
-        
-        Swal.fire(
-          'Error!',
-          errorMessage,
-          'error'
-        );
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
+      } else {
+        errorMessage += 'Please check your connection and try again.';
       }
+      
+      setError(errorMessage);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -453,7 +530,21 @@ const SellProduct = ({ isModal = false, closeModal }) => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-white">My Products</h2>
+          <div className="flex items-center space-x-4">
+            <h2 className="text-2xl font-bold text-white">My Products</h2>
+            <span className="text-gray-400 text-sm">({products.length} products)</span>
+            <button
+              onClick={fetchProducts}
+              disabled={loading}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center disabled:opacity-50"
+              title="Refresh products list"
+            >
+              <svg className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
+          </div>
           <button
             onClick={() => setActiveView('form')}
             className="px-6 py-3 bg-gradient-to-r from-gold to-yellow-500 text-black font-bold rounded-xl hover:from-yellow-500 hover:to-gold transition-all shadow-xl hover:shadow-2xl text-lg flex items-center"
@@ -611,6 +702,7 @@ const SellProduct = ({ isModal = false, closeModal }) => {
           <h2 className="text-2xl font-bold text-white">
             {editingProduct ? 'Edit Product' : 'Add New Product'}
           </h2>
+          
           <button
             onClick={handleCancel}
             className="px-4 py-2 border border-gray-600 text-white rounded-lg hover:bg-gray-800 transition-colors"
@@ -621,22 +713,55 @@ const SellProduct = ({ isModal = false, closeModal }) => {
         
         {error && (
           <div className="mb-6 p-4 bg-red-900 bg-opacity-50 border border-red-700 text-red-200 rounded-lg relative" role="alert">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <span className="block sm:inline">{error}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span className="block sm:inline">{error}</span>
+              </div>
+              <button
+                onClick={() => setError('')}
+                className="ml-4 text-red-200 hover:text-red-100 transition-colors duration-200"
+                title="Close"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         )}
         
         {success && (
           <div className="mb-6 p-4 bg-green-900 bg-opacity-50 border border-green-700 text-green-200 rounded-lg relative" role="alert">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="block sm:inline">{success}</span>
+              </div>
+              <button
+                onClick={() => setSuccess('')}
+                className="ml-4 text-green-200 hover:text-green-100 transition-colors duration-200"
+                title="Close"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading && (
+          <div className="mb-6 p-4 bg-blue-900 bg-opacity-50 border border-blue-700 text-blue-200 rounded-lg relative" role="alert">
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <svg className="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span className="block sm:inline">{success}</span>
+              <span className="block sm:inline">{editingProduct ? 'Updating product...' : 'Creating product...'}</span>
             </div>
           </div>
         )}
@@ -853,6 +978,60 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl shadow-2xl border border-gray-800 p-8">
         {activeView === 'list' ? renderProductList() : renderProductForm()}
       </div>
+      
+      {/* Custom Delete Confirmation Modal */}
+      {showDeleteModal && productToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full border border-gray-700 shadow-2xl">
+            <div className="flex items-center mb-6">
+              <div className="bg-red-500 rounded-full p-3 mr-4">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Delete Product</h3>
+                <p className="text-gray-300 text-sm">This action cannot be undone</p>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-300 mb-2">Are you sure you want to delete this product?</p>
+              <div className="bg-gray-700 rounded-lg p-3">
+                <p className="text-white font-medium">{productToDelete.title}</p>
+                <p className="text-gray-400 text-sm">${productToDelete.price}</p>
+              </div>
+            </div>
+            
+            <div className="flex space-x-4">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setProductToDelete(null);
+                }}
+                className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 font-medium"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </div>
+                ) : (
+                  'Delete Product'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
