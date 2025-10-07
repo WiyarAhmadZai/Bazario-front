@@ -119,7 +119,7 @@ const Wishlist = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {favorites.map((product) => (
                   <div key={product.id} className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                    <Link to={`/products/${product.id}`} className="block">
+                    <Link to={`/product/${product.id}`} className="block">
                       <div className="aspect-w-16 aspect-h-12 relative group cursor-pointer">
                         {product.image_urls && product.image_urls.length > 0 ? (
                           <img
@@ -147,7 +147,7 @@ const Wishlist = () => {
                     </Link>
                     
                     <div className="p-6">
-                      <Link to={`/products/${product.id}`}>
+                      <Link to={`/product/${product.id}`}>
                         <h3 className="text-white font-semibold text-lg mb-2 hover:text-gold transition-colors line-clamp-2">
                           {product.title}
                         </h3>
