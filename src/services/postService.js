@@ -22,6 +22,28 @@ export const getSponsoredPosts = async (params = {}) => {
   }
 };
 
+// Get post comments
+export const getPostComments = async (postId) => {
+  try {
+    const response = await api.get(`/posts/${postId}/comments`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getting post comments:", error);
+    throw error;
+  }
+};
+
+// Add a comment to a post
+export const addPostComment = async (postId, data) => {
+  try {
+    const response = await api.post(`/posts/${postId}/comments`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    throw error;
+  }
+};
+
 // Create a new post
 export const createPost = async (postData) => {
   try {
@@ -117,31 +139,6 @@ export const favoritePost = async (postId) => {
   }
 };
 
-// Get post comments
-export const getPostComments = async (postId, page = 1) => {
-  try {
-    const response = await api.get(`/posts/${postId}/comments?page=${page}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error getting post comments:", error);
-    throw error;
-  }
-};
-
-// Add a comment to a post
-export const addComment = async (postId, content, parentId = null) => {
-  try {
-    const response = await api.post(`/posts/${postId}/comments`, {
-      content,
-      parent_id: parentId,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error adding comment:", error);
-    throw error;
-  }
-};
-
 export default {
   getPosts,
   getSponsoredPosts,
@@ -152,5 +149,5 @@ export default {
   likePost,
   favoritePost,
   getPostComments,
-  addComment,
+  addPostComment,
 };
