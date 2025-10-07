@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import sellerService from '../services/sellerService';
 import Select from 'react-select';
@@ -8,6 +8,7 @@ import Swal from 'sweetalert2'; // Add SweetAlert2 import
 const SellProduct = ({ isModal = false, closeModal }) => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,23 @@ const SellProduct = ({ isModal = false, closeModal }) => {
     }
     
     fetchProducts();
-  }, [user, navigate]);
+    
+    // Check if we're in edit mode
+    const editId = searchParams.get('edit');
+    const view = searchParams.get('view');
+    
+    if (editId) {
+      setLoading(true);
+      handleEdit(parseInt(editId)).finally(() => {
+        setLoading(false);
+      });
+    }
+    
+    // If view=form is specified, switch to form view
+    if (view === 'form') {
+      setActiveView('form');
+    }
+  }, [user, navigate, searchParams]);
 
   const fetchProducts = async () => {
     try {
@@ -212,7 +229,30 @@ const SellProduct = ({ isModal = false, closeModal }) => {
     }
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = async (productOrId) => {
+    let product;
+    
+    // If it's an ID, find the product in the products array or fetch it
+    if (typeof productOrId === 'number') {
+      product = products.find(p => p.id === productOrId);
+      
+      // If product not found in local array, fetch it from API
+      if (!product) {
+        try {
+          console.log('Product not found locally, fetching from API...');
+          const response = await sellerService.getProduct(productOrId);
+          product = response.data.data || response.data;
+          console.log('Fetched product:', product);
+        } catch (error) {
+          console.error('Failed to fetch product:', error);
+          setError('Failed to load product for editing');
+          return;
+        }
+      }
+    } else {
+      product = productOrId;
+    }
+    
     setEditingProduct(product);
     setFormData({
       title: product.title || '',
@@ -220,7 +260,7 @@ const SellProduct = ({ isModal = false, closeModal }) => {
       price: product.price || '',
       discount: product.discount || '',
       stock: product.stock || '',
-      category_enum: product.category_enum || '',
+      category_enum: product.category_enum || product.category?.name || '',
       images: []
     });
     
@@ -555,6 +595,16 @@ const SellProduct = ({ isModal = false, closeModal }) => {
 
   // Render product form view
   const renderProductForm = () => {
+    // Show loading state when fetching product for editing
+    if (editingProduct && loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mb-4"></div>
+          <p className="text-white text-lg">Loading product data...</p>
+        </div>
+      );
+    }
+
     return (
       <>
         <div className="flex justify-between items-center mb-6">
