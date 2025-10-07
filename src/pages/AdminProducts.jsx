@@ -1,8 +1,75 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../context/AuthContext';
 import { getAdminProducts, updateProduct } from '../services/productService';
+import Pagination from '../components/Pagination';
+import RecordsPerPageSelector from '../components/RecordsPerPageSelector';
+
+// Skeleton loader component
+const ProductSkeleton = () => (
+  <tr className="bg-gray-800 border-b border-gray-700 animate-pulse">
+    <td className="px-6 py-4 whitespace-nowrap">
+      <div className="flex items-center">
+        <div className="w-16 h-16 bg-gray-700 rounded-lg"></div>
+        <div className="ml-4">
+          <div className="h-4 bg-gray-700 rounded w-32 mb-2"></div>
+          <div className="h-3 bg-gray-700 rounded w-48"></div>
+        </div>
+      </div>
+    </td>
+    <td className="px-6 py-4 whitespace-nowrap">
+      <div className="h-4 bg-gray-700 rounded w-24 mb-1"></div>
+      <div className="h-3 bg-gray-700 rounded w-32"></div>
+    </td>
+    <td className="px-6 py-4 whitespace-nowrap">
+      <div className="h-4 bg-gray-700 rounded w-16"></div>
+    </td>
+    <td className="px-6 py-4 whitespace-nowrap">
+      <div className="h-6 bg-gray-700 rounded-full w-20"></div>
+    </td>
+    <td className="px-6 py-4 whitespace-nowrap">
+      <div className="flex space-x-2">
+        <div className="h-8 bg-gray-700 rounded w-16"></div>
+        <div className="h-8 bg-gray-700 rounded w-16"></div>
+        <div className="h-8 bg-gray-700 rounded w-20"></div>
+      </div>
+    </td>
+  </tr>
+);
+
+// Lazy image component
+const LazyImage = ({ src, alt, className, onError }) => {
+  const [imageSrc, setImageSrc] = useState('https://placehold.co/300x300/374151/FFFFFF?text=Loading...');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (src) {
+      const img = new Image();
+      img.onload = () => {
+        setImageSrc(src);
+        setIsLoading(false);
+      };
+      img.onerror = () => {
+        setImageSrc('https://placehold.co/300x300/374151/FFFFFF?text=No+Image');
+        setIsLoading(false);
+        if (onError) onError();
+      };
+      img.src = src;
+    } else {
+      setImageSrc('https://placehold.co/300x300/374151/FFFFFF?text=No+Image');
+      setIsLoading(false);
+    }
+  }, [src, onError]);
+
+  return (
+    <img
+      src={imageSrc}
+      alt={alt}
+      className={`${className} ${isLoading ? 'animate-pulse' : ''}`}
+    />
+  );
+};
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -15,6 +82,9 @@ const AdminProducts = () => {
     status: '', // Empty by default to show all statuses
     sort_by: 'newest' // Sort by newest first by default
   });
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [recordsPerPage, setRecordsPerPage] = useState(8);
   
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -27,7 +97,7 @@ const AdminProducts = () => {
   }, [user, navigate]);
 
   // Fetch products for admin
-  const fetchProducts = async (page = 1) => {
+  const fetchProducts = useCallback(async (page = 1) => {
     if (!user || user.role !== 'admin') return;
     
     setLoading(true);
@@ -37,8 +107,7 @@ const AdminProducts = () => {
       // Build request params
       const params = {
         page: page,
-        per_page: 12,
-        sort_by: 'newest', // Always sort by newest first
+        per_page: recordsPerPage,
         ...filters
       };
       
@@ -50,6 +119,7 @@ const AdminProducts = () => {
       });
       
       console.log('Fetching admin products with params:', params);
+      console.log('Current filters:', filters);
       
       const response = await getAdminProducts(params);
       console.log('Admin products response:', response);
@@ -91,7 +161,7 @@ const AdminProducts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, filters, recordsPerPage]);
 
   // Initial load
   useEffect(() => {
@@ -100,24 +170,61 @@ const AdminProducts = () => {
     }
   }, [user, filters]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
   // Handle filter changes
   const handleFilterChange = (e) => {
     setFilters({
       ...filters,
       [e.target.name]: e.target.value
     });
+    // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
+  // Debounced search
+  
   const handleSearchChange = (e) => {
-    setFilters({
-      ...filters,
-      search: e.target.value
-    });
+    const value = e.target.value;
+    
+    // Show searching indicator
+    setIsSearching(true);
+    
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout for debounced search
+    const timeout = setTimeout(() => {
+      setFilters(prev => ({
+        ...prev,
+        search: value
+      }));
+      setCurrentPage(1);
+      setIsSearching(false);
+    }, 500); // 500ms delay
+    
+    setSearchTimeout(timeout);
   };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
     fetchProducts(page);
+  };
+
+  const handleRecordsPerPageChange = (e) => {
+    const newRecordsPerPage = parseInt(e.target.value);
+    setRecordsPerPage(newRecordsPerPage);
+    setCurrentPage(1); // Reset to first page
+    fetchProducts(1);
   };
 
   // Helper function to get image URL
@@ -312,9 +419,35 @@ const AdminProducts = () => {
 
       {/* Filters */}
       <div className="rounded-2xl shadow-lg p-6 mb-10 bg-gradient-to-r from-gray-800 to-gray-900">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-white">Filters & Sorting</h3>
+          <button
+            onClick={() => {
+              setFilters({
+                search: '',
+                status: '',
+                sort_by: 'newest'
+              });
+            }}
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors text-sm"
+          >
+            Reset Filters
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
-            <label className="block text-sm font-medium text-white mb-2">Search</label>
+            <label className="block text-sm font-medium text-white mb-2">
+              Search
+              {isSearching && (
+                <span className="ml-2 inline-flex items-center text-xs text-gold">
+                  <svg className="animate-spin -ml-1 mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Searching...
+                </span>
+              )}
+            </label>
             <input
               type="text"
               name="search"
@@ -341,7 +474,19 @@ const AdminProducts = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-white mb-2">Sort By</label>
+            <label className="block text-sm font-medium text-white mb-2">
+              Sort By
+              {filters.sort_by && filters.sort_by !== 'newest' && (
+                <span className="ml-2 px-2 py-1 bg-gold text-black text-xs rounded-full font-medium">
+                  {filters.sort_by === 'oldest' && 'Oldest First'}
+                  {filters.sort_by === 'name' && 'A to Z'}
+                  {filters.sort_by === 'name_desc' && 'Z to A'}
+                  {filters.sort_by === 'price_low' && 'Price: Low to High'}
+                  {filters.sort_by === 'price_high' && 'Price: High to Low'}
+                  {filters.sort_by === 'status' && 'Status'}
+                </span>
+              )}
+            </label>
             <select
               name="sort_by"
               value={filters.sort_by || 'newest'}
@@ -349,11 +494,20 @@ const AdminProducts = () => {
               className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all text-white"
             >
               <option value="newest" className="bg-gray-700">Newest First</option>
-              <option value="name" className="bg-gray-700">Name</option>
+              <option value="oldest" className="bg-gray-700">Oldest First</option>
+              <option value="name" className="bg-gray-700">Name: A to Z</option>
+              <option value="name_desc" className="bg-gray-700">Name: Z to A</option>
               <option value="price_low" className="bg-gray-700">Price: Low to High</option>
               <option value="price_high" className="bg-gray-700">Price: High to Low</option>
+              <option value="status" className="bg-gray-700">Status</option>
             </select>
           </div>
+          
+          <RecordsPerPageSelector
+            value={recordsPerPage}
+            onChange={handleRecordsPerPageChange}
+            label="Records per Page"
+          />
         </div>
       </div>
 
@@ -379,8 +533,25 @@ const AdminProducts = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+        <div className="bg-gray-900 rounded-2xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Seller</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-gray-900 divide-y divide-gray-700">
+                {[...Array(8)].map((_, index) => (
+                  <ProductSkeleton key={index} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -406,7 +577,7 @@ const AdminProducts = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-16 w-16">
-                              <img 
+                              <LazyImage 
                                 className="h-16 w-16 object-cover rounded-lg" 
                                 src={product.images && product.images.length > 0 ? 
                                   (() => {
@@ -451,9 +622,7 @@ const AdminProducts = () => {
                                   })() : 
                                   'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
                                 alt={product.title || 'Product'}
-                                onError={(e) => {
-                                  e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
-                                }}
+                                onError={() => console.log('Image failed to load for product:', product.id)}
                               />
                             </div>
                             <div className="ml-4">
@@ -516,26 +685,14 @@ const AdminProducts = () => {
                 </table>
               </div>
               
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-12">
-                  <div className="flex space-x-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-full transition-all ${
-                          currentPage === page
-                            ? 'bg-gradient-to-r from-gold to-yellow-600 text-black font-bold'
-                            : 'bg-gray-700 text-white hover:bg-gray-600'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Enhanced Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                totalItems={products.length}
+                itemsPerPage={recordsPerPage}
+              />
             </>
           ) : (
             <div className="col-span-full text-center py-12">
