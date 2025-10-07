@@ -13,7 +13,7 @@ const Posts = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [filters, setFilters] = useState({
-    user_id: '',
+    search: '',
     sort_by: 'newest'
   });
 
@@ -116,7 +116,21 @@ const Posts = () => {
 
           {/* Filters */}
           <div className="bg-gray-800 rounded-2xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Search
+                </label>
+                <input
+                  type="text"
+                  name="search"
+                  value={filters.search}
+                  onChange={handleFilterChange}
+                  placeholder="Search posts..."
+                  className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all text-white"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
                   Sort By
@@ -129,36 +143,20 @@ const Posts = () => {
                 >
                   <option value="newest" className="bg-gray-700">Newest First</option>
                   <option value="oldest" className="bg-gray-700">Oldest First</option>
-                  <option value="most_liked" className="bg-gray-700">Most Liked</option>
-                  <option value="most_commented" className="bg-gray-700">Most Commented</option>
+                  <option value="price_low" className="bg-gray-700">Price: Low to High</option>
+                  <option value="price_high" className="bg-gray-700">Price: High to Low</option>
+                  <option value="name_asc" className="bg-gray-700">Name: A to Z</option>
+                  <option value="name_desc" className="bg-gray-700">Name: Z to A</option>
                 </select>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">
-                  User
-                </label>
-                <input
-                  type="text"
-                  name="user_id"
-                  value={filters.user_id}
-                  onChange={handleFilterChange}
-                  placeholder="Filter by user ID"
-                  className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all text-white"
-                />
-              </div>
-
-              <RecordsPerPageSelector
-                value={recordsPerPage}
-                onChange={handleRecordsPerPageChange}
-                label="Posts per Page"
-                options={[5, 10, 20, 50]}
-              />
 
               <div className="flex items-end">
                 <button
                   onClick={() => {
-                    setFilters({ user_id: '', sort_by: 'newest' });
+                    setFilters({
+                      search: '',
+                      sort_by: 'newest'
+                    });
                     setCurrentPage(1);
                   }}
                   className="w-full px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-xl transition-colors"
@@ -166,6 +164,15 @@ const Posts = () => {
                   Reset Filters
                 </button>
               </div>
+            </div>
+
+            <div className="mt-6">
+              <RecordsPerPageSelector
+                value={recordsPerPage}
+                onChange={handleRecordsPerPageChange}
+                label="Posts per Page"
+                options={[5, 10, 20, 50]}
+              />
             </div>
           </div>
         </div>
