@@ -116,7 +116,7 @@ const Wishlist = () => {
         {!loading && (
           <>
             {favorites && favorites.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {favorites.map((product) => (
                   <div key={product.id} className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                     <Link to={`/product/${product.id}`} className="block">
@@ -125,10 +125,10 @@ const Wishlist = () => {
                           <img
                             src={product.image_urls[0]}
                             alt={product.title}
-                            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         ) : (
-                          <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
+                          <div className="w-full h-40 bg-gray-700 flex items-center justify-center">
                             <svg className="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
