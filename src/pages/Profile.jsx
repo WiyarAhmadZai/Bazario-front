@@ -1029,7 +1029,7 @@ const Profile = () => {
                                   <img 
                                     src={getProductImageUrl(product)}
                                     alt={product.title}
-                                    className="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-200 cursor-pointer"
+                                    className="w-full h-40 object-cover hover:opacity-90 transition-opacity duration-200 cursor-pointer"
                                     onError={(e) => {
                                       e.target.src = '/src/assets/abstract-art-circle-clockwork-414579.jpg';
                                     }}
