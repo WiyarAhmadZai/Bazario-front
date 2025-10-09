@@ -1017,7 +1017,7 @@ const Profile = () => {
                 ) : (
                   <>
                     {userProducts.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                         {userProducts.map((product) => {
                           const discountPercentage = calculateDiscountPercentage(parseFloat(product.price), parseFloat(product.discount || 0));
                           const discountedPrice = parseFloat(product.price) - (parseFloat(product.price) * parseFloat(product.discount || 0) / 100);
