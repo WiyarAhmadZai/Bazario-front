@@ -69,28 +69,33 @@ const Shop = () => {
     }
   };
 
-  // Debounced search function
+  // Debounced search function (optimized)
   const debouncedSearch = useCallback(
     (() => {
       let timeoutId;
       return (searchValue) => {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
-          setFilters(prev => {
-            const newFilters = {
-              ...prev,
-              search: searchValue
-            };
+          // Only search if value is empty or has 2+ characters
+          if (searchValue === '' || searchValue.length >= 2) {
+            setFilters(prev => {
+              const newFilters = {
+                ...prev,
+                search: searchValue
+              };
+              setIsSearching(false);
+              // Reset to page 1 and fetch products
+              setCurrentPage(1);
+              fetchProductsWithPerPage(1, recordsPerPage, newFilters);
+              return newFilters;
+            });
+          } else {
             setIsSearching(false);
-            // Reset to page 1 and fetch products
-            setCurrentPage(1);
-            fetchProductsWithPerPage(1, recordsPerPage, newFilters);
-            return newFilters;
-          });
-        }, 500); // 500ms delay
+          }
+        }, 300); // Reduced delay to 300ms for better UX
       };
     })(),
-    []
+    [recordsPerPage]
   );
 
   // Handle search input change
