@@ -9,6 +9,7 @@ import { likeProduct, unlikeProduct, getLikeStatus, getLikeCount } from '../serv
 import ShareModal from '../components/ShareModal';
 import Pagination from '../components/Pagination';
 import RecordsPerPageSelector from '../components/RecordsPerPageSelector';
+import { ProductSkeletonGrid } from '../components/ProductSkeleton';
 // SVG Icons
 const HeartIcon = ({ filled = false }) => (
   <svg className="w-4 h-4" fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
@@ -131,30 +132,19 @@ const Shop = () => {
         setCurrentPage(response.current_page || 1);
         setTotalPages(response.last_page || 1);
         
-        // Fetch like counts and status for all products
-        const likePromises = response.data.map(async (product) => {
-          try {
-            const [likeCountResponse, likeStatusResponse] = await Promise.all([
-              getLikeCount(product.id),
-              getLikeStatus(product.id)
-            ]);
-            return { 
-              productId: product.id, 
-              likeCount: likeCountResponse.like_count,
-              liked: likeStatusResponse.liked
-            };
-          } catch (err) {
-            console.error(`Error fetching like data for product ${product.id}:`, err);
-            return { productId: product.id, likeCount: 0, liked: false };
-          }
-        });
-        
-        const likeData = await Promise.all(likePromises);
+        // Initialize like data with default values (no need to fetch immediately)
         const likesMap = {};
-        likeData.forEach(({ productId, likeCount, liked }) => {
-          likesMap[productId] = { likeCount, liked };
+        response.data.forEach((product) => {
+          likesMap[product.id] = {
+            likeCount: 0,
+            liked: false,
+            loading: false
+          };
         });
         setProductLikes(likesMap);
+        
+        // Fetch like counts and status in background (non-blocking)
+        fetchLikeDataInBackground(response.data);
       } else {
         setProducts([]);
         setCurrentPage(1);
@@ -168,6 +158,41 @@ const Shop = () => {
       setTotalPages(1);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch like data in background without blocking UI
+  const fetchLikeDataInBackground = async (products) => {
+    try {
+      const likePromises = products.map(async (product) => {
+        try {
+          const [likeCountResponse, likeStatusResponse] = await Promise.all([
+            getLikeCount(product.id),
+            getLikeStatus(product.id)
+          ]);
+          return { 
+            productId: product.id, 
+            likeCount: likeCountResponse.like_count,
+            liked: likeStatusResponse.liked
+          };
+        } catch (err) {
+          console.error(`Error fetching like data for product ${product.id}:`, err);
+          return { productId: product.id, likeCount: 0, liked: false };
+        }
+      });
+      
+      const likeData = await Promise.all(likePromises);
+      const likesMap = {};
+      likeData.forEach(({ productId, likeCount, liked }) => {
+        likesMap[productId] = {
+          likeCount,
+          liked,
+          loading: false
+        };
+      });
+      setProductLikes(prev => ({ ...prev, ...likesMap }));
+    } catch (err) {
+      console.error('Error fetching like data in background:', err);
     }
   };
 
@@ -450,8 +475,8 @@ const Shop = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+        <div className="py-8">
+          <ProductSkeletonGrid count={recordsPerPage} />
         </div>
       )}
 
