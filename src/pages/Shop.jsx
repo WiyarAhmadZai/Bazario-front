@@ -485,7 +485,7 @@ const Shop = () => {
         <div className="relative">
           {products && products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {products.map((product) => {
                   const discountPercentage = calculateDiscountPercentage(product.price, product.discount);
                   const discountedPrice = product.price - (product.price * (product.discount || 0) / 100);
@@ -531,7 +531,7 @@ const Shop = () => {
                             })() : 
                             'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
                           alt={product.title || 'Product'}
-                          className="w-full h-64 object-cover cursor-pointer"
+                          className="w-full h-48 object-cover cursor-pointer"
                           onClick={() => handleViewProduct(product.id)}
                           onError={(e) => {
                             e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
@@ -559,8 +559,8 @@ const Shop = () => {
                           </svg>
                         </button>
                       </div>
-                      <div className="p-6">
-                        <div className="flex justify-between items-start mb-3">
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
                           <h3 
                             className="text-xl font-bold text-white line-clamp-1 cursor-pointer hover:text-gold transition-colors"
                             onClick={() => handleViewProduct(product.id)}
@@ -568,15 +568,15 @@ const Shop = () => {
                             {product.title || 'Untitled Product'}
                           </h3>
                           {product.seller && (
-                            <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">
+                            <span className="text-[10px] bg-gray-700 text-gray-300 px-2 py-1 rounded-full">
                               By {product.seller.name}
                             </span>
                           )}
                         </div>
-                        <p className="text-gray-300 mb-4 line-clamp-2 text-sm">{product.description || 'No description available'}</p>
+                        <p className="text-gray-300 mb-3 line-clamp-2 text-sm">{product.description || 'No description available'}</p>
                         
                         {/* Price Section */}
-                        <div className="mb-4">
+                        <div className="mb-3">
                           {discountPercentage > 0 ? (
                             <div className="flex items-center space-x-2">
                               <span className="text-2xl font-bold text-gold">${discountedPrice.toFixed(2)}</span>
@@ -591,7 +591,7 @@ const Shop = () => {
                         </div>
                         
                         {/* Like and Share Buttons */}
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center justify-between mb-3">
                           <button
                             onClick={(e) => handleLike(product.id, e)}
                             className={`group flex items-center space-x-2 px-4 py-2 rounded-full text-sm transition-all duration-300 ${
