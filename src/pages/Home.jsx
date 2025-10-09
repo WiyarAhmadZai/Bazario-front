@@ -88,23 +88,36 @@ const Home = () => {
   };
   return (
     <div className="home-page">
-      {/* Modern Hero Section */}
-      <section className="relative w-full h-screen overflow-hidden">
-        {/* Dynamic Background with Parallax Effect */}
+      {/* Enhanced Hero Section - Full Width */}
+      <section className="relative w-full h-screen overflow-hidden -mt-16">
+        {/* Dynamic Background with Enhanced Parallax Effect */}
         <div className="absolute inset-0">
           {slides.map((slide, index) => (
             <div
               key={index}
-              className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+              className={`absolute inset-0 transition-all duration-1500 ease-in-out ${
+                index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
               }`}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/90"></div>
+              {/* Enhanced gradient overlay with multiple layers - Darker */}
+              <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/85 to-black/95"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/50"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40"></div>
+              
               <img 
                 src={slide.image}
                 alt={`Slide ${index + 1}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transform transition-transform duration-1500 ease-out"
+                style={{
+                  filter: 'brightness(0.5) contrast(1.2) saturate(1.3)',
+                  transform: index === currentSlide ? 'scale(1.05)' : 'scale(1.1)'
+                }}
               />
+              
+              {/* Subtle overlay pattern */}
+              <div className="absolute inset-0 opacity-10" style={{
+                backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.2) 0%, transparent 50%)'
+              }}></div>
             </div>
           ))}
         </div>
@@ -117,9 +130,9 @@ const Home = () => {
           <div className="absolute bottom-40 right-10 w-1 h-1 bg-white rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
         </div>
         
-        {/* Main Content - Centered */}
-        <div className="relative z-10 flex items-center justify-center h-full px-4 sm:px-6 lg:px-8">
-          <div className="container mx-auto">
+        {/* Main Content - Centered with proper spacing */}
+        <div className="relative z-10 flex items-center justify-center h-full">
+          <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               {/* Left Content */}
               <div className="text-left">
@@ -240,9 +253,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-16 bg-gray-900">
-        <div className="container mx-auto px-4">
+      {/* Enhanced Featured Products */}
+      <section className="py-20 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-20 left-20 w-64 h-64 bg-gold rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-20 w-48 h-48 bg-gold rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+        
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Featured Products</h2>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">Discover our handpicked selection of premium luxury items</p>
@@ -370,9 +389,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-16 bg-gray-800">
-        <div className="container mx-auto px-4">
+      {/* Enhanced Categories */}
+      <section className="py-20 bg-gradient-to-b from-gray-800 via-gray-700 to-gray-800 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-10 right-10 w-32 h-32 bg-gold rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute bottom-10 left-10 w-24 h-24 bg-gold rounded-full blur-xl animate-pulse" style={{ animationDelay: '3s' }}></div>
+        </div>
+        
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Shop by Category</h2>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">Explore our carefully curated categories</p>
@@ -461,7 +486,7 @@ const Home = () => {
           <div className="absolute top-1/3 right-1/3 w-4 h-4 border border-gold rotate-45 animate-spin-slow" style={{ animationDelay: '1s' }}></div>
         </div>
         
-        <div className="container mx-auto px-4 text-center relative z-10">
+        <div className="container mx-auto px-6 lg:px-8 text-center relative z-10">
           <div className="animate-fade-in-up mb-16">
             <div className="inline-block mb-8">
               <div className="w-24 h-px bg-gradient-to-r from-gold to-yellow-400 mx-auto mb-6 shadow-lg shadow-gold/30"></div>
@@ -544,7 +569,7 @@ const Home = () => {
           <div className="absolute bottom-20 right-20 w-36 h-36 bg-gold rounded-full blur-2xl animate-pulse" style={{ animationDelay: '3s' }}></div>
         </div>
         
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16 animate-fade-in-up">
             <div className="inline-block mb-6">
               <div className="w-20 h-px bg-gradient-to-r from-gold to-yellow-400 mx-auto mb-4 shadow-lg shadow-gold/30"></div>
@@ -644,7 +669,7 @@ const Home = () => {
           <div className="absolute top-1/3 right-1/3 w-6 h-6 border border-gold rotate-45 animate-spin-slow" style={{ animationDelay: '1s' }}></div>
         </div>
         
-        <div className="container mx-auto px-4 text-center relative z-10">
+        <div className="container mx-auto px-6 lg:px-8 text-center relative z-10">
           <div className="max-w-4xl mx-auto animate-fade-in-up">
             <div className="inline-block mb-8">
               <div className="w-24 h-px bg-gradient-to-r from-gold to-yellow-400 mx-auto mb-6 shadow-lg shadow-gold/30"></div>
