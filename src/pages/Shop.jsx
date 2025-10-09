@@ -30,7 +30,8 @@ const Shop = () => {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [recordsPerPage, setRecordsPerPage] = useState(12);
+  const [totalItems, setTotalItems] = useState(0);
+  const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [filters, setFilters] = useState({
     category: '',
     search: '',
@@ -83,7 +84,7 @@ const Shop = () => {
             setIsSearching(false);
             // Reset to page 1 and fetch products
             setCurrentPage(1);
-            fetchProducts(1, newFilters);
+            fetchProductsWithPerPage(1, recordsPerPage, newFilters);
             return newFilters;
           });
         }, 500); // 500ms delay
@@ -131,6 +132,7 @@ const Shop = () => {
         setProducts(response.data);
         setCurrentPage(response.current_page || 1);
         setTotalPages(response.last_page || 1);
+        setTotalItems(response.total || 0);
         
         // Initialize like data with default values (no need to fetch immediately)
         const likesMap = {};
@@ -149,6 +151,70 @@ const Shop = () => {
         setProducts([]);
         setCurrentPage(1);
         setTotalPages(1);
+        setTotalItems(0);
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError('Failed to fetch products. Please make sure the backend server is running.');
+      setProducts([]);
+      setCurrentPage(1);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch products with specific per_page value
+  const fetchProductsWithPerPage = async (page = 1, perPage = recordsPerPage, customFilters = null) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Build request params
+      const activeFilters = customFilters || filters;
+      const params = {
+        page: page,
+        status: 'approved', // Explicitly add approved status for shop page
+        per_page: perPage,
+        ...activeFilters
+      };
+      
+      // Remove empty filters
+      Object.keys(params).forEach(key => {
+        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+          delete params[key];
+        }
+      });
+      
+      console.log('Fetching products with params:', params);
+      
+      const response = await getProducts(params);
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        console.log('Received products:', response.data);
+        setProducts(response.data);
+        setCurrentPage(response.current_page || 1);
+        setTotalPages(response.last_page || 1);
+        setTotalItems(response.total || 0);
+        
+        // Initialize like data with default values (no need to fetch immediately)
+        const likesMap = {};
+        response.data.forEach((product) => {
+          likesMap[product.id] = {
+            likeCount: 0,
+            liked: false,
+            loading: false
+          };
+        });
+        setProductLikes(likesMap);
+        
+        // Fetch like counts and status in background (non-blocking)
+        fetchLikeDataInBackground(response.data);
+      } else {
+        setProducts([]);
+        setCurrentPage(1);
+        setTotalPages(1);
+        setTotalItems(0);
       }
     } catch (err) {
       console.error('Error fetching products:', err);
@@ -199,7 +265,7 @@ const Shop = () => {
   // Initial load
   useEffect(() => {
     fetchCategories();
-    fetchProducts(1);
+    fetchProductsWithPerPage(1, recordsPerPage);
   }, []);
 
   // Refresh data when products are updated
@@ -232,7 +298,7 @@ const Shop = () => {
     setFilters(newFilters);
     // Reset to page 1 when filters change
     setCurrentPage(1);
-    fetchProducts(1, newFilters);
+    fetchProductsWithPerPage(1, recordsPerPage, newFilters);
   };
 
   // Clear all filters
@@ -245,19 +311,20 @@ const Shop = () => {
     setFilters(clearedFilters);
     setSearchTerm('');
     setCurrentPage(1);
-    fetchProducts(1, clearedFilters);
+    fetchProductsWithPerPage(1, recordsPerPage, clearedFilters);
   };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    fetchProducts(page);
+    fetchProductsWithPerPage(page, recordsPerPage);
   };
 
   const handleRecordsPerPageChange = (e) => {
     const newRecordsPerPage = parseInt(e.target.value);
     setRecordsPerPage(newRecordsPerPage);
     setCurrentPage(1); // Reset to first page
-    fetchProducts(1);
+    // Use the new value directly in the API call
+    fetchProductsWithPerPage(1, newRecordsPerPage);
   };
 
   const handleViewProduct = (productId) => {
@@ -448,7 +515,8 @@ const Shop = () => {
           <RecordsPerPageSelector
             value={recordsPerPage}
             onChange={handleRecordsPerPageChange}
-            label="Records per Page"
+            label="Products per Page"
+            options={[10, 20, 30, 40, 50]}
           />
         </div>
       </div>
@@ -630,7 +698,7 @@ const Shop = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
-                totalItems={products.length}
+                totalItems={totalItems}
                 itemsPerPage={recordsPerPage}
               />
             </>
