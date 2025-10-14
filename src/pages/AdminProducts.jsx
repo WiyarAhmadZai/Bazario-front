@@ -2,8 +2,8 @@ import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../context/AuthContext';
-import { getAdminProducts, updateProduct } from '../services/productService';
-import { toggleSponsor } from '../services/adminService';
+import { getAdminProducts } from '../services/productService';
+import { toggleSponsor, updateProduct } from '../services/adminService';
 import Pagination from '../components/Pagination';
 import RecordsPerPageSelector from '../components/RecordsPerPageSelector';
 
@@ -78,6 +78,7 @@ const AdminProducts = () => {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState({
     search: '',
     status: '', // Empty by default to show all statuses
@@ -130,25 +131,28 @@ const AdminProducts = () => {
       
       const response = await getAdminProducts(params);
       
+      console.log('FetchProducts response:', response);
+      
+      // Handle paginated response from Laravel
       if (response && response.data && Array.isArray(response.data)) {
+        console.log('Using paginated response data');
         setProducts(response.data);
         setCurrentPage(response.current_page || 1);
         setTotalPages(response.last_page || 1);
-      } else if (response && typeof response === 'object' && response.data === undefined) {
+        setTotalItems(response.total || 0);
+      } else if (response && Array.isArray(response)) {
         // Handle case where response is directly an array (non-paginated)
-        if (Array.isArray(response)) {
-          setProducts(response);
-          setCurrentPage(1);
-          setTotalPages(1);
-        } else {
-          setProducts([]);
-          setCurrentPage(1);
-          setTotalPages(1);
-        }
+        console.log('Using direct array response');
+        setProducts(response);
+        setCurrentPage(1);
+        setTotalPages(1);
+        setTotalItems(response.length);
       } else {
+        console.log('No valid response data, setting empty products');
         setProducts([]);
         setCurrentPage(1);
         setTotalPages(1);
+        setTotalItems(0);
       }
     } catch (err) {
       console.error('Error fetching products:', err);
@@ -297,12 +301,18 @@ const AdminProducts = () => {
     }
 
     try {
+      console.log('=== PRODUCT UPDATE DEBUG ===');
       console.log(`Updating product ${productId} to status ${status}`);
+      console.log('Current user:', user);
+      console.log('User role:', user?.role);
+      console.log('Token exists:', !!localStorage.getItem('token'));
       
       // Show loading state
       setLoading(true);
       
+      console.log('Calling updateProduct API...');
       const response = await updateProduct(productId, { status });
+      console.log('API call completed');
       console.log('Update response:', response);
       console.log('Response status field:', response.status);
       console.log('Response product field:', response.product);
@@ -311,6 +321,7 @@ const AdminProducts = () => {
       // Use the status from the response if available
       const actualStatus = response.status || response.product?.status || status;
       console.log('Actual status from response:', actualStatus);
+      console.log('Current products before update:', products.map(p => ({ id: p.id, status: p.status })));
       
       // Show success message with SweetAlert
       Swal.fire({
@@ -321,11 +332,13 @@ const AdminProducts = () => {
       });
       
       // Update the product status in the local state without reloading the page
-      setProducts(prevProducts => 
-        prevProducts.map(product => 
+      setProducts(prevProducts => {
+        const updatedProducts = prevProducts.map(product => 
           product.id === productId ? { ...product, status: actualStatus } : product
-        )
-      );
+        );
+        console.log('Updated products after state change:', updatedProducts.map(p => ({ id: p.id, status: p.status })));
+        return updatedProducts;
+      });
       
       // Clear any previous errors
       setError('');
@@ -336,7 +349,13 @@ const AdminProducts = () => {
       }, 1000);
       
     } catch (err) {
+      console.error('=== PRODUCT UPDATE ERROR ===');
       console.error('Error updating product status:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
+      
       let errorMessage = 'Failed to update product status.';
       
       if (err.response) {
@@ -371,6 +390,7 @@ const AdminProducts = () => {
       });
     } finally {
       setLoading(false);
+      console.log('=== PRODUCT UPDATE DEBUG END ===');
     }
   };
 
@@ -842,7 +862,7 @@ const AdminProducts = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
-                totalItems={products.length}
+                totalItems={totalItems}
                 itemsPerPage={recordsPerPage}
               />
             </>
