@@ -287,170 +287,218 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* User Profile Header */}
-      <div className="bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 rounded-2xl shadow-2xl p-6 mb-8 border border-gray-700">
-        <div className="flex flex-col xl:flex-row items-center xl:items-start">
-          {/* Profile Image Section - Centered on mobile, left on desktop */}
-          <div className="relative mb-6 xl:mb-0 xl:mr-8 flex-shrink-0">
-            <div className="relative">
-              {/* Main Profile Image */}
-              <div 
-                className="h-40 w-40 xl:h-48 xl:w-48 rounded-full overflow-hidden border-4 border-gold shadow-2xl ring-4 ring-gold/20 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-3xl"
-                onClick={() => setShowImageModal(true)}
-                title="Click to view full size"
-              >
-            {user.avatar ? (
-              <img 
-                src={`http://localhost:8000/storage/${user.avatar}`} 
-                alt={user.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-                <div className="bg-gradient-to-br from-gold via-yellow-500 to-yellow-600 h-full w-full flex items-center justify-center" style={{display: user.avatar ? 'none' : 'flex'}}>
-                  <span className="text-black font-bold text-5xl xl:text-6xl">{user.name?.charAt(0) || 'U'}</span>
-                </div>
-              </div>
-              
-              {/* Online Status Indicator */}
-              <div className="absolute -bottom-2 -right-2 h-8 w-8 bg-green-500 rounded-full border-4 border-gray-800 flex items-center justify-center">
-                <div className="h-3 w-3 bg-white rounded-full animate-pulse"></div>
-              </div>
-              
-              {/* Decorative Elements */}
-              <div className="absolute -top-2 -left-2 h-6 w-6 bg-gold rounded-full opacity-60"></div>
-              <div className="absolute -top-1 -right-1 h-4 w-4 bg-yellow-400 rounded-full opacity-40"></div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Modern Profile Header */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-8">
+          {/* Cover Photo Section */}
+          <div className="h-48 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 relative">
+            <div className="absolute inset-0 bg-black/20"></div>
+            <div className="absolute bottom-4 right-4">
+              <button className="bg-white/90 hover:bg-white text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                Edit Cover
+              </button>
             </div>
           </div>
           
-          {/* Main Content Area - Uses full width */}
-          <div className="w-full xl:flex-1">
-            {/* Top Row: Name, Bio, and Contact */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Left Column: Name and Bio */}
-              <div className="space-y-4">
-                <div>
-                  <h1 className="text-3xl xl:text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    {user.name}
-                  </h1>
-                  <div className="flex items-center text-sm text-gray-400 mb-3">
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                    </svg>
-                    Member since {new Date(user.created_at).toLocaleDateString()}
+          {/* Profile Info Section */}
+          <div className="px-8 pb-8 -mt-16 relative">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between">
+              {/* Profile Image and Basic Info */}
+              <div className="flex flex-col lg:flex-row lg:items-end space-y-4 lg:space-y-0 lg:space-x-6">
+                <div className="relative">
+                  <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden">
+                    {user.avatar ? (
+                      <img 
+                        src={`http://localhost:8000/storage/${user.avatar}`} 
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className="bg-gradient-to-br from-gray-400 to-gray-600 h-full w-full flex items-center justify-center" style={{display: user.avatar ? 'none' : 'flex'}}>
+                      <span className="text-white font-bold text-4xl">{user.name?.charAt(0) || 'U'}</span>
+                    </div>
                   </div>
+                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white"></div>
                 </div>
                 
-                {/* Bio Section */}
-                <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600">
-                  <p className="text-gray-300 leading-relaxed">
-                    {user.bio || 'No bio available'}
-                  </p>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
+                  <div className="flex items-center space-x-4 text-gray-600">
+                    <span className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      </svg>
+                      Member since {new Date(user.created_at).toLocaleDateString()}
+                    </span>
+                    {user.role && (
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      </span>
+                    )}
+                  </div>
+                  {user.bio && (
+                    <p className="text-gray-700 max-w-2xl">{user.bio}</p>
+                  )}
                 </div>
               </div>
               
-              {/* Right Column: Contact Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white mb-3">Contact Information</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {user.phone && (
-                    <button
-                      onClick={() => handlePhoneCall(user.phone)}
-                      className="group flex flex-col items-center justify-center bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-green-400/20"
-                      title="Call"
-                    >
-                      <PhoneIcon />
-                      <span className="text-sm font-medium mt-1">Call</span>
-                    </button>
-                  )}
-                  
-                  {user.phone && (
-                    <button
-                      onClick={() => handleWhatsAppMessage(user.phone)}
-                      className="group flex flex-col items-center justify-center bg-gradient-to-br from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white p-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-green-300/20"
-                      title="WhatsApp"
-                    >
-                      <WhatsappIcon />
-                      <span className="text-sm font-medium mt-1">WhatsApp</span>
-                    </button>
-                  )}
-                  
-                  {user.email && (
-                    <button
-                      onClick={() => handleEmail(user.email)}
-                      className="group flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-blue-400/20"
-                      title="Email"
-                    >
-                      <EnvelopeIcon />
-                      <span className="text-sm font-medium mt-1">Email</span>
-                    </button>
-                  )}
-                  
-                  {(user.address || user.city || user.country) && (
-                    <button
-                      onClick={() => handleLocation(user.address, user.city, user.country)}
-                      className="group flex flex-col items-center justify-center bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-red-400/20"
-                      title="Location"
-                    >
-                      <MapIcon />
-                      <span className="text-sm font-medium mt-1">Location</span>
-                    </button>
-                  )}
-                </div>
+              {/* Action Buttons */}
+              <div className="flex space-x-3 mt-6 lg:mt-0">
+                {user.phone && (
+                  <button
+                    onClick={() => handlePhoneCall(user.phone)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                  >
+                    <PhoneIcon />
+                    <span>Call</span>
+                  </button>
+                )}
+                {user.phone && (
+                  <button
+                    onClick={() => handleWhatsAppMessage(user.phone)}
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                  >
+                    <WhatsappIcon />
+                    <span>WhatsApp</span>
+                  </button>
+                )}
+                {user.email && (
+                  <button
+                    onClick={() => handleEmail(user.email)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                  >
+                    <EnvelopeIcon />
+                    <span>Email</span>
+                  </button>
+                )}
+                <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                  <ShareIcon />
+                  <span>Share</span>
+                </button>
               </div>
             </div>
-            
-            {/* Bottom Row: Additional Information - Full Width */}
-            {(user.profession || user.city || user.country) && (
-              <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-gold" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
-                  Additional Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {user.profession && (
-                    <div className="flex items-center space-x-3 bg-gray-800/50 px-4 py-3 rounded-lg border border-gray-600">
-                      <BriefcaseIcon />
-                      <div>
-                        <span className="text-sm text-gray-400">Profession</span>
-                        <p className="text-white font-medium">{user.profession}</p>
-                      </div>
-                    </div>
-                  )}
-                  {user.city && (
-                    <div className="flex items-center space-x-3 bg-gray-800/50 px-4 py-3 rounded-lg border border-gray-600">
-                      <GlobeIcon />
-                      <div>
-                        <span className="text-sm text-gray-400">City</span>
-                        <p className="text-white font-medium">{user.city}</p>
-                      </div>
-                    </div>
-                  )}
-                  {user.country && (
-                    <div className="flex items-center space-x-3 bg-gray-800/50 px-4 py-3 rounded-lg border border-gray-600">
-                      <GlobeIcon />
-                      <div>
-                        <span className="text-sm text-gray-400">Country</span>
-                        <p className="text-white font-medium">{user.country}</p>
-                      </div>
-                    </div>
-                  )}
-            </div>
-          </div>
-            )}
           </div>
         </div>
-      </div>
+        {/* Information Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Contact Information Card */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              </svg>
+              Contact Information
+            </h3>
+            <div className="space-y-3">
+              {user.email && (
+                <div className="flex items-center text-gray-600">
+                  <EnvelopeIcon />
+                  <span className="ml-3">{user.email}</span>
+                </div>
+              )}
+              {user.phone && (
+                <div className="flex items-center text-gray-600">
+                  <PhoneIcon />
+                  <span className="ml-3">{user.phone}</span>
+                </div>
+              )}
+              {(user.address || user.city || user.country) && (
+                <div className="flex items-center text-gray-600">
+                  <MapIcon />
+                  <span className="ml-3">
+                    {[user.address, user.city, user.country].filter(Boolean).join(', ')}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
 
-      {/* User Products */}
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-6">Products Posted by {user.name}</h2>
+          {/* Professional Information Card */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
+              </svg>
+              Professional Info
+            </h3>
+            <div className="space-y-3">
+              {user.profession && (
+                <div className="flex items-center text-gray-600">
+                  <BriefcaseIcon />
+                  <span className="ml-3">{user.profession}</span>
+                </div>
+              )}
+              {user.role && (
+                <div className="flex items-center text-gray-600">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  <span className="ml-3 capitalize">{user.role}</span>
+                </div>
+              )}
+              <div className="flex items-center text-gray-600">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+                <span className="ml-3">Joined {new Date(user.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Card */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+              </svg>
+              Statistics
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Total Products</span>
+                <span className="font-semibold text-gray-900">{products.length}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Approved</span>
+                <span className="font-semibold text-green-600">{products.filter(p => p.status === 'approved').length}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Pending</span>
+                <span className="font-semibold text-yellow-600">{products.filter(p => p.status === 'pending').length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Products Section */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Products by {user.name}</h2>
+              <p className="text-gray-600 mt-1">
+                {products.length} {products.length === 1 ? 'product' : 'products'} available
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-900">{products.length}</div>
+                <div className="text-xs text-gray-500">Total</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600">
+                  {products.filter(p => p.status === 'approved').length}
+                </div>
+                <div className="text-xs text-gray-500">Approved</div>
+              </div>
+            </div>
+          </div>
+        
         {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => {
@@ -462,63 +510,89 @@ const UserProfile = () => {
               return (
                 <div 
                   key={product.id} 
-                  className="bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-700 cursor-pointer"
+                  className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
                   onClick={() => navigate(`/product/${product.id}`)}
                 >
                   <div className="relative">
                     <img 
-                      src={productImages.length > 0 ? getImageUrl(productImages[0]) : 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
+                      src={productImages.length > 0 ? getImageUrl(productImages[0]) : 'https://placehold.co/300x300/f3f4f6/6b7280?text=Product+Image'} 
                       alt={product.title}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
                       onError={(e) => {
-                        e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+                        e.target.src = 'https://placehold.co/300x300/f3f4f6/6b7280?text=Product+Image';
                       }}
                     />
+                    
+                    {/* Status Badge */}
+                    <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium ${
+                      product.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      product.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      product.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {product.status?.charAt(0).toUpperCase() + product.status?.slice(1)}
+                    </div>
+                    
                     {/* Discount Badge */}
                     {discountPercentage > 0 && (
-                      <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
                         -{discountPercentage}%
-                    </div>
+                      </div>
                     )}
-                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                      {formatDate(product.created_at)}
-                    </div>
                   </div>
+                  
                   <div className="p-4">
-                    <h3 className="text-lg font-bold text-white line-clamp-1">{product.title || 'Untitled Product'}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
+                      {product.title || 'Untitled Product'}
+                    </h3>
                     
                     {/* Price Section */}
-                    <div className="mt-2">
+                    <div className="mb-3">
                       {discountPercentage > 0 ? (
                         <div className="flex items-center space-x-2">
-                          <span className="text-gold font-bold text-lg">${discountedPrice.toFixed(2)}</span>
-                          <span className="text-gray-400 line-through text-sm">${parseFloat(product.price).toFixed(2)}</span>
+                          <span className="text-lg font-bold text-gray-900">${discountedPrice.toFixed(2)}</span>
+                          <span className="text-sm text-gray-500 line-through">${parseFloat(product.price).toFixed(2)}</span>
                         </div>
                       ) : (
-                        <p className="text-gold font-bold text-lg">${parseFloat(product.price)?.toFixed(2) || '0.00'}</p>
+                        <p className="text-lg font-bold text-gray-900">${parseFloat(product.price)?.toFixed(2) || '0.00'}</p>
                       )}
                     </div>
                     
-                    {/* Like and Share Buttons */}
-                    <div className="flex items-center justify-between mt-3">
+                    {/* Product Meta */}
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center space-x-1">
+                        <HeartIcon filled={false} />
+                        <span>{likeInfo.likeCount}</span>
+                      </div>
+                      <span>{formatDate(product.created_at)}</span>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                       <button
-                        onClick={(e) => handleLike(product.id, e)}
-                        className={`group flex items-center space-x-2 px-4 py-2 rounded-full text-sm transition-all duration-300 ${
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLike(product.id, e);
+                        }}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                           likeInfo.liked 
-                            ? 'bg-red-500 text-white shadow-lg' 
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:shadow-md'
+                            ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                       >
                         <HeartIcon filled={likeInfo.liked} />
-                        <span className="font-medium">{likeInfo.likeCount}</span>
+                        <span>Like</span>
                       </button>
                       
                       <button
-                        onClick={(e) => handleShare(product, e)}
-                        className="group flex items-center space-x-2 px-4 py-2 rounded-full text-sm bg-gray-700 text-gray-300 hover:bg-gray-600 hover:shadow-md transition-all duration-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShare(product, e);
+                        }}
+                        className="flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
                       >
                         <ShareIcon />
-                        <span className="font-medium">Share</span>
+                        <span>Share</span>
                       </button>
                     </div>
                   </div>
@@ -527,10 +601,19 @@ const UserProfile = () => {
             })}
           </div>
         ) : (
-          <div className="bg-gray-800 rounded-xl p-8 text-center">
-            <p className="text-gray-400">This user hasn't posted any products yet.</p>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM8 15a1 1 0 100-2 1 1 0 000 2zm4 0a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Products Yet</h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              {user.name} hasn't posted any products yet. Check back later for new items!
+            </p>
           </div>
         )}
+        </div>
       </div>
 
       {/* Share Modal */}
@@ -542,12 +625,12 @@ const UserProfile = () => {
 
       {/* Image Modal */}
       {showImageModal && user.avatar && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="relative max-w-4xl max-h-full">
             {/* Close Button */}
             <button
               onClick={() => setShowImageModal(false)}
-              className="absolute -top-4 -right-4 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors duration-200 z-10"
+              className="absolute -top-4 -right-4 bg-white hover:bg-gray-100 text-gray-600 rounded-full p-2 shadow-lg transition-colors z-10"
               title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -555,17 +638,27 @@ const UserProfile = () => {
               </svg>
             </button>
             
-            {/* Image */}
-            <img
-              src={`http://localhost:8000/storage/${user.avatar}`}
-              alt={user.name}
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-              style={{ maxHeight: '80vh', maxWidth: '80vw' }}
-            />
-            
-            {/* User Name Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 rounded-b-lg">
-              <h3 className="text-white text-xl font-semibold">{user.name}</h3>
+            {/* Image Container */}
+            <div className="relative overflow-hidden rounded-lg shadow-2xl bg-white p-4">
+              <img
+                src={`http://localhost:8000/storage/${user.avatar}`}
+                alt={user.name}
+                className="max-w-full max-h-full object-contain rounded-lg"
+                style={{ maxHeight: '80vh', maxWidth: '80vw' }}
+              />
+              
+              {/* User Name Overlay */}
+              <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <span className="text-gray-600 font-bold text-sm">{user.name?.charAt(0) || 'U'}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-gray-900 font-semibold">{user.name}</h3>
+                    <p className="text-gray-600 text-sm">Profile Picture</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
