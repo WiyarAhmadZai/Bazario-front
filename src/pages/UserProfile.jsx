@@ -307,7 +307,11 @@ const UserProfile = () => {
               {/* Profile Image and Basic Info */}
               <div className="flex flex-col lg:flex-row lg:items-end space-y-4 lg:space-y-0 lg:space-x-6">
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden">
+                  <div 
+                    className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden cursor-pointer hover:scale-105 transition-transform duration-300"
+                    onClick={() => setShowImageModal(true)}
+                    title="Click to view full size"
+                  >
                     {user.avatar ? (
                       <img 
                         src={`http://localhost:8000/storage/${user.avatar}`} 
@@ -625,12 +629,18 @@ const UserProfile = () => {
 
       {/* Image Modal */}
       {showImageModal && user.avatar && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="relative max-w-4xl max-h-full">
+        <div 
+          className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div 
+            className="relative max-w-6xl max-h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Close Button */}
             <button
               onClick={() => setShowImageModal(false)}
-              className="absolute -top-4 -right-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full p-2 shadow-lg transition-colors z-10"
+              className="absolute -top-6 -right-6 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full p-3 shadow-2xl transition-all duration-300 z-10 hover:scale-110"
               title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -639,23 +649,28 @@ const UserProfile = () => {
             </button>
             
             {/* Image Container */}
-            <div className="relative overflow-hidden rounded-lg shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 p-4 border border-gray-700">
+            <div className="relative overflow-hidden rounded-2xl shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 p-6 border border-gray-700">
               <img
                 src={`http://localhost:8000/storage/${user.avatar}`}
                 alt={user.name}
                 className="max-w-full max-h-full object-contain rounded-lg"
-                style={{ maxHeight: '80vh', maxWidth: '80vw' }}
+                style={{ 
+                  maxHeight: '85vh', 
+                  maxWidth: '85vw',
+                  width: 'auto',
+                  height: 'auto'
+                }}
               />
               
               {/* User Name Overlay */}
-              <div className="absolute bottom-4 left-4 right-4 bg-gradient-to-r from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-gold to-yellow-500 rounded-full flex items-center justify-center">
-                    <span className="text-black font-bold text-sm">{user.name?.charAt(0) || 'U'}</span>
+              <div className="absolute bottom-6 left-6 right-6 bg-gradient-to-r from-gray-800/95 to-gray-900/95 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-gold to-yellow-500 rounded-full flex items-center justify-center">
+                    <span className="text-black font-bold text-lg">{user.name?.charAt(0) || 'U'}</span>
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">{user.name}</h3>
-                    <p className="text-gray-400 text-sm">Profile Picture</p>
+                    <h3 className="text-white text-xl font-bold">{user.name}</h3>
+                    <p className="text-gray-400">Profile Picture</p>
                   </div>
                 </div>
               </div>
