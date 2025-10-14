@@ -218,10 +218,16 @@ const ProductDetails = () => {
     
     setIsAddingReply(true);
     try {
-      console.log('Posting reply to review:', reviewId, 'with text:', replyText);
+      console.log('=== REPLY DEBUG ===');
+      console.log('Product ID:', id);
+      console.log('Review ID:', reviewId);
+      console.log('Reply text:', replyText);
+      console.log('User authenticated:', isAuthenticated);
+      console.log('User ID:', user?.id);
       
       const response = await addReviewReply(id, reviewId, { comment: replyText });
       console.log('Reply posted successfully:', response);
+      console.log('=== REPLY DEBUG END ===');
       
       // Update the reviews state to include the new reply
       const updateReviewsWithReply = (reviews, targetId, newReply) => {
@@ -293,7 +299,14 @@ const ProductDetails = () => {
         });
       }
     } catch (err) {
+      console.error('=== REPLY ERROR DEBUG ===');
       console.error('Error adding reply:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
+      console.error('=== REPLY ERROR DEBUG END ===');
+      
       addNotification({
         type: 'error',
         title: 'Error',
