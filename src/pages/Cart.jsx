@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
-import { getCart, updateCartItem, removeFromCart } from '../services/cartService';
+// Cart functionality is handled by CartContext
 
 const Cart = () => {
   const [loading, setLoading] = useState(true);
@@ -12,59 +12,24 @@ const Cart = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchCart();
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
+    // Cart items are managed by CartContext and persisted in localStorage
+    // No need to fetch from API as CartContext handles persistence
+    setLoading(false);
+  }, []);
 
-  const fetchCart = async () => {
-    try {
-      setLoading(true);
-      const response = await getCart();
-      // We're using context for cart items, so we don't need to set state here
-    } catch (err) {
-      setError('Failed to fetch cart items');
-      console.error('Error fetching cart:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuantityChange = async (itemId, newQuantity) => {
+  const handleQuantityChange = (itemId, newQuantity) => {
     if (newQuantity <= 0) {
       handleRemoveFromCart(itemId);
       return;
     }
     
-    if (isAuthenticated) {
-      try {
-        await updateCartItem(itemId, newQuantity);
-        updateQuantity(itemId, newQuantity);
-      } catch (err) {
-        setError('Failed to update item quantity');
-        console.error('Error updating cart item:', err);
-      }
-    } else {
-      // For non-authenticated users, update context only
-      updateQuantity(itemId, newQuantity);
-    }
+    // Update quantity in context (which persists to localStorage)
+    updateQuantity(itemId, newQuantity);
   };
 
-  const handleRemoveFromCart = async (itemId) => {
-    if (isAuthenticated) {
-      try {
-        await removeFromCart(itemId);
-        removeContextItem(itemId);
-      } catch (err) {
-        setError('Failed to remove item from cart');
-        console.error('Error removing from cart:', err);
-      }
-    } else {
-      // For non-authenticated users, update context only
-      removeContextItem(itemId);
-    }
+  const handleRemoveFromCart = (itemId) => {
+    // Remove item from context (which persists to localStorage)
+    removeContextItem(itemId);
   };
 
   const cartTotal = cartItems.reduce(
