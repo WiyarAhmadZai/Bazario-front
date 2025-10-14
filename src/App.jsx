@@ -35,6 +35,26 @@ import SellProduct from './pages/SellProduct';
 import { useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 
+// Dashboard Redirect Component
+const DashboardRedirect = () => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Redirect to appropriate dashboard based on role
+  return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -53,7 +73,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   
   if (requiredRole && user && user.role !== requiredRole) {
     // Redirect to appropriate dashboard based on role
-    return <Navigate to={user && user.role === 'admin' ? '/admin' : '/'} replace />;
+    return <Navigate to={user && user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
   }
   
   return children;
@@ -73,7 +93,7 @@ const RedirectIfAuthenticated = ({ children }) => {
   
   if (isAuthenticated && user) {
     // Redirect to appropriate dashboard based on role
-    return <Navigate to={user.role === 'admin' ? '/admin' : '/'} replace />;
+    return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
   }
   
   return children;
@@ -128,10 +148,13 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole="user">
               <Dashboard />
             </ProtectedRoute>
           } />
+          
+          {/* Role-based dashboard redirect */}
+          <Route path="/dashboard-redirect" element={<DashboardRedirect />} />
           <Route path="/sell" element={
             <ProtectedRoute>
               <SellProduct />
