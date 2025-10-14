@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { WishlistContext } from '../context/WishlistContext';
 import { likePost, deletePost, getPostComments, addPostComment } from '../services/postService';
 import { addToFavorites, removeFromFavorites } from '../services/favoriteService';
 import { followUser, toggleNotification } from '../services/followService';
@@ -24,6 +25,7 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
   const [replyingTo, setReplyingTo] = useState(null);
 
   const { user } = useContext(AuthContext);
+  const { addToWishlist, isInWishlist, removeFromWishlist } = useContext(WishlistContext);
   const navigate = useNavigate();
 
   // Handle profile navigation
@@ -70,12 +72,12 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
     }
   };
 
-  // Handle favorite/unfavorite
+  // Handle favorite/unfavorite (add to wishlist for products)
   const handleFavorite = async () => {
     if (!user) {
       Swal.fire({
         title: 'Login Required',
-        text: 'Please login to favorite posts',
+        text: 'Please login to add products to wishlist',
         icon: 'info',
         confirmButtonText: 'OK'
       });
@@ -85,39 +87,72 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
     try {
       setLoading(true);
       
-      // Optimistic update
-      const newFavoritedState = !isFavorited;
-      setIsFavorited(newFavoritedState);
-      setFavoritesCount(prev => newFavoritedState ? prev + 1 : Math.max(0, prev - 1));
-
-      let response;
-      if (newFavoritedState) {
-        response = await addToFavorites(post.id);
+      // Check if this is a product (sponsored post)
+      if (post.product_id || post.price) {
+        // This is a product, add to wishlist
+        const isInWishlistNow = isInWishlist(post.id);
+        
+        if (isInWishlistNow) {
+          await removeFromWishlist(post.id);
+          Swal.fire({
+            title: 'Removed!',
+            text: 'Product removed from wishlist',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          // Convert post to product format for wishlist
+          const productData = {
+            id: post.id,
+            title: post.title || post.content,
+            price: post.price || 0,
+            description: post.content,
+            images: post.images || [],
+            seller: post.user,
+            category: post.category
+          };
+          
+          await addToWishlist(productData);
+          Swal.fire({
+            title: 'Added!',
+            text: 'Product added to wishlist',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        }
       } else {
-        response = await removeFromFavorites(post.id);
+        // This is a regular post, use the original favorite functionality
+        const newFavoritedState = !isFavorited;
+        setIsFavorited(newFavoritedState);
+        setFavoritesCount(prev => newFavoritedState ? prev + 1 : Math.max(0, prev - 1));
+
+        let response;
+        if (newFavoritedState) {
+          response = await addToFavorites(post.id);
+        } else {
+          response = await removeFromFavorites(post.id);
+        }
+        
+        // Update with server response
+        setIsFavorited(response.is_favorited);
+        setFavoritesCount(response.favorites_count);
       }
-      
-      // Update with server response
-      setIsFavorited(response.is_favorited);
-      setFavoritesCount(response.favorites_count);
     } catch (error) {
       console.error('Error favoriting post:', error);
-      
-      // Revert optimistic update
-      setIsFavorited(!isFavorited);
-      setFavoritesCount(prev => isFavorited ? prev + 1 : Math.max(0, prev - 1));
       
       if (error.response?.status === 401) {
         Swal.fire({
           title: 'Login Required',
-          text: 'Please login to favorite posts',
+          text: 'Please login to add products to wishlist',
           icon: 'info',
           confirmButtonText: 'OK'
         });
       } else {
         Swal.fire({
           title: 'Error',
-          text: 'Failed to favorite post',
+          text: 'Failed to add product to wishlist',
           icon: 'error',
           confirmButtonText: 'OK'
         });
@@ -428,7 +463,10 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
                         onClick={handleFavorite}
                         className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-600"
                       >
-                        {isFavorited ? 'Remove from Favorites' : 'Save to Favorites'}
+                        {(post.product_id || post.price) ? 
+                          (isInWishlist(post.id) ? 'Remove from Wishlist' : 'Add to Wishlist') : 
+                          (isFavorited ? 'Remove from Favorites' : 'Save to Favorites')
+                        }
                       </button>
                     )}
                   </div>
@@ -511,15 +549,20 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
             onClick={handleFavorite}
             disabled={loading}
             className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
-              isFavorited 
-                ? 'text-gold bg-gold bg-opacity-10' 
-                : 'text-gray-400 hover:text-gold hover:bg-gold hover:bg-opacity-10'
+              (post.product_id || post.price) ? 
+                (isInWishlist(post.id) ? 'text-red-500 bg-red-500 bg-opacity-10' : 'text-gray-400 hover:text-red-500 hover:bg-red-500 hover:bg-opacity-10') :
+                (isFavorited ? 'text-gold bg-gold bg-opacity-10' : 'text-gray-400 hover:text-gold hover:bg-gold hover:bg-opacity-10')
             } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <svg className="w-6 h-6" fill={isFavorited ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            <svg className="w-6 h-6" fill={(post.product_id || post.price) ? (isInWishlist(post.id) ? 'currentColor' : 'none') : (isFavorited ? 'currentColor' : 'none')} stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
-            <span className="text-sm font-medium">{favoritesCount}</span>
+            <span className="text-sm font-medium">
+              {(post.product_id || post.price) ? 
+                (isInWishlist(post.id) ? 'In Wishlist' : 'Add to Wishlist') : 
+                favoritesCount
+              }
+            </span>
           </button>
         </div>
       </div>
