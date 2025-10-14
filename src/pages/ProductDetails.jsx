@@ -6,6 +6,7 @@ import { WishlistContext } from '../context/WishlistContext';
 import { useNotifications } from '../context/NotificationContext';
 import { getProductById, getProducts } from '../services/productService';
 import { getProductReviews, addProductReview, addReviewReply, deleteReview, updateReview } from '../services/reviewsService';
+import { likeProduct, unlikeProduct, getLikeStatus, getLikeCount } from '../services/likeService';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 
@@ -33,6 +34,8 @@ const ProductDetails = () => {
   const [editingReview, setEditingReview] = useState(null);
   const [editText, setEditText] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const { isAuthenticated, user } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
   const { addToWishlist, isInWishlist, removeFromWishlist } = useContext(WishlistContext);
@@ -41,7 +44,23 @@ const ProductDetails = () => {
   useEffect(() => {
     fetchProduct();
     fetchReviews();
+    fetchLikeData();
   }, [id]);
+
+  const fetchLikeData = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const [likeStatus, likeCountData] = await Promise.all([
+        getLikeStatus(id),
+        getLikeCount(id)
+      ]);
+      setIsLiked(likeStatus.liked);
+      setLikeCount(likeCountData.like_count);
+    } catch (err) {
+      console.error('Error fetching like data:', err);
+    }
+  };
 
   useEffect(() => {
     if (product) {
@@ -173,6 +192,42 @@ const ProductDetails = () => {
         message: 'Failed to update wishlist. Please try again.'
       });
       console.error('Error toggling wishlist:', err);
+    }
+  };
+
+  const handleToggleLike = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      if (isLiked) {
+        await unlikeProduct(id);
+        setIsLiked(false);
+        setLikeCount(prev => Math.max(0, prev - 1));
+        addNotification({
+          type: 'info',
+          title: 'Product Unliked',
+          message: `You unliked ${product.name}`
+        });
+      } else {
+        await likeProduct(id);
+        setIsLiked(true);
+        setLikeCount(prev => prev + 1);
+        addNotification({
+          type: 'success',
+          title: 'Product Liked',
+          message: `You liked ${product.name}`
+        });
+      }
+    } catch (err) {
+      addNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update like status. Please try again.'
+      });
+      console.error('Error toggling like:', err);
     }
   };
 
@@ -811,6 +866,7 @@ const ProductDetails = () => {
               {product.stock > 0 ? (
                 <button 
                   onClick={handleAddToCart}
+                  data-cart-section
                   className="w-full bg-gradient-to-r from-gold to-yellow-600 hover:from-yellow-600 hover:to-gold text-black font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   Add to Cart
@@ -859,7 +915,23 @@ const ProductDetails = () => {
                 Share
               </button>
               <button 
+                onClick={handleToggleLike}
+                data-like-section
+                className="flex items-center text-gray-400 hover:text-gold transition-colors"
+              >
+                <svg 
+                  className={`w-5 h-5 mr-2 ${isLiked ? 'text-blue-500 fill-current' : ''}`} 
+                  fill={isLiked ? "currentColor" : "none"} 
+                  stroke="currentColor" 
+                  viewBox="0 0 20 20"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                </svg>
+                {isLiked ? 'Unlike' : 'Like'} ({likeCount})
+              </button>
+              <button 
                 onClick={handleToggleWishlist}
+                data-wishlist-section
                 className="flex items-center text-gray-400 hover:text-gold transition-colors"
               >
                 <svg 
@@ -1017,7 +1089,7 @@ const ProductDetails = () => {
       </div>
 
       {/* Product Reviews */}
-      <div className="mt-16">
+      <div id="reviews-section" className="mt-16">
         <h2 className="text-2xl font-bold text-white mb-6">Customer Reviews</h2>
         
         {/* Add Review Form */}
