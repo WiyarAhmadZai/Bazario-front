@@ -1,54 +1,49 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { getFavorites } from '../services/favoriteService';
+import { WishlistContext } from '../context/WishlistContext';
 import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 const Wishlist = () => {
-  const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   const { user } = useContext(AuthContext);
+  const { wishlistItems, removeFromWishlist, loading: wishlistLoading } = useContext(WishlistContext);
 
   useEffect(() => {
-    if (user) {
-      fetchFavorites();
-    }
-  }, [user]);
+    // Wishlist items are managed by WishlistContext
+    setLoading(wishlistLoading);
+  }, [wishlistLoading]);
 
-  const fetchFavorites = async (page = 1) => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await getFavorites({ page });
-      
-      if (response && response.data) {
-        setFavorites(response.data);
-        setCurrentPage(response.current_page || 1);
-        setTotalPages(response.last_page || 1);
-      } else {
-        setFavorites([]);
-        setCurrentPage(1);
-        setTotalPages(1);
-      }
-    } catch (err) {
-      console.error('Error fetching favorites:', err);
-      setError('Failed to fetch favorites: ' + (err.message || 'Unknown error'));
-      setFavorites([]);
-      setCurrentPage(1);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Wishlist items are managed by WishlistContext
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    fetchFavorites(page);
+    // Pagination is handled by WishlistContext
+  };
+
+  const handleRemoveFromWishlist = async (productId) => {
+    try {
+      await removeFromWishlist(productId);
+      
+      Swal.fire({
+        title: 'Removed!',
+        text: 'Item removed from wishlist',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      console.error('Error removing from wishlist:', err);
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to remove item from wishlist',
+        icon: 'error'
+      });
+    }
   };
 
   if (!user) {
@@ -95,7 +90,7 @@ const Wishlist = () => {
             </div>
             <div className="mt-2">
               <button 
-                onClick={() => fetchFavorites(currentPage)}
+                onClick={() => window.location.reload()}
                 className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
               >
                 Retry
@@ -115,9 +110,9 @@ const Wishlist = () => {
         {/* Favorites Grid */}
         {!loading && (
           <>
-            {favorites && favorites.length > 0 ? (
+            {wishlistItems && wishlistItems.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {favorites.map((product) => (
+                {wishlistItems.map((product) => (
                   <div key={product.id} className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                     <Link to={`/product/${product.id}`} className="block">
                       <div className="aspect-w-16 aspect-h-12 relative group cursor-pointer">
@@ -164,10 +159,24 @@ const Wishlist = () => {
                         )}
                       </div>
                       
-                      <div className="flex items-center justify-between text-sm text-gray-400">
+                      <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
                         <span>By {product.seller?.name || 'Unknown'}</span>
                         <span>{product.category?.name || 'Uncategorized'}</span>
                       </div>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveFromWishlist(product.id);
+                        }}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Remove from Wishlist
+                      </button>
                     </div>
                   </div>
                 ))}
