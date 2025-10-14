@@ -627,19 +627,19 @@ const Shop = () => {
                           </div>
                         )}
                         <button
-                          onClick={() => handleToggleWishlist(product)}
-                          className="absolute bottom-4 right-4 bg-gray-900 p-2 rounded-full shadow-md hover:bg-gray-700 transition-colors"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleToggleWishlist(product);
+                          }}
+                          className={`absolute bottom-4 right-4 p-2 rounded-full shadow-md transition-colors ${
+                            isInWishlist(product.id) 
+                              ? 'bg-red-500 text-white hover:bg-red-600' 
+                              : 'bg-gray-900 text-gray-300 hover:bg-gray-700'
+                          }`}
                           aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
                         >
-                          <svg 
-                            className={`w-5 h-5 ${isInWishlist(product.id) ? 'text-red-500 fill-current' : 'text-gray-300'}`} 
-                            fill={isInWishlist(product.id) ? "currentColor" : "none"} 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24" 
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
+                          <HeartIcon filled={isInWishlist(product.id)} />
                         </button>
                       </div>
                       <div className="p-4">
