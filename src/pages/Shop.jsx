@@ -45,8 +45,9 @@ const Shop = () => {
   
   const { isAuthenticated } = useContext(AuthContext);
   const { addToCart: addToLocalCart } = useContext(CartContext);
-  const { addToWishlist, isInWishlist, removeFromWishlist } = useContext(WishlistContext);
+  const { addToWishlist, isInWishlist, removeFromWishlist, wishlistItems } = useContext(WishlistContext);
   const navigate = useNavigate();
+  
 
   // Fetch categories
   const fetchCategories = async () => {
@@ -144,6 +145,7 @@ const Shop = () => {
         setTotalPages(response.data.last_page || 1);
         setTotalItems(response.data.total || 0);
         
+        
         // Initialize like data with default values (no need to fetch immediately)
         const likesMap = {};
         productsData.forEach((product) => {
@@ -211,6 +213,7 @@ const Shop = () => {
         setCurrentPage(response.data.current_page || 1);
         setTotalPages(response.data.last_page || 1);
         setTotalItems(response.data.total || 0);
+        
         
         // Initialize like data with default values (no need to fetch immediately)
         const likesMap = {};
@@ -351,10 +354,14 @@ const Shop = () => {
   };
 
   const handleToggleWishlist = async (product) => {
-    if (isInWishlist(product.id)) {
-      await removeFromWishlist(product.id);
-    } else {
-      await addToWishlist(product);
+    try {
+      if (isInWishlist(product.id)) {
+        await removeFromWishlist(product.id);
+      } else {
+        await addToWishlist(product);
+      }
+    } catch (error) {
+      console.error('Shop: Error toggling wishlist:', error);
     }
   };
 
