@@ -93,9 +93,10 @@ const EmailVerification = () => {
       
       if (response.data.email_verified) {
         setSuccess('Email verified successfully!');
-        // Small delay before redirecting to dashboard
+        // Small delay before redirecting to appropriate dashboard based on role
         setTimeout(() => {
-          navigate('/dashboard');
+          const userRole = response.data.user?.role || 'user';
+          navigate(userRole === 'admin' ? '/admin' : '/dashboard');
         }, 1500);
       }
     } catch (err) {
