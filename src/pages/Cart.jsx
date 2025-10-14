@@ -4,6 +4,44 @@ import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 // Cart functionality is handled by CartContext
 
+// Helper function to get product image URL (same logic as Shop page)
+const getProductImageUrl = (product) => {
+  if (!product.images) {
+    return 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+  }
+
+  let imageUrl = '';
+  
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    imageUrl = product.images[0];
+  } else if (typeof product.images === 'string') {
+    try {
+      // Try to parse as JSON array
+      const imagesArray = JSON.parse(product.images);
+      if (Array.isArray(imagesArray) && imagesArray.length > 0) {
+        imageUrl = imagesArray[0];
+      }
+    } catch (e) {
+      // If parsing fails, use the string directly
+      imageUrl = product.images;
+    }
+  }
+  
+  // Handle absolute vs relative URLs
+  if (imageUrl.startsWith('http')) {
+    return imageUrl;
+  } else {
+    // Fix: Check if imageUrl already starts with 'products/' to avoid duplication
+    if (imageUrl.startsWith('/storage/')) {
+      return imageUrl;
+    } else if (imageUrl.startsWith('products/')) {
+      return `/storage/${imageUrl}`;
+    } else {
+      return `/storage/products/${imageUrl}`;
+    }
+  }
+};
+
 const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -93,21 +131,30 @@ const Cart = () => {
             {cartItems.map((item) => (
               <div key={item.id} className="flex flex-col sm:flex-row items-center p-6 border-b border-gray-200 last:border-0">
                 <div className="bg-gray-200 h-24 w-24 rounded-lg mb-4 sm:mb-0 flex items-center justify-center">
-                  {item.images && item.images.length > 0 ? (
+                  <Link 
+                    to={`/product/${item.id}`}
+                    className="w-full h-full block"
+                  >
                     <img 
-                      src={item.images[0].startsWith('http') ? item.images[0] : `/storage/${item.images[0]}`} 
-                      alt={item.title}
-                      className="w-full h-full object-cover rounded-lg"
+                      src={getProductImageUrl(item)} 
+                      alt={item.title || 'Product'}
+                      className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                      onError={(e) => {
+                        e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
+                      }}
                     />
-                  ) : (
-                    <div className="bg-gray-300 border-2 border-dashed rounded-xl w-16 h-16" />
-                  )}
+                  </Link>
                 </div>
                 
                 <div className="flex-1 sm:ml-6 w-full">
                   <div className="flex flex-col sm:flex-row justify-between">
                     <div className="mb-4 sm:mb-0">
-                      <h3 className="text-lg font-semibold">{item.title || 'Product'}</h3>
+                      <Link 
+                        to={`/product/${item.id}`}
+                        className="text-lg font-semibold hover:text-gold transition-colors cursor-pointer"
+                      >
+                        {item.title || 'Product'}
+                      </Link>
                       <p className="text-gray-600">${item.price || 0}</p>
                     </div>
                     
