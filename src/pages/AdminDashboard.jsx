@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import adminService from '../services/adminService';
 
 const AdminDashboard = () => {
+  const { user } = useContext(AuthContext);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // Redirect non-admin users to user dashboard
+  if (user && user.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   useEffect(() => {
     fetchData();
