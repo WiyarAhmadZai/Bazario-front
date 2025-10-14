@@ -300,22 +300,32 @@ const Profile = () => {
       // Only handle non-image field updates (image is handled separately)
       if (Object.keys(changedFields).length > 0) {
         const response = await updateProfile(changedFields);
-        updateAuthProfile(response.user);
+        
+        // Handle response format - ensure we get the user data
+        const userData = response.user || response;
+        updateAuthProfile(userData);
         
         // Also update localStorage to persist across page refreshes
-        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        setSuccess('Profile updated successfully!');
+        setEditing(false);
+        setImagePreview(null);
+        setTimeout(() => setSuccess(''), 3000);
       } else {
         setError('No changes detected');
         setLoading(false);
         return;
       }
-      
-      setSuccess('Profile updated successfully!');
-      setEditing(false);
-      setImagePreview(null);
-      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to update profile');
+      console.error('Profile update error:', err);
+      if (err.errors) {
+        // Handle validation errors
+        const firstError = Object.values(err.errors)[0];
+        setError(Array.isArray(firstError) ? firstError[0] : firstError);
+      } else {
+        setError(err.message || 'Failed to update profile');
+      }
     } finally {
       setLoading(false);
     }
@@ -337,6 +347,7 @@ const Profile = () => {
       
       setLoading(true);
       setError('');
+      setSuccess('');
       
       try {
         // Create preview immediately
@@ -357,10 +368,18 @@ const Profile = () => {
         // Also update localStorage to persist across page refreshes
         localStorage.setItem('user', JSON.stringify(userData));
         
+        // Clear the preview since the image is now uploaded
+        setImagePreview(null);
+        
         setSuccess('Profile image updated successfully!');
         setTimeout(() => setSuccess(''), 3000);
       } catch (err) {
-        setError(err.message || 'Failed to update profile image');
+        console.error('Image upload error:', err);
+        if (err.errors && err.errors.avatar) {
+          setError(err.errors.avatar[0]);
+        } else {
+          setError(err.message || 'Failed to update profile image');
+        }
         setImagePreview(null);
       } finally {
         setLoading(false);
@@ -384,6 +403,25 @@ const Profile = () => {
       fetchUserProducts();
     }
   }, [user, productsPage]);
+
+  // Refresh user data when component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        bio: user?.bio || '',
+        date_of_birth: user?.date_of_birth || '',
+        address: user?.address || '',
+        city: user?.city || '',
+        country: user?.country || '',
+        gender: user?.gender || '',
+        profession: user?.profession || '',
+        social_links: user?.social_links || {}
+      });
+    }
+  }, [user]);
 
   // Refresh data when returning from edit page
   useEffect(() => {
@@ -785,6 +823,7 @@ const Profile = () => {
                     onChange={handleImageChange}
                     disabled={loading}
                     className="hidden"
+                    title="Select an image (max 5MB)"
                   />
                 </label>
               </div>
