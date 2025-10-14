@@ -136,9 +136,16 @@ const Shop = () => {
       if (response && response.data) {
         // Handle paginated response
         const productsData = Array.isArray(response.data) ? response.data : response.data.data || [];
+        console.log('=== SHOP PAGE DEBUG ===');
+        console.log('Full API response:', response);
         console.log('Received products:', productsData);
         console.log('Products count:', productsData.length);
         console.log('Total products:', response.data.total || 0);
+        console.log('Products by seller:');
+        productsData.forEach((product, index) => {
+          console.log(`${index + 1}. ID: ${product.id}, Title: ${product.title}, Seller: ${product.seller?.name} (${product.seller?.email})`);
+        });
+        console.log('=== END SHOP DEBUG ===');
         
         setProducts(productsData);
         setCurrentPage(response.data.current_page || 1);
@@ -205,9 +212,16 @@ const Shop = () => {
       if (response && response.data) {
         // Handle paginated response
         const productsData = Array.isArray(response.data) ? response.data : response.data.data || [];
+        console.log('=== SHOP PAGE DEBUG ===');
+        console.log('Full API response:', response);
         console.log('Received products:', productsData);
         console.log('Products count:', productsData.length);
         console.log('Total products:', response.data.total || 0);
+        console.log('Products by seller:');
+        productsData.forEach((product, index) => {
+          console.log(`${index + 1}. ID: ${product.id}, Title: ${product.title}, Seller: ${product.seller?.name} (${product.seller?.email})`);
+        });
+        console.log('=== END SHOP DEBUG ===');
         
         setProducts(productsData);
         setCurrentPage(response.data.current_page || 1);
