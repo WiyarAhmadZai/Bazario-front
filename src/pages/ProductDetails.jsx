@@ -543,9 +543,17 @@ const ProductDetails = () => {
         <div key={reply.id} className={`${depth > 0 ? 'ml-4 mt-2' : ''} bg-gray-700 rounded-lg p-3`}>
         <div className="flex justify-between mb-2">
           <div className="flex items-center">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 w-6 rounded-full flex items-center justify-center mr-2">
-              <span className="text-white font-bold text-xs">{reply.user?.name?.charAt(0) || 'U'}</span>
-            </div>
+            {getUserAvatarUrl(reply.user) ? (
+              <img 
+                src={getUserAvatarUrl(reply.user)}
+                alt={reply.user?.name || 'User'}
+                className="h-6 w-6 rounded-full object-cover mr-2 border border-blue-500"
+              />
+            ) : (
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 w-6 rounded-full flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-xs">{reply.user?.name?.charAt(0) || 'U'}</span>
+              </div>
+            )}
             <h5 className="font-medium text-white text-sm">{reply.user?.name || 'Anonymous'}</h5>
           </div>
           <span className="text-gray-400 text-xs">{new Date(reply.created_at).toLocaleDateString()}</span>
@@ -678,6 +686,35 @@ const ProductDetails = () => {
         return `http://localhost:8000/storage/products/${imagePath}`;
       }
     }
+  };
+
+  const getUserAvatarUrl = (user) => {
+    if (!user) return null;
+    
+    // Check for avatar field
+    if (user.avatar) {
+      let avatarUrl;
+      // Handle avatar images specifically
+      if (user.avatar.startsWith('http')) {
+        avatarUrl = user.avatar;
+      } else if (user.avatar.startsWith('/storage/')) {
+        avatarUrl = `http://localhost:8000${user.avatar}`;
+      } else if (user.avatar.startsWith('avatars/')) {
+        avatarUrl = `http://localhost:8000/storage/${user.avatar}`;
+      } else {
+        avatarUrl = `http://localhost:8000/storage/avatars/${user.avatar}`;
+      }
+      
+      console.log('Avatar Debug:', {
+        user: user.name,
+        avatarPath: user.avatar,
+        constructedUrl: avatarUrl
+      });
+      
+      return avatarUrl;
+    }
+    
+    return null;
   };
 
   const parseImages = (images) => {
@@ -886,9 +923,22 @@ const ProductDetails = () => {
                 to={`/user/${product.seller?.id}`} 
                 className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
               >
-                <div className="bg-gradient-to-r from-gold to-yellow-500 h-12 w-12 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-black font-bold">{product.seller?.name?.charAt(0) || 'U'}</span>
-                </div>
+                {getUserAvatarUrl(product.seller) ? (
+                  <img 
+                    src={getUserAvatarUrl(product.seller)}
+                    alt={product.seller?.name || 'User'}
+                    className="h-12 w-12 rounded-full object-cover mr-3 border-2 border-gold"
+                    onLoad={() => console.log('Avatar image loaded successfully')}
+                    onError={(e) => {
+                      console.error('Avatar image failed to load:', e.target.src);
+                      console.log('Falling back to initial letter');
+                    }}
+                  />
+                ) : (
+                  <div className="bg-gradient-to-r from-gold to-yellow-500 h-12 w-12 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-black font-bold">{product.seller?.name?.charAt(0) || 'U'}</span>
+                  </div>
+                )}
                 <div>
                   <p className="text-white font-semibold">Posted by</p>
                   <p className="text-gold hover:text-yellow-500 transition-colors">
@@ -1156,9 +1206,17 @@ const ProductDetails = () => {
                 <div key={review.id} className="border-b border-gray-700 pb-6 last:border-0 last:pb-0">
                   <div className="flex justify-between mb-2">
                     <div className="flex items-center">
-                      <div className="bg-gradient-to-r from-gold to-yellow-500 h-8 w-8 rounded-full flex items-center justify-center mr-3">
-                        <span className="text-black font-bold text-sm">{review.user?.name?.charAt(0) || 'U'}</span>
-                      </div>
+                      {getUserAvatarUrl(review.user) ? (
+                        <img 
+                          src={getUserAvatarUrl(review.user)}
+                          alt={review.user?.name || 'User'}
+                          className="h-8 w-8 rounded-full object-cover mr-3 border border-gold"
+                        />
+                      ) : (
+                        <div className="bg-gradient-to-r from-gold to-yellow-500 h-8 w-8 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-black font-bold text-sm">{review.user?.name?.charAt(0) || 'U'}</span>
+                        </div>
+                      )}
                       <h4 className="font-semibold text-white">{review.user?.name || 'Anonymous'}</h4>
                     </div>
                     <span className="text-gray-500 text-sm">{new Date(review.created_at).toLocaleDateString()}</span>
