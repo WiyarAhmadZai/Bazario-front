@@ -132,16 +132,21 @@ const Shop = () => {
       
       const response = await getProducts(params);
       
-      if (response && response.data && Array.isArray(response.data)) {
-        console.log('Received products:', response.data);
-        setProducts(response.data);
-        setCurrentPage(response.current_page || 1);
-        setTotalPages(response.last_page || 1);
-        setTotalItems(response.total || 0);
+      if (response && response.data) {
+        // Handle paginated response
+        const productsData = Array.isArray(response.data) ? response.data : response.data.data || [];
+        console.log('Received products:', productsData);
+        console.log('Products count:', productsData.length);
+        console.log('Total products:', response.data.total || 0);
+        
+        setProducts(productsData);
+        setCurrentPage(response.data.current_page || 1);
+        setTotalPages(response.data.last_page || 1);
+        setTotalItems(response.data.total || 0);
         
         // Initialize like data with default values (no need to fetch immediately)
         const likesMap = {};
-        response.data.forEach((product) => {
+        productsData.forEach((product) => {
           likesMap[product.id] = {
             likeCount: 0,
             liked: false,
@@ -151,7 +156,7 @@ const Shop = () => {
         setProductLikes(likesMap);
         
         // Fetch like counts and status in background (non-blocking)
-        fetchLikeDataInBackground(response.data);
+        fetchLikeDataInBackground(productsData);
       } else {
         setProducts([]);
         setCurrentPage(1);
@@ -195,16 +200,21 @@ const Shop = () => {
       
       const response = await getProducts(params);
       
-      if (response && response.data && Array.isArray(response.data)) {
-        console.log('Received products:', response.data);
-        setProducts(response.data);
-        setCurrentPage(response.current_page || 1);
-        setTotalPages(response.last_page || 1);
-        setTotalItems(response.total || 0);
+      if (response && response.data) {
+        // Handle paginated response
+        const productsData = Array.isArray(response.data) ? response.data : response.data.data || [];
+        console.log('Received products:', productsData);
+        console.log('Products count:', productsData.length);
+        console.log('Total products:', response.data.total || 0);
+        
+        setProducts(productsData);
+        setCurrentPage(response.data.current_page || 1);
+        setTotalPages(response.data.last_page || 1);
+        setTotalItems(response.data.total || 0);
         
         // Initialize like data with default values (no need to fetch immediately)
         const likesMap = {};
-        response.data.forEach((product) => {
+        productsData.forEach((product) => {
           likesMap[product.id] = {
             likeCount: 0,
             liked: false,
@@ -214,7 +224,7 @@ const Shop = () => {
         setProductLikes(likesMap);
         
         // Fetch like counts and status in background (non-blocking)
-        fetchLikeDataInBackground(response.data);
+        fetchLikeDataInBackground(productsData);
       } else {
         setProducts([]);
         setCurrentPage(1);
