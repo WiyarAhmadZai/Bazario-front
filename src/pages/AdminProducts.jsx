@@ -86,6 +86,15 @@ const AdminProducts = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [recordsPerPage, setRecordsPerPage] = useState(8);
+
+  // Helper function to calculate remaining days
+  const getRemainingDays = (endTime) => {
+    const now = new Date();
+    const end = new Date(endTime);
+    const diffTime = end - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
   
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -119,21 +128,9 @@ const AdminProducts = () => {
         }
       });
       
-      console.log('Fetching admin products with params:', params);
-      console.log('Current filters:', filters);
-      
       const response = await getAdminProducts(params);
-      console.log('Admin products response:', response);
       
       if (response && response.data && Array.isArray(response.data)) {
-        // Log the first few products to see their image data
-        response.data.slice(0, 3).forEach(product => {
-          console.log('Product ID:', product.id, 'Title:', product.title);
-          console.log('Images:', product.images, 'Type:', typeof product.images);
-          console.log('Parsed image URL:', getImageUrl(product.images));
-          console.log('---');
-        });
-        
         setProducts(response.data);
         setCurrentPage(response.current_page || 1);
         setTotalPages(response.last_page || 1);
@@ -230,38 +227,31 @@ const AdminProducts = () => {
 
   // Helper function to get image URL
   const getImageUrl = (imagePath) => {
-    console.log('Processing image path:', imagePath, 'Type:', typeof imagePath);
-    
     // Handle null, undefined, or empty paths
     if (!imagePath || imagePath === '' || imagePath === '[]' || imagePath === 'null' || imagePath === 'undefined') {
       return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
     }
     
-    // Handle string representations of arrays (JSON) - this is the main fix
+    // Handle string representations of arrays (JSON)
     if (typeof imagePath === 'string' && imagePath.startsWith('[')) {
       try {
         const parsed = JSON.parse(imagePath);
-        console.log('Parsed image array:', parsed);
         if (Array.isArray(parsed) && parsed.length > 0) {
           imagePath = parsed[0]; // Get the first image from the parsed array
-          console.log('Using first image:', imagePath);
         } else {
           return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
         }
       } catch (e) {
-        console.error('Error parsing image array:', e, 'Input:', imagePath);
         return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
       }
     }
     
     // Handle direct arrays
     if (Array.isArray(imagePath)) {
-      console.log('Direct array found:', imagePath);
       if (imagePath.length === 0) {
         return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
       }
       imagePath = imagePath[0]; // Use the first image
-      console.log('Using first image from array:', imagePath);
     }
     
     // Additional check for empty or whitespace-only strings
@@ -286,7 +276,6 @@ const AdminProducts = () => {
     }
     
     // Fallback for any other cases
-    console.log('Using fallback image');
     return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
   };
 
@@ -409,7 +398,7 @@ const AdminProducts = () => {
         // Update local state
         setProducts(prev => prev.map(p => 
           p.id === product.id 
-            ? { ...p, sponsor: 0, sponsor_start_time: null, sponsor_end_time: null }
+            ? { ...p, sponsor: false, sponsor_start_time: null, sponsor_end_time: null }
             : p
         ));
 
@@ -431,15 +420,14 @@ const AdminProducts = () => {
         setLoading(false);
       }
     } else {
-      // Add sponsorship - show form for start/end times
-      const { value: formValues } = await Swal.fire({
+      // Add sponsorship - show form for number of days
+      const { value: sponsorDays } = await Swal.fire({
         title: 'Sponsor Product',
         html: `
           <div class="text-left">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
-            <input id="sponsor_start_time" type="datetime-local" class="swal2-input" required>
-            <label class="block text-sm font-medium text-gray-700 mb-2 mt-4">End Time</label>
-            <input id="sponsor_end_time" type="datetime-local" class="swal2-input" required>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Number of Days to Sponsor</label>
+            <input id="sponsor_days" type="number" min="1" max="365" value="7" class="swal2-input" placeholder="Enter number of days" required>
+            <p class="text-xs text-gray-500 mt-2">Sponsorship will start immediately and last for the specified number of days.</p>
           </div>
         `,
         focusConfirm: false,
@@ -447,43 +435,32 @@ const AdminProducts = () => {
         confirmButtonText: 'Sponsor Product',
         cancelButtonText: 'Cancel',
         preConfirm: () => {
-          const startTime = document.getElementById('sponsor_start_time').value;
-          const endTime = document.getElementById('sponsor_end_time').value;
-          
-          if (!startTime || !endTime) {
-            Swal.showValidationMessage('Please fill in both start and end times');
+          const input = document.getElementById('sponsor_days');
+          const value = parseInt(input.value);
+          if (!value || isNaN(value) || value < 1 || value > 365) {
+            Swal.showValidationMessage('Please enter a valid number of days (1-365)');
             return false;
           }
-          
-          if (new Date(startTime) >= new Date(endTime)) {
-            Swal.showValidationMessage('End time must be after start time');
-            return false;
-          }
-          
-          if (new Date(startTime) < new Date()) {
-            Swal.showValidationMessage('Start time cannot be in the past');
-            return false;
-          }
-          
-          return { sponsor_start_time: startTime, sponsor_end_time: endTime };
+          return value;
         }
       });
 
-      if (formValues) {
+      if (sponsorDays && !isNaN(sponsorDays)) {
         try {
           setLoading(true);
-          const response = await toggleSponsor(product.id, {
+          const sponsorData = {
             sponsor: true,
-            sponsor_start_time: formValues.sponsor_start_time,
-            sponsor_end_time: formValues.sponsor_end_time
-          });
+            sponsor_days: sponsorDays
+          };
+          
+          const response = await toggleSponsor(product.id, sponsorData);
           
           // Update local state
           setProducts(prev => prev.map(p => 
             p.id === product.id 
               ? { 
                   ...p, 
-                  sponsor: 1, 
+                  sponsor: true, 
                   sponsor_start_time: response.sponsor_start_time,
                   sponsor_end_time: response.sponsor_end_time
                 }
@@ -492,21 +469,38 @@ const AdminProducts = () => {
 
           Swal.fire({
             title: 'Success!',
-            text: 'Product sponsored successfully',
+            text: `Product sponsored successfully for ${sponsorDays} days`,
             icon: 'success',
             confirmButtonText: 'OK'
           });
         } catch (error) {
-          console.error('Error adding sponsorship:', error);
+          let errorMessage = 'Failed to sponsor product';
+          if (error.response && error.response.data) {
+            if (error.response.data.errors) {
+              // Show validation errors
+              const errorKeys = Object.keys(error.response.data.errors);
+              errorMessage = errorKeys.map(key => error.response.data.errors[key].join(', ')).join('\n');
+            } else if (error.response.data.message) {
+              errorMessage = error.response.data.message;
+            }
+          }
+          
           Swal.fire({
             title: 'Error!',
-            text: 'Failed to sponsor product',
+            text: errorMessage,
             icon: 'error',
             confirmButtonText: 'OK'
           });
         } finally {
           setLoading(false);
         }
+      } else {
+        Swal.fire({
+          title: 'Invalid Input',
+          text: 'Please enter a valid number of days (1-365)',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
       }
     }
   };
@@ -776,16 +770,21 @@ const AdminProducts = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
+                          <div className="flex flex-col">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              product.sponsor === 1 ? 'bg-gold text-black' : 'bg-gray-100 text-gray-800'
+                              product.sponsor ? 'bg-gold text-black' : 'bg-gray-100 text-gray-800'
                             }`}>
-                              {product.sponsor === 1 ? 'Sponsored' : 'Not Sponsored'}
+                              {product.sponsor ? 'Sponsored' : 'Not Sponsored'}
                             </span>
-                            {product.sponsor === 1 && product.sponsor_end_time && (
-                              <span className="ml-2 text-xs text-gray-400">
-                                Until {new Date(product.sponsor_end_time).toLocaleDateString()}
-                              </span>
+                            {product.sponsor && product.sponsor_end_time && (
+                              <div className="mt-1 text-xs text-gray-500">
+                                <div className="flex items-center">
+                                  <span className="text-gold font-semibold">
+                                    {getRemainingDays(product.sponsor_end_time)} days left
+                                  </span>
+                                </div>
+                                <div>Until: {new Date(product.sponsor_end_time).toLocaleDateString()}</div>
+                              </div>
                             )}
                           </div>
                         </td>
@@ -823,13 +822,13 @@ const AdminProducts = () => {
                           <button
                             onClick={() => toggleSponsorStatus(product)}
                             className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                              product.sponsor === 1 
+                              product.sponsor 
                                 ? 'bg-red-100 text-red-800 hover:bg-red-200' 
                                 : 'bg-gold text-black hover:bg-yellow-500'
                             }`}
                             disabled={loading}
                           >
-                            {product.sponsor === 1 ? 'Remove Sponsor' : 'Sponsor'}
+                            {product.sponsor ? 'Remove Sponsor' : 'Sponsor'}
                           </button>
                         </td>
                       </tr>
