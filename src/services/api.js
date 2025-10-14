@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   // Remove the default Content-Type header so FormData can set it correctly
   headers: {},
   timeout: 30000, // 30 second timeout
@@ -12,6 +12,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
+    console.log("API Request Debug:", {
+      url: config.url,
+      method: config.method,
+      hasToken: !!token,
+      tokenPreview: token ? token.substring(0, 20) + "..." : "none",
+    });
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,9 +38,22 @@ api.interceptors.request.use(
 // Add a response interceptor to handle auth errors
 api.interceptors.response.use(
   (response) => {
+    console.log("API Response Debug:", {
+      url: response.config.url,
+      status: response.status,
+      data: response.data,
+    });
     return response;
   },
   (error) => {
+    console.log("API Error Debug:", {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
     // Handle network errors specifically
     if (!error.response) {
       // Network error (no response from server)
