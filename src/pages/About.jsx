@@ -93,12 +93,12 @@ const About = () => {
         <div className="absolute inset-0">
           {/* Main background image */}
           <div className="absolute inset-0">
-            <img 
-              src="/src/assets/architecture-art-bridge-cliff-459203.jpg" 
-              alt="About Us" 
+          <img 
+            src="/src/assets/architecture-art-bridge-cliff-459203.jpg" 
+            alt="About Us" 
               className="w-full h-full object-cover transform scale-110"
               style={{
-                filter: 'brightness(0.4) contrast(1.2) saturate(1.1)',
+                filter: 'brightness(0.2) contrast(1.3) saturate(1.1)',
                 animation: 'parallax 20s ease-in-out infinite'
               }}
             />
@@ -146,16 +146,16 @@ const About = () => {
             
             {/* Main heading with typewriter effect */}
             <div className={`transform transition-all duration-1000 delay-200 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                 <span className="bg-gradient-to-r from-white via-gold to-white bg-clip-text text-transparent animate-gradient-x">
-                  About Luxury Store
+                About Luxury Store
                 </span>
               </h1>
             </div>
             
             {/* Subtitle with enhanced styling */}
             <div className={`transform transition-all duration-1000 delay-400 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-              <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto leading-relaxed font-light">
+              <p className="text-base md:text-lg text-gray-200 mb-8 max-w-2xl mx-auto leading-relaxed font-light">
                 Crafting exceptional experiences through premium luxury products and unparalleled service
               </p>
             </div>
@@ -195,7 +195,7 @@ const About = () => {
 
       {/* Enhanced Stats Section */}
       <section className="relative py-20 bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8 md:px-12 lg:px-16">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               <span className="bg-gradient-to-r from-gold to-yellow-500 bg-clip-text text-transparent">
@@ -237,15 +237,15 @@ const About = () => {
                 {/* Decorative elements */}
                 <div className="absolute top-2 right-2 w-2 h-2 bg-gold/30 rounded-full animate-pulse"></div>
                 <div className="absolute bottom-2 left-2 w-1 h-1 bg-yellow-400/50 rounded-full"></div>
-              </div>
-            ))}
+            </div>
+          ))}
           </div>
         </div>
       </section>
 
       {/* Enhanced Our Story Section */}
       <section id="our-story" className="py-20 bg-gradient-to-br from-black/80 to-gray-900/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8 md:px-12 lg:px-16">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -267,10 +267,10 @@ const About = () => {
                     <h3 className="text-2xl font-bold text-white">The Beginning</h3>
                   </div>
                   <p className="text-gray-300 text-lg leading-relaxed">
-                    Founded in 2025, Luxury Store began with a simple vision: to make premium luxury products accessible to everyone. 
-                    What started as a small online boutique has grown into a premier destination for discerning customers seeking 
-                    exceptional quality and timeless design.
-                  </p>
+                Founded in 2025, Luxury Store began with a simple vision: to make premium luxury products accessible to everyone. 
+                What started as a small online boutique has grown into a premier destination for discerning customers seeking 
+                exceptional quality and timeless design.
+              </p>
                 </div>
                 
                 <div className="group">
@@ -281,10 +281,10 @@ const About = () => {
                     <h3 className="text-2xl font-bold text-white">Our Mission</h3>
                   </div>
                   <p className="text-gray-300 text-lg leading-relaxed">
-                    Our carefully curated collection features only the finest products from renowned artisans and emerging designers 
-                    who share our commitment to craftsmanship, sustainability, and innovation. Each item in our store is selected 
-                    for its superior quality, unique design, and enduring value.
-                  </p>
+                Our carefully curated collection features only the finest products from renowned artisans and emerging designers 
+                who share our commitment to craftsmanship, sustainability, and innovation. Each item in our store is selected 
+                for its superior quality, unique design, and enduring value.
+              </p>
                 </div>
                 
                 <div className="group">
@@ -295,19 +295,19 @@ const About = () => {
                     <h3 className="text-2xl font-bold text-white">The Future</h3>
                   </div>
                   <p className="text-gray-300 text-lg leading-relaxed">
-                    Today, we continue to honor our founding principles while embracing new technologies and trends that enhance 
-                    the luxury shopping experience. Our dedicated team works tirelessly to ensure that every interaction with 
-                    Luxury Store reflects the excellence we expect from ourselves and our partners.
-                  </p>
-                </div>
+                Today, we continue to honor our founding principles while embracing new technologies and trends that enhance 
+                the luxury shopping experience. Our dedicated team works tirelessly to ensure that every interaction with 
+                Luxury Store reflects the excellence we expect from ourselves and our partners.
+              </p>
+            </div>
               </div>
               
               {/* Enhanced Image */}
               <div className="relative group">
                 <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                  <img 
-                    src="/src/assets/apple-computer-decor-design-326502.jpg" 
-                    alt="Our Store" 
+              <img 
+                src="/src/assets/apple-computer-decor-design-326502.jpg" 
+                alt="Our Store" 
                     className="w-full h-96 object-cover transform group-hover:scale-105 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
@@ -327,7 +327,7 @@ const About = () => {
         
       {/* Enhanced Features Section */}
       <section className="py-20 bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8 md:px-12 lg:px-16">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               <span className="bg-gradient-to-r from-gold to-yellow-500 bg-clip-text text-transparent">
@@ -408,7 +408,7 @@ const About = () => {
         
       {/* Enhanced Values Section */}
       <section className="py-20 bg-gradient-to-br from-black/80 to-gray-900/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8 md:px-12 lg:px-16">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               <span className="bg-gradient-to-r from-gold to-yellow-500 bg-clip-text text-transparent">
@@ -457,7 +457,7 @@ const About = () => {
 
       {/* Enhanced Team Section */}
       <section id="team" className="py-20 bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8 md:px-12 lg:px-16">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               <span className="bg-gradient-to-r from-gold to-yellow-500 bg-clip-text text-transparent">
