@@ -11,12 +11,23 @@ export const WishlistProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useContext(AuthContext);
 
-  // Load wishlist from API when user is authenticated
+  // Load wishlist from API when user is authenticated, localStorage otherwise
   useEffect(() => {
     if (isAuthenticated) {
       fetchWishlist();
     } else {
-      setWishlistItems([]);
+      // Load from localStorage for non-authenticated users
+      try {
+        const savedWishlist = localStorage.getItem('wishlist');
+        if (savedWishlist) {
+          setWishlistItems(JSON.parse(savedWishlist));
+        } else {
+          setWishlistItems([]);
+        }
+      } catch (error) {
+        console.error('Error loading wishlist from localStorage:', error);
+        setWishlistItems([]);
+      }
       setLoading(false);
     }
   }, [isAuthenticated]);
@@ -36,41 +47,58 @@ export const WishlistProvider = ({ children }) => {
 
   // Add item to wishlist
   const handleAddToWishlist = async (product) => {
-    if (!isAuthenticated) {
-      // For non-authenticated users, we could use localStorage
-      // but for now, we'll just return
-      return;
-    }
-    
-    try {
-      await addToFavorites(product.id);
-      // Add to local state
-      setWishlistItems(prevItems => {
-        const exists = prevItems.find(item => item.id === product.id);
+    if (isAuthenticated) {
+      try {
+        await addToFavorites(product.id);
+        // Add to local state
+        setWishlistItems(prevItems => {
+          const exists = prevItems.find(item => item.id === product.id);
+          if (!exists) {
+            return [...prevItems, product];
+          }
+          return prevItems;
+        });
+      } catch (error) {
+        console.error('Error adding to wishlist:', error);
+      }
+    } else {
+      // For non-authenticated users, use localStorage
+      try {
+        const savedWishlist = localStorage.getItem('wishlist');
+        const wishlistItems = savedWishlist ? JSON.parse(savedWishlist) : [];
+        const exists = wishlistItems.find(item => item.id === product.id);
         if (!exists) {
-          return [...prevItems, product];
+          const updatedWishlist = [...wishlistItems, product];
+          localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+          setWishlistItems(updatedWishlist);
         }
-        return prevItems;
-      });
-    } catch (error) {
-      console.error('Error adding to wishlist:', error);
+      } catch (error) {
+        console.error('Error adding to wishlist (localStorage):', error);
+      }
     }
   };
 
   // Remove item from wishlist
   const handleRemoveFromWishlist = async (productId) => {
-    if (!isAuthenticated) {
-      // For non-authenticated users, we could use localStorage
-      // but for now, we'll just return
-      return;
-    }
-    
-    try {
-      await removeFromFavorites(productId);
-      // Remove from local state
-      setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId));
-    } catch (error) {
-      console.error('Error removing from wishlist:', error);
+    if (isAuthenticated) {
+      try {
+        await removeFromFavorites(productId);
+        // Remove from local state
+        setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId));
+      } catch (error) {
+        console.error('Error removing from wishlist:', error);
+      }
+    } else {
+      // For non-authenticated users, use localStorage
+      try {
+        const savedWishlist = localStorage.getItem('wishlist');
+        const wishlistItems = savedWishlist ? JSON.parse(savedWishlist) : [];
+        const updatedWishlist = wishlistItems.filter(item => item.id !== productId);
+        localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+        setWishlistItems(updatedWishlist);
+      } catch (error) {
+        console.error('Error removing from wishlist (localStorage):', error);
+      }
     }
   };
 
