@@ -479,20 +479,48 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
 
       {/* Content */}
       <div className="p-6">
-        <p className="text-white text-lg leading-relaxed mb-4">{post.content}</p>
+        <p 
+          className="text-white text-lg leading-relaxed mb-4 cursor-pointer hover:text-gold transition-colors"
+          onClick={() => navigate(`/product/${post.id}`)}
+        >
+          {post.content}
+        </p>
 
         {/* Images - Show only one image */}
         {((post.image_urls && post.image_urls.length > 0) || (post.images && post.images.length > 0)) && (
           <div className="mb-6">
-            <div className="relative group">
+            <div 
+              className="relative group cursor-pointer"
+              onClick={() => navigate(`/product/${post.id}`)}
+            >
               <img
-                src={(post.image_urls || post.images || [])[0]}
+                src={(() => {
+                  // Handle both image_urls and images arrays
+                  const imageArray = post.image_urls || post.images || [];
+                  if (imageArray.length > 0) {
+                    let imageUrl = imageArray[0];
+                    
+                    // Handle absolute vs relative URLs
+                    if (imageUrl.startsWith('http')) {
+                      return imageUrl;
+                    } else if (imageUrl.startsWith('/storage/')) {
+                      return imageUrl;
+                    } else if (imageUrl.startsWith('products/')) {
+                      return `/storage/${imageUrl}`;
+                    } else {
+                      return `/storage/products/${imageUrl}`;
+                    }
+                  }
+                  return 'https://placehold.co/400x300/374151/FFFFFF?text=Product+Image';
+                })()}
                 alt="Post image"
-                className="w-full h-64 object-cover rounded-xl cursor-pointer hover:opacity-90 transition-all duration-300 hover:scale-105"
-                onClick={() => navigate(`/product/${post.id}`)}
+                className="w-full h-64 object-cover rounded-xl hover:opacity-90 transition-all duration-300 hover:scale-105"
+                onError={(e) => {
+                  e.target.src = 'https://placehold.co/400x300/374151/FFFFFF?text=Product+Image';
+                }}
               />
               {/* Hover overlay for click indication */}
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center rounded-xl">
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center rounded-xl pointer-events-none">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -720,9 +748,30 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
                 </svg>
               </button>
               <img
-                src={post.image_urls[0]}
+                src={(() => {
+                  // Handle both image_urls and images arrays
+                  const imageArray = post.image_urls || post.images || [];
+                  if (imageArray.length > 0) {
+                    let imageUrl = imageArray[0];
+                    
+                    // Handle absolute vs relative URLs
+                    if (imageUrl.startsWith('http')) {
+                      return imageUrl;
+                    } else if (imageUrl.startsWith('/storage/')) {
+                      return imageUrl;
+                    } else if (imageUrl.startsWith('products/')) {
+                      return `/storage/${imageUrl}`;
+                    } else {
+                      return `/storage/products/${imageUrl}`;
+                    }
+                  }
+                  return 'https://placehold.co/400x300/374151/FFFFFF?text=Product+Image';
+                })()}
                 alt="Post image"
                 className="max-w-full max-h-full object-contain rounded-lg"
+                onError={(e) => {
+                  e.target.src = 'https://placehold.co/400x300/374151/FFFFFF?text=Product+Image';
+                }}
               />
             </div>
           </div>
