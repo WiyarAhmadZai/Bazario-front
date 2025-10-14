@@ -52,7 +52,7 @@ export const WishlistProvider = ({ children }) => {
         await addToFavorites(product.id);
         // Add to local state
         setWishlistItems(prevItems => {
-          const exists = prevItems.find(item => item.id === product.id);
+          const exists = prevItems.find(item => String(item.id) === String(product.id));
           if (!exists) {
             return [...prevItems, product];
           }
@@ -66,7 +66,7 @@ export const WishlistProvider = ({ children }) => {
       try {
         const savedWishlist = localStorage.getItem('wishlist');
         const wishlistItems = savedWishlist ? JSON.parse(savedWishlist) : [];
-        const exists = wishlistItems.find(item => item.id === product.id);
+        const exists = wishlistItems.find(item => String(item.id) === String(product.id));
         if (!exists) {
           const updatedWishlist = [...wishlistItems, product];
           localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
@@ -84,7 +84,7 @@ export const WishlistProvider = ({ children }) => {
       try {
         await removeFromFavorites(productId);
         // Remove from local state
-        setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId));
+        setWishlistItems(prevItems => prevItems.filter(item => String(item.id) !== String(productId)));
       } catch (error) {
         console.error('Error removing from wishlist:', error);
       }
@@ -93,7 +93,7 @@ export const WishlistProvider = ({ children }) => {
       try {
         const savedWishlist = localStorage.getItem('wishlist');
         const wishlistItems = savedWishlist ? JSON.parse(savedWishlist) : [];
-        const updatedWishlist = wishlistItems.filter(item => item.id !== productId);
+        const updatedWishlist = wishlistItems.filter(item => String(item.id) !== String(productId));
         localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
         setWishlistItems(updatedWishlist);
       } catch (error) {
@@ -104,7 +104,8 @@ export const WishlistProvider = ({ children }) => {
 
   // Check if item is in wishlist
   const isInWishlist = (productId) => {
-    return wishlistItems.some(item => item.id === productId);
+    // Convert both IDs to strings for comparison to handle type mismatches
+    return wishlistItems.some(item => String(item.id) === String(productId));
   };
 
   // Clear wishlist
