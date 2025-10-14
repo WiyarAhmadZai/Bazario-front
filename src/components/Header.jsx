@@ -291,16 +291,18 @@ const Header = () => {
                     </svg>
                     Profile
                   </Link>
-                  <Link 
-                    to="/dashboard" 
-                    className="block px-4 py-2 text-xs text-white hover:bg-gray-700 hover:bg-opacity-50 flex items-center transition-colors duration-200"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2v2zm14 0a2 2 0 012 2v6a2 2 0 01-2 2h-2M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2H7z" />
-                    </svg>
-                    User Dashboard
-                  </Link>
+                  {user && user.role !== 'admin' && (
+                    <Link 
+                      to="/dashboard" 
+                      className="block px-4 py-2 text-xs text-white hover:bg-gray-700 hover:bg-opacity-50 flex items-center transition-colors duration-200"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2v2zm14 0a2 2 0 012 2v6a2 2 0 01-2 2h-2M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2H7z" />
+                      </svg>
+                      User Dashboard
+                    </Link>
+                  )}
                   {user && user.role === 'admin' && (
                     <Link 
                       to="/admin" 
