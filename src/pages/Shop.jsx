@@ -417,35 +417,24 @@ const Shop = () => {
 
   const handleShare = (product, e) => {
     e.stopPropagation();
-    setSelectedProduct(product);
-    setShowShareModal(true);
-  };
-
-  // Handle product share
-  const shareProduct = (platform) => {
-    const url = `${window.location.origin}/product/${selectedProduct.id}`;
-    const title = selectedProduct?.title || 'Check out this product';
+    const url = `${window.location.origin}/product/${product.id}`;
+    const title = product?.title || 'Check out this product';
     
-    const shareUrls = {
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`,
-      email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`Check out this product: ${url}`)}`
-    };
-    
-    if (platform === 'copy') {
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: `Check out this product: ${title}`,
+        url: url
+      });
+    } else {
       navigator.clipboard.writeText(url);
-      // Show a temporary message or feedback
-      alert('Link copied to clipboard!');
-      setShowShareModal(false);
-      return;
+      Swal.fire({
+        title: 'Link Copied!',
+        text: 'Product link has been copied to clipboard',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      });
     }
-    
-    if (shareUrls[platform]) {
-      window.open(shareUrls[platform], '_blank');
-    }
-    setShowShareModal(false);
   };
 
   // Calculate discount percentage
