@@ -9,7 +9,7 @@ export const WishlistContext = createContext();
 export const WishlistProvider = ({ children }) => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, user } = useContext(AuthContext);
 
   // Load wishlist from API when user is authenticated, localStorage otherwise
   useEffect(() => {
@@ -18,7 +18,8 @@ export const WishlistProvider = ({ children }) => {
     } else {
       // Load from localStorage for non-authenticated users
       try {
-        const savedWishlist = localStorage.getItem('wishlist');
+        const wishlistKey = user ? `wishlist_${user.id}` : 'wishlist_guest';
+        const savedWishlist = localStorage.getItem(wishlistKey);
         if (savedWishlist) {
           setWishlistItems(JSON.parse(savedWishlist));
         } else {
@@ -30,7 +31,7 @@ export const WishlistProvider = ({ children }) => {
       }
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
 
   const fetchWishlist = async () => {
     try {
@@ -64,12 +65,13 @@ export const WishlistProvider = ({ children }) => {
     } else {
       // For non-authenticated users, use localStorage
       try {
-        const savedWishlist = localStorage.getItem('wishlist');
+        const wishlistKey = user ? `wishlist_${user.id}` : 'wishlist_guest';
+        const savedWishlist = localStorage.getItem(wishlistKey);
         const wishlistItems = savedWishlist ? JSON.parse(savedWishlist) : [];
         const exists = wishlistItems.find(item => String(item.id) === String(product.id));
         if (!exists) {
           const updatedWishlist = [...wishlistItems, product];
-          localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+          localStorage.setItem(wishlistKey, JSON.stringify(updatedWishlist));
           setWishlistItems(updatedWishlist);
         }
       } catch (error) {
@@ -91,10 +93,11 @@ export const WishlistProvider = ({ children }) => {
     } else {
       // For non-authenticated users, use localStorage
       try {
-        const savedWishlist = localStorage.getItem('wishlist');
+        const wishlistKey = user ? `wishlist_${user.id}` : 'wishlist_guest';
+        const savedWishlist = localStorage.getItem(wishlistKey);
         const wishlistItems = savedWishlist ? JSON.parse(savedWishlist) : [];
         const updatedWishlist = wishlistItems.filter(item => String(item.id) !== String(productId));
-        localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+        localStorage.setItem(wishlistKey, JSON.stringify(updatedWishlist));
         setWishlistItems(updatedWishlist);
       } catch (error) {
         console.error('Error removing from wishlist (localStorage):', error);
