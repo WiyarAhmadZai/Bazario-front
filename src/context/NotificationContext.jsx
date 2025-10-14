@@ -64,7 +64,7 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  // Handle notification click - navigate to relevant page
+  // Handle notification click - navigate to relevant page with smooth animation
   const handleNotificationClick = (notification) => {
     // Mark as read first
     if (!notification.read_at) {
@@ -74,7 +74,58 @@ export const NotificationProvider = ({ children }) => {
     // Navigate to the action URL
     if (notification.data?.action_url) {
       navigate(notification.data.action_url);
+      
+      // Add smooth scroll animation after navigation
+      setTimeout(() => {
+        const targetElement = getTargetElement(notification);
+        if (targetElement) {
+          smoothScrollToElement(targetElement);
+        }
+      }, 100);
     }
+  };
+
+  // Get target element based on notification type
+  const getTargetElement = (notification) => {
+    const { type, data } = notification;
+    
+    switch (type) {
+      case 'review':
+      case 'review_reply':
+        return document.getElementById('reviews-section') || document.querySelector('[id*="review"]');
+      case 'like':
+        return document.querySelector('[data-like-section]') || document.querySelector('.like-button');
+      case 'wishlist':
+        return document.querySelector('[data-wishlist-section]') || document.querySelector('.wishlist-button');
+      case 'cart':
+        return document.querySelector('[data-cart-section]') || document.querySelector('.add-to-cart-button');
+      case 'product_status':
+        return document.getElementById('product-status') || document.querySelector('.product-status');
+      default:
+        return null;
+    }
+  };
+
+  // Smooth scroll to element with highlight animation
+  const smoothScrollToElement = (element) => {
+    if (!element) return;
+    
+    // Scroll to element
+    element.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center' 
+    });
+    
+    // Add highlight animation
+    element.style.transition = 'all 0.3s ease';
+    element.style.backgroundColor = '#fbbf24'; // Gold color
+    element.style.boxShadow = '0 0 20px rgba(251, 191, 36, 0.5)';
+    
+    // Remove highlight after animation
+    setTimeout(() => {
+      element.style.backgroundColor = '';
+      element.style.boxShadow = '';
+    }, 2000);
   };
 
   // Add local notification (for immediate feedback)
