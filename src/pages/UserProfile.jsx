@@ -287,12 +287,12 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Modern Profile Header */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-8">
+        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 overflow-hidden mb-8">
           {/* Cover Photo Section */}
-          <div className="h-48 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 relative">
+          <div className="h-48 bg-gradient-to-r from-gold via-yellow-500 to-bronze relative">
             <div className="absolute inset-0 bg-black/20"></div>
             <div className="absolute bottom-4 right-4">
               <button className="bg-white/90 hover:bg-white text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -327,22 +327,22 @@ const UserProfile = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
-                  <div className="flex items-center space-x-4 text-gray-600">
+                  <h1 className="text-3xl font-bold text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">{user.name}</h1>
+                  <div className="flex items-center space-x-4 text-gray-400">
                     <span className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 mr-1 text-gold" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                       </svg>
                       Member since {new Date(user.created_at).toLocaleDateString()}
                     </span>
                     {user.role && (
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                      <span className="bg-gradient-to-r from-gold/20 to-yellow-500/20 text-gold border border-gold/30 px-2 py-1 rounded-full text-sm font-medium">
                         {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </span>
                     )}
                   </div>
                   {user.bio && (
-                    <p className="text-gray-700 max-w-2xl">{user.bio}</p>
+                    <p className="text-gray-300 max-w-2xl">{user.bio}</p>
                   )}
                 </div>
               </div>
@@ -352,7 +352,7 @@ const UserProfile = () => {
                 {user.phone && (
                   <button
                     onClick={() => handlePhoneCall(user.phone)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
                   >
                     <PhoneIcon />
                     <span>Call</span>
@@ -361,7 +361,7 @@ const UserProfile = () => {
                 {user.phone && (
                   <button
                     onClick={() => handleWhatsAppMessage(user.phone)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                    className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
                   >
                     <WhatsappIcon />
                     <span>WhatsApp</span>
@@ -370,13 +370,13 @@ const UserProfile = () => {
                 {user.email && (
                   <button
                     onClick={() => handleEmail(user.email)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                    className="bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-500 hover:to-gold text-black px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
                   >
                     <EnvelopeIcon />
                     <span>Email</span>
                   </button>
                 )}
-                <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                <button className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl">
                   <ShareIcon />
                   <span>Share</span>
                 </button>
@@ -387,9 +387,9 @@ const UserProfile = () => {
         {/* Information Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Contact Information Card */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-xl shadow-xl border border-gray-700/50 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
               </svg>
@@ -397,19 +397,19 @@ const UserProfile = () => {
             </h3>
             <div className="space-y-3">
               {user.email && (
-                <div className="flex items-center text-gray-600">
+                <div className="flex items-center text-gray-300">
                   <EnvelopeIcon />
                   <span className="ml-3">{user.email}</span>
                 </div>
               )}
               {user.phone && (
-                <div className="flex items-center text-gray-600">
+                <div className="flex items-center text-gray-300">
                   <PhoneIcon />
                   <span className="ml-3">{user.phone}</span>
                 </div>
               )}
               {(user.address || user.city || user.country) && (
-                <div className="flex items-center text-gray-600">
+                <div className="flex items-center text-gray-300">
                   <MapIcon />
                   <span className="ml-3">
                     {[user.address, user.city, user.country].filter(Boolean).join(', ')}
@@ -420,29 +420,29 @@ const UserProfile = () => {
           </div>
 
           {/* Professional Information Card */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-xl shadow-xl border border-gray-700/50 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
               </svg>
               Professional Info
             </h3>
             <div className="space-y-3">
               {user.profession && (
-                <div className="flex items-center text-gray-600">
+                <div className="flex items-center text-gray-300">
                   <BriefcaseIcon />
                   <span className="ml-3">{user.profession}</span>
                 </div>
               )}
               {user.role && (
-                <div className="flex items-center text-gray-600">
+                <div className="flex items-center text-gray-300">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
                   <span className="ml-3 capitalize">{user.role}</span>
                 </div>
               )}
-              <div className="flex items-center text-gray-600">
+              <div className="flex items-center text-gray-300">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                 </svg>
@@ -452,49 +452,49 @@ const UserProfile = () => {
           </div>
 
           {/* Stats Card */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-xl shadow-xl border border-gray-700/50 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
               </svg>
               Statistics
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Total Products</span>
-                <span className="font-semibold text-gray-900">{products.length}</span>
+                <span className="text-gray-400">Total Products</span>
+                <span className="font-semibold text-gold">{products.length}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Approved</span>
-                <span className="font-semibold text-green-600">{products.filter(p => p.status === 'approved').length}</span>
+                <span className="text-gray-400">Approved</span>
+                <span className="font-semibold text-green-400">{products.filter(p => p.status === 'approved').length}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Pending</span>
-                <span className="font-semibold text-yellow-600">{products.filter(p => p.status === 'pending').length}</span>
+                <span className="text-gray-400">Pending</span>
+                <span className="font-semibold text-yellow-400">{products.filter(p => p.status === 'pending').length}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Products Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-700/50 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Products by {user.name}</h2>
-              <p className="text-gray-600 mt-1">
+              <h2 className="text-2xl font-bold text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Products by {user.name}</h2>
+              <p className="text-gray-400 mt-1">
                 {products.length} {products.length === 1 ? 'product' : 'products'} available
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-center">
-                <div className="text-lg font-bold text-gray-900">{products.length}</div>
-                <div className="text-xs text-gray-500">Total</div>
+                <div className="text-lg font-bold text-gold">{products.length}</div>
+                <div className="text-xs text-gray-400">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-green-600">
+                <div className="text-lg font-bold text-green-400">
                   {products.filter(p => p.status === 'approved').length}
                 </div>
-                <div className="text-xs text-gray-500">Approved</div>
+                <div className="text-xs text-gray-400">Approved</div>
               </div>
             </div>
           </div>
@@ -510,25 +510,25 @@ const UserProfile = () => {
               return (
                 <div 
                   key={product.id} 
-                  className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+                  className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group hover:scale-105"
                   onClick={() => navigate(`/product/${product.id}`)}
                 >
                   <div className="relative">
                     <img 
-                      src={productImages.length > 0 ? getImageUrl(productImages[0]) : 'https://placehold.co/300x300/f3f4f6/6b7280?text=Product+Image'} 
+                      src={productImages.length > 0 ? getImageUrl(productImages[0]) : 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
                       alt={product.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+                      className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
                       onError={(e) => {
-                        e.target.src = 'https://placehold.co/300x300/f3f4f6/6b7280?text=Product+Image';
+                        e.target.src = 'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image';
                       }}
                     />
                     
                     {/* Status Badge */}
                     <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium ${
-                      product.status === 'approved' ? 'bg-green-100 text-green-800' :
-                      product.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      product.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
+                      product.status === 'approved' ? 'bg-green-500 text-white' :
+                      product.status === 'pending' ? 'bg-yellow-500 text-black' :
+                      product.status === 'rejected' ? 'bg-red-500 text-white' :
+                      'bg-gray-500 text-white'
                     }`}>
                       {product.status?.charAt(0).toUpperCase() + product.status?.slice(1)}
                     </div>
@@ -542,7 +542,7 @@ const UserProfile = () => {
                   </div>
                   
                   <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-lg font-semibold text-white line-clamp-2 mb-2 group-hover:text-gold transition-colors">
                       {product.title || 'Untitled Product'}
                     </h3>
                     
@@ -550,16 +550,16 @@ const UserProfile = () => {
                     <div className="mb-3">
                       {discountPercentage > 0 ? (
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg font-bold text-gray-900">${discountedPrice.toFixed(2)}</span>
-                          <span className="text-sm text-gray-500 line-through">${parseFloat(product.price).toFixed(2)}</span>
+                          <span className="text-lg font-bold text-gold">${discountedPrice.toFixed(2)}</span>
+                          <span className="text-sm text-gray-400 line-through">${parseFloat(product.price).toFixed(2)}</span>
                         </div>
                       ) : (
-                        <p className="text-lg font-bold text-gray-900">${parseFloat(product.price)?.toFixed(2) || '0.00'}</p>
+                        <p className="text-lg font-bold text-gold">${parseFloat(product.price)?.toFixed(2) || '0.00'}</p>
                       )}
                     </div>
                     
                     {/* Product Meta */}
-                    <div className="flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center justify-between text-sm text-gray-400">
                       <div className="flex items-center space-x-1">
                         <HeartIcon filled={false} />
                         <span>{likeInfo.likeCount}</span>
@@ -568,7 +568,7 @@ const UserProfile = () => {
                     </div>
                     
                     {/* Action Buttons */}
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -576,8 +576,8 @@ const UserProfile = () => {
                         }}
                         className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                           likeInfo.liked 
-                            ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-red-500 text-white hover:bg-red-600' 
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         }`}
                       >
                         <HeartIcon filled={likeInfo.liked} />
@@ -589,7 +589,7 @@ const UserProfile = () => {
                           e.stopPropagation();
                           handleShare(product, e);
                         }}
-                        className="flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                        className="flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
                       >
                         <ShareIcon />
                         <span>Share</span>
@@ -602,13 +602,13 @@ const UserProfile = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center border border-gray-600">
+              <svg className="w-8 h-8 text-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM8 15a1 1 0 100-2 1 1 0 000 2zm4 0a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Products Yet</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
+            <h3 className="text-lg font-semibold text-white mb-2">No Products Yet</h3>
+            <p className="text-gray-400 max-w-md mx-auto">
               {user.name} hasn't posted any products yet. Check back later for new items!
             </p>
           </div>
@@ -625,12 +625,12 @@ const UserProfile = () => {
 
       {/* Image Modal */}
       {showImageModal && user.avatar && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="relative max-w-4xl max-h-full">
             {/* Close Button */}
             <button
               onClick={() => setShowImageModal(false)}
-              className="absolute -top-4 -right-4 bg-white hover:bg-gray-100 text-gray-600 rounded-full p-2 shadow-lg transition-colors z-10"
+              className="absolute -top-4 -right-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full p-2 shadow-lg transition-colors z-10"
               title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -639,7 +639,7 @@ const UserProfile = () => {
             </button>
             
             {/* Image Container */}
-            <div className="relative overflow-hidden rounded-lg shadow-2xl bg-white p-4">
+            <div className="relative overflow-hidden rounded-lg shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900 p-4 border border-gray-700">
               <img
                 src={`http://localhost:8000/storage/${user.avatar}`}
                 alt={user.name}
@@ -648,14 +648,14 @@ const UserProfile = () => {
               />
               
               {/* User Name Overlay */}
-              <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-4">
+              <div className="absolute bottom-4 left-4 right-4 bg-gradient-to-r from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-gray-600 font-bold text-sm">{user.name?.charAt(0) || 'U'}</span>
+                  <div className="w-10 h-10 bg-gradient-to-br from-gold to-yellow-500 rounded-full flex items-center justify-center">
+                    <span className="text-black font-bold text-sm">{user.name?.charAt(0) || 'U'}</span>
                   </div>
                   <div>
-                    <h3 className="text-gray-900 font-semibold">{user.name}</h3>
-                    <p className="text-gray-600 text-sm">Profile Picture</p>
+                    <h3 className="text-white font-semibold">{user.name}</h3>
+                    <p className="text-gray-400 text-sm">Profile Picture</p>
                   </div>
                 </div>
               </div>
