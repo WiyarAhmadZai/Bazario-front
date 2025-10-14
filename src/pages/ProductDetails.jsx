@@ -543,18 +543,23 @@ const ProductDetails = () => {
         <div key={reply.id} className={`${depth > 0 ? 'ml-4 mt-2' : ''} bg-gray-700 rounded-lg p-3`}>
         <div className="flex justify-between mb-2">
           <div className="flex items-center">
-            {getUserAvatarUrl(reply.user) ? (
-              <img 
-                src={getUserAvatarUrl(reply.user)}
-                alt={reply.user?.name || 'User'}
-                className="h-6 w-6 rounded-full object-cover mr-2 border border-blue-500"
-              />
-            ) : (
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 w-6 rounded-full flex items-center justify-center mr-2">
-                <span className="text-white font-bold text-xs">{reply.user?.name?.charAt(0) || 'U'}</span>
-              </div>
-            )}
-            <h5 className="font-medium text-white text-sm">{reply.user?.name || 'Anonymous'}</h5>
+            <Link 
+              to={`/user/${reply.user?.id}`} 
+              className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              {getUserAvatarUrl(reply.user) ? (
+                <img 
+                  src={getUserAvatarUrl(reply.user)}
+                  alt={reply.user?.name || 'User'}
+                  className="h-6 w-6 rounded-full object-cover mr-2 border border-blue-500 hover:border-blue-400 transition-colors"
+                />
+              ) : (
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-6 w-6 rounded-full flex items-center justify-center mr-2 hover:from-blue-400 hover:to-blue-500 transition-all">
+                  <span className="text-white font-bold text-xs">{reply.user?.name?.charAt(0) || 'U'}</span>
+                </div>
+              )}
+              <h5 className="font-medium text-white text-sm hover:text-blue-400 transition-colors">{reply.user?.name || 'Anonymous'}</h5>
+            </Link>
           </div>
           <span className="text-gray-400 text-xs">{new Date(reply.created_at).toLocaleDateString()}</span>
         </div>
@@ -1206,18 +1211,23 @@ const ProductDetails = () => {
                 <div key={review.id} className="border-b border-gray-700 pb-6 last:border-0 last:pb-0">
                   <div className="flex justify-between mb-2">
                     <div className="flex items-center">
-                      {getUserAvatarUrl(review.user) ? (
-                        <img 
-                          src={getUserAvatarUrl(review.user)}
-                          alt={review.user?.name || 'User'}
-                          className="h-8 w-8 rounded-full object-cover mr-3 border border-gold"
-                        />
-                      ) : (
-                        <div className="bg-gradient-to-r from-gold to-yellow-500 h-8 w-8 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-black font-bold text-sm">{review.user?.name?.charAt(0) || 'U'}</span>
-                        </div>
-                      )}
-                      <h4 className="font-semibold text-white">{review.user?.name || 'Anonymous'}</h4>
+                      <Link 
+                        to={`/user/${review.user?.id}`} 
+                        className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
+                      >
+                        {getUserAvatarUrl(review.user) ? (
+                          <img 
+                            src={getUserAvatarUrl(review.user)}
+                            alt={review.user?.name || 'User'}
+                            className="h-8 w-8 rounded-full object-cover mr-3 border border-gold hover:border-yellow-400 transition-colors"
+                          />
+                        ) : (
+                          <div className="bg-gradient-to-r from-gold to-yellow-500 h-8 w-8 rounded-full flex items-center justify-center mr-3 hover:from-yellow-400 hover:to-gold transition-all">
+                            <span className="text-black font-bold text-sm">{review.user?.name?.charAt(0) || 'U'}</span>
+                          </div>
+                        )}
+                        <h4 className="font-semibold text-white hover:text-gold transition-colors">{review.user?.name || 'Anonymous'}</h4>
+                      </Link>
                     </div>
                     <span className="text-gray-500 text-sm">{new Date(review.created_at).toLocaleDateString()}</span>
                   </div>
