@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
@@ -8,6 +9,11 @@ const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const { cartCount } = useContext(CartContext);
   const { wishlistCount } = useContext(WishlistContext);
+
+  // Redirect admin users to admin dashboard
+  if (user && user.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8">
