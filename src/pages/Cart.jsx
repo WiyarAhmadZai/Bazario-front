@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
+import ShareModal from '../components/ShareModal';
+import Swal from 'sweetalert2';
 // Cart functionality is handled by CartContext
 
 // Helper function to get product image URL (same logic as Shop page)
@@ -45,6 +47,8 @@ const getProductImageUrl = (product) => {
 const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const { isAuthenticated } = useContext(AuthContext);
   const { cartItems, updateQuantity, removeFromCart: removeContextItem } = useContext(CartContext);
   const navigate = useNavigate();
@@ -54,6 +58,13 @@ const Cart = () => {
     // No need to fetch from API as CartContext handles persistence
     setLoading(false);
   }, []);
+
+  const handleShare = (product, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedProduct(product);
+    setShowShareModal(true);
+  };
 
   const handleQuantityChange = (itemId, newQuantity) => {
     if (newQuantity <= 0) {
@@ -177,14 +188,27 @@ const Cart = () => {
                       
                       <div className="font-semibold">${(item.price * item.quantity || 0).toFixed(2)}</div>
                       
-                      <button 
-                        className="text-red-500 hover:text-red-700"
-                        onClick={() => handleRemoveFromCart(item.id)}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          className="text-blue-500 hover:text-blue-700"
+                          onClick={(e) => handleShare(item, e)}
+                          title="Share product"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                          </svg>
+                        </button>
+                        
+                        <button 
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => handleRemoveFromCart(item.id)}
+                          title="Remove from cart"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -232,6 +256,13 @@ const Cart = () => {
           </div>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        product={selectedProduct}
+      />
     </div>
   );
 };
