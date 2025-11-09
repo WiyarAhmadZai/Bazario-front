@@ -703,158 +703,163 @@ const AdminProducts = () => {
           {products && products.length > 0 ? (
             <>
               <div className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-700">
-                  <thead className="bg-gray-700">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Product</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Seller</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-800 divide-y divide-gray-700">
-                    {products.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-750">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-16 w-16">
-                              <LazyImage 
-                                className="h-16 w-16 object-cover rounded-lg" 
-                                src={product.images && product.images.length > 0 ? 
-                                  (() => {
-                                    // Handle different image data formats
-                                    let firstImage = null;
-                                    
-                                    // If product.images is an array, use the first element
-                                    if (Array.isArray(product.images)) {
-                                      if (product.images.length > 0) {
-                                        firstImage = product.images[0];
-                                      }
-                                    } 
-                                    // If product.images is a string
-                                    else if (typeof product.images === 'string') {
-                                      // If it's a JSON array string, parse it
-                                      if (product.images.startsWith('[')) {
-                                        try {
-                                          const parsedArray = JSON.parse(product.images);
-                                          if (Array.isArray(parsedArray) && parsedArray.length > 0) {
-                                            firstImage = parsedArray[0];
-                                          }
-                                        } catch (e) {
-                                          console.error('Error parsing product images array for product', product.id, e);
-                                          // If parsing fails, use the string directly if it looks like a path
-                                          if (product.images.length > 5 && !product.images.includes('[')) {
-                                            firstImage = product.images;
-                                          }
-                                        }
-                                      } else {
-                                        // Regular string path
-                                        firstImage = product.images;
-                                      }
-                                    }
-                                    
-                                    // If we couldn't extract a valid image, use placeholder
-                                    if (!firstImage) {
-                                      return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
-                                    }
-                                    
-                                    const finalUrl = getImageUrl(firstImage);
-                                    return finalUrl;
-                                  })() : 
-                                  'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
-                                alt={product.title || 'Product'}
-                                onError={() => console.log('Image failed to load for product:', product.id)}
-                              />
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-white">{product.title || 'Untitled Product'}</div>
-                              <div className="text-sm text-gray-400 line-clamp-1">{product.description || 'No description'}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-white">{product.seller?.name || 'Unknown Seller'}</div>
-                          <div className="text-sm text-gray-400">{product.seller?.email || ''}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                          ${parseFloat(product.price)?.toFixed(2) || '0.00'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            product.status === 'approved' ? 'bg-green-100 text-green-800' :
-                            product.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {product.status || 'Unknown'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              product.sponsor ? 'bg-gold text-black' : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {product.sponsor ? 'Sponsored' : 'Not Sponsored'}
-                            </span>
-                            {product.sponsor && product.sponsor_end_time && (
-                              <div className="mt-1 text-xs text-gray-500">
-                                <div className="flex items-center">
-                                  <span className="text-gold font-semibold">
-                                    {getRemainingDays(product.sponsor_end_time)} days left
-                                  </span>
-                                </div>
-                                <div>Until: {new Date(product.sponsor_end_time).toLocaleDateString()}</div>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {product.status !== 'approved' && (
-                            <button
-                              onClick={() => updateProductStatus(product.id, 'approved')}
-                              className="text-green-500 hover:text-green-700 mr-3"
-                            >
-                              Approve
-                            </button>
-                          )}
-                          {product.status !== 'rejected' && (
-                            <button
-                              onClick={() => updateProductStatus(product.id, 'rejected')}
-                              className="text-red-500 hover:text-red-700 mr-3"
-                            >
-                              Reject
-                            </button>
-                          )}
-                          {product.status !== 'pending' && (
-                            <button
-                              onClick={() => updateProductStatus(product.id, 'pending')}
-                              className="text-yellow-500 hover:text-yellow-700 mr-3"
-                            >
-                              Set Pending
-                            </button>
-                          )}
-                          <button
-                            onClick={() => navigate(`/product/${product.id}`)}
-                            className="text-blue-500 hover:text-blue-700 mr-3"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() => toggleSponsorStatus(product)}
-                            className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                              product.sponsor 
-                                ? 'bg-red-100 text-red-800 hover:bg-red-200' 
-                                : 'bg-gold text-black hover:bg-yellow-500'
-                            }`}
-                            disabled={loading}
-                          >
-                            {product.sponsor ? 'Remove Sponsor' : 'Sponsor'}
-                          </button>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Product</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Seller</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Sponsor</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {products.map((product) => (
+                        <tr key={product.id} className="hover:bg-gray-750">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-16 w-16">
+                                <LazyImage 
+                                  className="h-16 w-16 object-cover rounded-lg" 
+                                  src={product.images && product.images.length > 0 ? 
+                                    (() => {
+                                      // Handle different image data formats
+                                      let firstImage = null;
+                                      
+                                      // If product.images is an array, use the first element
+                                      if (Array.isArray(product.images)) {
+                                        if (product.images.length > 0) {
+                                          firstImage = product.images[0];
+                                        }
+                                      } 
+                                      // If product.images is a string
+                                      else if (typeof product.images === 'string') {
+                                        // If it's a JSON array string, parse it
+                                        if (product.images.startsWith('[')) {
+                                          try {
+                                            const parsedArray = JSON.parse(product.images);
+                                            if (Array.isArray(parsedArray) && parsedArray.length > 0) {
+                                              firstImage = parsedArray[0];
+                                            }
+                                          } catch (e) {
+                                            console.error('Error parsing product images array for product', product.id, e);
+                                            // If parsing fails, use the string directly if it looks like a path
+                                            if (product.images.length > 5 && !product.images.includes('[')) {
+                                              firstImage = product.images;
+                                            }
+                                          }
+                                        } else {
+                                          // Regular string path
+                                          firstImage = product.images;
+                                        }
+                                      }
+                                      
+                                      // If we couldn't extract a valid image, use placeholder
+                                      if (!firstImage) {
+                                        return 'https://placehold.co/300x300/374151/FFFFFF?text=No+Image';
+                                      }
+                                      
+                                      const finalUrl = getImageUrl(firstImage);
+                                      return finalUrl;
+                                    })() : 
+                                    'https://placehold.co/300x300/374151/FFFFFF?text=Product+Image'} 
+                                  alt={product.title || 'Product'}
+                                  onError={() => console.log('Image failed to load for product:', product.id)}
+                                />
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-white">{product.title || 'Untitled Product'}</div>
+                                <div className="text-sm text-gray-400 line-clamp-1">{product.description || 'No description'}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-white">{product.seller?.name || 'Unknown Seller'}</div>
+                            <div className="text-sm text-gray-400">{product.seller?.email || ''}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            ${parseFloat(product.price)?.toFixed(2) || '0.00'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              product.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              product.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {product.status || 'Unknown'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                product.sponsor ? 'bg-gold text-black' : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {product.sponsor ? 'Sponsored' : 'Not Sponsored'}
+                              </span>
+                              {product.sponsor && product.sponsor_end_time && (
+                                <div className="mt-1 text-xs text-gray-500">
+                                  <div className="flex items-center">
+                                    <span className="text-gold font-semibold">
+                                      {getRemainingDays(product.sponsor_end_time)} days left
+                                    </span>
+                                  </div>
+                                  <div>Until: {new Date(product.sponsor_end_time).toLocaleDateString()}</div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium">
+                            <div className="flex flex-nowrap items-center gap-3 overflow-x-auto md:overflow-visible">
+                              {product.status !== 'approved' && (
+                                <button
+                                  onClick={() => updateProductStatus(product.id, 'approved')}
+                                  className="text-green-500 hover:text-green-700"
+                                >
+                                  Approve
+                                </button>
+                              )}
+                              {product.status !== 'rejected' && (
+                                <button
+                                  onClick={() => updateProductStatus(product.id, 'rejected')}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  Reject
+                                </button>
+                              )}
+                              {product.status !== 'pending' && (
+                                <button
+                                  onClick={() => updateProductStatus(product.id, 'pending')}
+                                  className="text-yellow-500 hover:text-yellow-700"
+                                >
+                                  Set Pending
+                                </button>
+                              )}
+                              <button
+                                onClick={() => navigate(`/product/${product.id}`)}
+                                className="text-blue-500 hover:text-blue-700"
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={() => toggleSponsorStatus(product)}
+                                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                  product.sponsor 
+                                    ? 'bg-red-100 text-red-800 hover:bg-red-200' 
+                                    : 'bg-gold text-black hover:bg-yellow-500'
+                                }`}
+                                disabled={loading}
+                              >
+                                {product.sponsor ? 'Remove Sponsor' : 'Sponsor'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
               
               {/* Enhanced Pagination */}
