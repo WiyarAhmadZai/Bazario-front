@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useNavigate } from 'react-router-dom';
+import Modal from './Modal';
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,13 +15,25 @@ const NotificationDropdown = () => {
     markAllAsRead,
     fetchNotifications 
   } = useNotifications();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Refresh notifications when dropdown opens
   useEffect(() => {
-    if (isOpen && isAuthenticated) {
+    if (isOpen && isAuthenticated && notifications.length === 0) {
+      // Fetch only if we have nothing cached to ensure instant open
       fetchNotifications();
     }
-  }, [isOpen, isAuthenticated, fetchNotifications]);
+  }, [isOpen, isAuthenticated, fetchNotifications, notifications.length]);
+
+  const openAllNotifications = () => {
+    if (window.innerWidth < 768) {
+      setIsOpen(false);
+      navigate('/notifications');
+    } else {
+      setIsModalOpen(true);
+    }
+  };
 
   if (!isAuthenticated) {
     return null;
@@ -133,10 +147,7 @@ const NotificationDropdown = () => {
           {notifications.length > 0 && (
             <div className="p-4 border-t border-gray-700">
               <button
-                onClick={() => {
-                  setIsOpen(false);
-                  // Navigate to full notifications page if needed
-                }}
+                onClick={openAllNotifications}
                 className="w-full text-center text-sm text-gold hover:text-yellow-400 transition-colors"
               >
                 View all notifications
@@ -153,6 +164,39 @@ const NotificationDropdown = () => {
           onClick={() => setIsOpen(false)}
         ></div>
       )}
+
+      {/* Desktop Modal for All Notifications */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="All Notifications" size="lg">
+        <div className="max-h-[70vh] overflow-y-auto">
+          {notifications.length === 0 ? (
+            <div className="p-4 text-center text-gray-400">No notifications</div>
+          ) : (
+            notifications.map((notification) => (
+              <div
+                key={notification.id}
+                onClick={() => {
+                  handleNotificationClick(notification);
+                  setIsModalOpen(false);
+                }}
+                className={`p-4 border-b border-gray-700 hover:bg-gray-700 cursor-pointer transition-colors ${
+                  !notification.read_at ? 'bg-gray-750' : ''
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="text-2xl">🔔</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-white truncate">{notification.title}</h4>
+                      <span className="text-xs text-gray-400">{new Date(notification.created_at).toLocaleString()}</span>
+                    </div>
+                    <p className="text-sm text-gray-300 mt-1 line-clamp-2">{notification.message}</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };
