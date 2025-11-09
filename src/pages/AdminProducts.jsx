@@ -775,11 +775,8 @@ const AdminProducts = () => {
                       </td>
                       <td className="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-white">
                         {(() => {
-                          const price = Number(product?.price) || 0;
-                          // Prefer backend-provided final price fields
-                          const dbFinal = product?.final_price ?? product?.discounted_price;
-                          let finalPrice = dbFinal != null ? Number(dbFinal) : NaN;
-                          // Parse discount robustly: supports '48', '48%', 0.48
+                          const price = parseFloat(product?.price ?? 0) || 0;
+                          // Always compute from percentage discount integer stored in DB
                           let rawDisc = product?.discount;
                           let discNum = 0;
                           if (typeof rawDisc === 'string') {
@@ -788,31 +785,24 @@ const AdminProducts = () => {
                           } else if (rawDisc != null) {
                             discNum = Number(rawDisc);
                           }
-                          if (!Number.isFinite(finalPrice)) {
-                            // Determine percent: if 0<d<=1 treat as fraction, else percentage
-                            let discountPct = 0;
-                            if (discNum > 0 && discNum <= 1) {
-                              discountPct = discNum * 100;
-                            } else if (discNum > 0) {
-                              discountPct = discNum;
-                            }
-                            discountPct = Math.min(Math.max(discountPct, 0), 100);
-                            finalPrice = price - (price * discountPct / 100);
-                            var displayPct = Math.round(discountPct);
-                          } else {
-                            // derive percentage for badge
-                            var displayPct = price > 0 ? Math.round((1 - finalPrice / price) * 100) : 0;
+                          // Interpret 0<d<=1 as fraction, otherwise as percent
+                          let discountPct = 0;
+                          if (discNum > 0 && discNum <= 1) {
+                            discountPct = discNum * 100;
+                          } else if (discNum > 0) {
+                            discountPct = discNum;
                           }
-                          const hasDiscount = price > 0 && finalPrice < price;
+                          discountPct = Math.min(Math.max(discountPct, 0), 100);
+                          const finalPriceRaw = price - (price * discountPct / 100);
+                          const finalPrice = Math.round(finalPriceRaw * 100) / 100;
+                          const hasDiscount = price > 0 && discountPct > 0;
                           return (
                             <div className="flex items-center space-x-2">
                               <span className="font-semibold text-white">${finalPrice.toFixed(2)}</span>
                               {hasDiscount && (
                                 <>
                                   <span className="text-gray-400 line-through">${price.toFixed(2)}</span>
-                                  {displayPct > 0 && (
-                                    <span className="text-green-400 text-xs">-{displayPct}%</span>
-                                  )}
+                                  <span className="text-green-400 text-xs">-{Math.round(discountPct)}%</span>
                                 </>
                               )}
                             </div>
