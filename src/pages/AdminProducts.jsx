@@ -703,7 +703,7 @@ const AdminProducts = () => {
                   <tr>
                     <th scope="col" className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Product</th>
                     <th scope="col" className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Seller</th>
-                    <th scope="col" className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
+                    <th scope="col" className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Final Price</th>
                     <th scope="col" className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
                     <th scope="col" className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Sponsor</th>
                     <th scope="col" className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
@@ -774,7 +774,50 @@ const AdminProducts = () => {
                         <div className="text-sm text-gray-400 truncate max-w-[120px] sm:max-w-none">{product.seller?.email || ''}</div>
                       </td>
                       <td className="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-white">
-                        ${parseFloat(product.price)?.toFixed(2) || '0.00'}
+                        {(() => {
+                          const price = Number(product?.price) || 0;
+                          // Prefer backend-provided final price fields
+                          const dbFinal = product?.final_price ?? product?.discounted_price;
+                          let finalPrice = dbFinal != null ? Number(dbFinal) : NaN;
+                          // Parse discount robustly: supports '48', '48%', 0.48
+                          let rawDisc = product?.discount;
+                          let discNum = 0;
+                          if (typeof rawDisc === 'string') {
+                            const cleaned = rawDisc.replace(/[^\d.+-]/g, '');
+                            discNum = parseFloat(cleaned);
+                          } else if (rawDisc != null) {
+                            discNum = Number(rawDisc);
+                          }
+                          if (!Number.isFinite(finalPrice)) {
+                            // Determine percent: if 0<d<=1 treat as fraction, else percentage
+                            let discountPct = 0;
+                            if (discNum > 0 && discNum <= 1) {
+                              discountPct = discNum * 100;
+                            } else if (discNum > 0) {
+                              discountPct = discNum;
+                            }
+                            discountPct = Math.min(Math.max(discountPct, 0), 100);
+                            finalPrice = price - (price * discountPct / 100);
+                            var displayPct = Math.round(discountPct);
+                          } else {
+                            // derive percentage for badge
+                            var displayPct = price > 0 ? Math.round((1 - finalPrice / price) * 100) : 0;
+                          }
+                          const hasDiscount = price > 0 && finalPrice < price;
+                          return (
+                            <div className="flex items-center space-x-2">
+                              <span className="font-semibold text-white">${finalPrice.toFixed(2)}</span>
+                              {hasDiscount && (
+                                <>
+                                  <span className="text-gray-400 line-through">${price.toFixed(2)}</span>
+                                  {displayPct > 0 && (
+                                    <span className="text-green-400 text-xs">-{displayPct}%</span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
