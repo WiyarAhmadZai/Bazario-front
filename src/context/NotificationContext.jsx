@@ -10,13 +10,41 @@ export const NotificationProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Helper: normalize backend notification to UI shape
+  const normalizeNotification = (n) => {
+    const rawType = n.type || n.data?.type || '';
+    const simplifiedType = String(rawType)
+      .split('\\').pop() // strip namespace if present
+      .replace(/Notification$/i, '')
+      .toLowerCase();
+
+    const title = n.title || n.data?.title || n.data?.subject || n.data?.heading || 'Notification';
+    const message = n.message || n.data?.message || n.data?.body || n.data?.text || '';
+    const action_url = n.action_url || n.data?.action_url || n.data?.url || null;
+
+    return {
+      id: n.id,
+      type: simplifiedType || 'info',
+      title,
+      message,
+      created_at: n.created_at || n.timestamp || new Date().toISOString(),
+      read_at: n.read_at || (n.read === true ? new Date().toISOString() : null),
+      data: { action_url },
+    };
+  };
+
   // Fetch notifications from API
   const fetchNotifications = async () => {
     try {
       setLoading(true);
       const response = await api.get('/notifications');
-      setNotifications(response.data.data || []);
-      setUnreadCount(response.data.data?.filter(n => !n.read_at).length || 0);
+      const list = Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : []);
+      const normalized = list.map(normalizeNotification);
+      setNotifications(normalized);
+      const unread = typeof response.data?.unread_count === 'number'
+        ? response.data.unread_count
+        : normalized.filter(n => !n.read_at).length;
+      setUnreadCount(unread);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
